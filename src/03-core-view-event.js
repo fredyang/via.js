@@ -383,6 +383,44 @@
 		_cleanData( elems );
 	};
 
+	$.addViewEvent = function ( customEventName, nativeEventName, conditionFn ) {
+
+		var handler = function ( e ) {
+			if ( conditionFn( e ) ) {
+				e.type = customEventName;
+				e.currentTarget = e.target;
+				$( e.target ).trigger( e );
+			}
+		};
+
+		if ( $.event.special[customEventName] ) {
+			throw "event '" + customEventName + "' has been defined";
+		}
+
+		$.event.special[customEventName] = {
+			setup: function () {
+				$( this ).bind( nativeEventName, handler );
+			},
+			teardown: function () {
+				$( this ).unbind( nativeEventName, handler );
+			}
+		};
+
+		return $;
+	};
+
+	$.addActionEvent = function ( actionName, nativeEventName ) {
+		if ( $.isArray( actionName ) ) {
+			for ( var i = 0; i < actionName.length; i++ ) {
+				$.addActionEvent( actionName[i][0], actionName[i][1] );
+			}
+			return $;
+		}
+		return $.addViewEvent( actionName, nativeEventName, function ( e ) {
+			return ($( e.target ).attr( "action" ) === actionName);
+		} );
+	};
+
 	jQueryFn.addViewHandler = function ( viewEvents, modelPath, viewHandler, options ) {
 		via.addViewHandler( this, viewEvents, modelPath, viewHandler, options );
 		return this;

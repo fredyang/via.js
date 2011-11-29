@@ -1,8 +1,8 @@
 module( "04-feature-declarative.js" );
 
 var debug = via.debug;
-var convertBindingTextToBindingObject = debug.convertBindingTextToBindingObject;
-var buildHandlers = debug.buildHandlers;
+var convertBindingTextToBindingObject = debug.buildBinding;
+var buildHandlerData = debug.processViaAttr;
 
 test( "buildHandlers --> convertBindingTextToBindingObject", function () {
 	var text1 = "@x";
@@ -22,21 +22,21 @@ test( "buildHandlers --> defaultTheme", function () {
 	var defaultTheme = via.options( "theme" );
 	equal( defaultTheme, "via", "the default theme is 'via'" );
 
-	var markup = $( "<div id='v1' data-via='@path:xyz' />" );
-	buildHandlers( markup );
+	var markup = $( "<div id='v1' via='@path:xyz' />" );
+	buildHandlerData( markup );
 	equal( markup.data( "via" ).theme, defaultTheme, "if binding has neither @mh or @vh, its theme is default theme" );
 } );
 
-test( "buildHandlers", function () {
+test( "buildHandlerData", function () {
 	var defaultTheme = via.options( "theme" );
 
-	var markup = $( "<div id='parent' data-via='@class:_ @path:xyz'>" +
-	                "<div id='child' data-via='@x' />" +
+	var markup = $( "<div id='parent' via='@class:_ @path:xyz'>" +
+	                "<div id='child' via='@x' />" +
 	                "</div>" ).appendTo( "#qunit-fixture" );
 
 	var views = $( ":via", "#qunit-fixture" );
 	ok( views.length, "can find views using ':via' selector" );
-	views.parseView();
+	views.view();
 
 	var parentBinding = $( "#parent" ).data( "via" );
 	var childBinding = $( "#child" ).data( "via" );
@@ -60,31 +60,31 @@ test( "buildHandlers", function () {
 	via.themes.via.bindingSet.y = "@class:x" +
 	                                "@mh:.,update,*text,option2";
 
-	markup = $( "<div data-via='@path:a @class:x'></div>" ).appendTo( "#qunit-fixture" );
+	markup = $( "<div via='@path:a @class:x'></div>" ).appendTo( "#qunit-fixture" );
 
-	var handlers = buildHandlers( markup );
+	var handlers = buildHandlerData( markup );
 	deepEqual( handlers.mh.length, 1, "@class:x will import mh defined in @class:x" );
 	deepEqual( handlers.vh.length, 1, "@class:x will import vh defined in @class:x" );
 	markup.remove();
 
-	markup = $( "<div data-via='@path:a @class:y'></div>" ).appendTo( "#qunit-fixture" );
+	markup = $( "<div via='@path:a @class:y'></div>" ).appendTo( "#qunit-fixture" );
 
-	handlers = buildHandlers( markup );
+	handlers = buildHandlerData( markup );
 	deepEqual( handlers.mh.length, 2, "@class:y will import mh defined in @class:y, and its nested @class:x" );
 	deepEqual( handlers.vh.length, 1, "@class:y will import vh defined in @class:y, and its nested @class:x" );
 	markup.remove();
 
-	markup = $( "<div data-via='@path:a @class:y;x'></div>" ).appendTo( "#qunit-fixture" );
+	markup = $( "<div via='@path:a @class:y;x'></div>" ).appendTo( "#qunit-fixture" );
 
-	handlers = buildHandlers( markup );
+	handlers = buildHandlerData( markup );
 	deepEqual( handlers.mh.length, 3, "you can have more than one view type in binding data" );
 	deepEqual( handlers.vh.length, 2, "you can have more than one view type in binding data" );
 	markup.remove();
 
 	//class can be just a className, or it can be className,path,options
-	markup = $( "<div data-via='@path:a @class:x,.,options4'></div>" ).appendTo( "#qunit-fixture" );
+	markup = $( "<div via='@path:a @class:x,.,options4'></div>" ).appendTo( "#qunit-fixture" );
 
-	handlers = buildHandlers( markup );
+	handlers = buildHandlerData( markup );
 	//check via.themes.via.bindingSet.x
 	deepEqual( handlers.mh[0].options, "options1", "when options is defined in binding.mh/mh, it has higher priority over the binding.options" );
 	deepEqual( handlers.vh[0].options, "options4", "when options is not defined in binding.mh/vh, use binding.options" );
@@ -108,9 +108,9 @@ test( "theme extension", function () {
 		}
 	};
 
-	markup = $( "<div data-via='@theme:test @path:a @class:x'></div>" ).appendTo( "#qunit-fixture" );
+	markup = $( "<div via='@theme:test @path:a @class:x'></div>" ).appendTo( "#qunit-fixture" );
 
-	handlers = buildHandlers( markup );
+	handlers = buildHandlerData( markup );
 	deepEqual( handlers.mh.length, 2, "you can have more than one view type in binding data" );
 	deepEqual( handlers.vh.length, 1, "you can have more than one view type in binding data" );
 	markup.remove();
@@ -118,7 +118,7 @@ test( "theme extension", function () {
 
 test( "buildPathWithContextAndIndex", function () {
 
-	var buildPathWithContextAndIndex = debug.buildPathWithContextAndIndex;
+	var buildPathWithContextAndIndex = debug.mergePath;
 
 	equal( buildPathWithContextAndIndex( "a.b", undefined ), "a.b", "if index is not defined, use context as path" );
 

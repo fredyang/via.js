@@ -146,7 +146,7 @@
 				key2 = modelHandler.substring( 2 ),
 				currentValue;
 
-			if ( modelHandler.indexOf( "*" ) === 0 ) {
+			if ( modelHandler.beginsWith( "*" ) ) {
 
 				var commonModelHandler = commonModelHandlers[key1];
 
@@ -156,12 +156,12 @@
 
 				}
 
-			} else if ( modelHandler.indexOf( "$" ) === 0 ) {
+			} else if ( modelHandler.beginsWith( "$" ) ) {
 
 				if ( isFunction( jQueryFn[key1] ) ) {
 
 					currentValue = modelEvent.currentValue();
-					if ( "css,attr,prop".indexOf( key1 ) != -1 ) {
+					if ( "css,attr,prop".contains( key1 ) ) {
 
 						var propName = modelEvent.options || modelEvent.targetIndex();
 						$( view )[key1]( propName, currentValue );
@@ -173,7 +173,7 @@
 					return;
 				}
 
-			} else if ( modelHandler.indexOf( "v." ) === 0 ) {
+			} else if ( modelHandler.beginsWith( "v." ) ) {
 
 				if ( view[key2] ) {
 
@@ -261,7 +261,7 @@
 						}
 					} else {
 						//before*
-						if ( event.indexOf( match[1] ) === 0 ) {
+						if ( event.beginsWith( match[1] ) ) {
 							return true;
 						}
 					}
@@ -357,7 +357,7 @@
 
 	function buildModelHandlerOptions( modelHandler, options ) {
 
-		if ( isString( modelHandler ) && modelHandler.indexOf( "*" ) === 0 ) {
+		if ( isString( modelHandler ) && modelHandler.beginsWith( "*" ) ) {
 
 			modelHandler = commonModelHandlers[modelHandler.substring( 1 )];
 
@@ -451,7 +451,7 @@
 				var path = toPhysicalPath( pathOrViews );
 
 				for ( var key in modelHandlerData ) {
-					if ( key.indexOf( path ) === 0 ) {
+					if ( key.beginsWith( path ) ) {
 						delete modelHandlerData[key];
 					}
 				}

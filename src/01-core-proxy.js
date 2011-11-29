@@ -91,10 +91,20 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 	};
 
 	arrayPrototype.pushUnique = arrayPrototype.pushUnique || function ( item ) {
-		if ( this.indexOf( item ) === -1 ) {
+		if ( !this.contains( item ) ) {
 			this.push( item );
 		}
 		return this;
+	};
+
+	var stringPrototype = String.prototype;
+
+	stringPrototype.beginsWith = stringPrototype.beginsWith || function ( text ) {
+		return this.indexOf( text ) === 0;
+	};
+
+	stringPrototype.contains = stringPrototype.contains || function ( text ) {
+		return this.indexOf( text ) !== -1;
 	};
 
 	function isObject( val ) {
@@ -604,7 +614,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 
 		joinPath: function ( context, subPath ) {
 			return !subPath ? context :
-				context ? context + (subPath.toString().indexOf( "*" ) === 0 ? subPath : "." + subPath)
+				context ? context + (subPath.toString().beginsWith( "*" ) ? subPath : "." + subPath)
 					: subPath;
 		},
 
@@ -657,13 +667,13 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 
 			//remove reference that path is in referenced role
 			for ( var key in modelReferences ) {
-				if ( key.indexOf( path ) === 0 ) {
+				if ( key.beginsWith( path ) ) {
 					delete modelReferences[key];
 				}
 			}
 
 			//delete shadow object
-			if ( path.indexOf( ns ) !== 0 ) {
+			if ( !path.beginsWith( ns ) ) {
 				rootProxy.del( ns + "." + path.replace( rDot, "_" ) );
 			}
 

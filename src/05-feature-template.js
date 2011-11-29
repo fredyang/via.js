@@ -76,7 +76,7 @@
 
 			var content = via.renderTemplate( options.templateId, dataSource, options );
 			$( this ).html( content );
-			content.findAll( ":via" ).parseView();
+			content.view();
 		} else {
 			$( this ).empty();
 		}

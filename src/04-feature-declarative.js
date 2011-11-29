@@ -7,7 +7,6 @@
 	var extend = $.extend;
 	var jQueryFn = $.fn;
 	var hasOwn = {}.hasOwnProperty;
-	var isObject = via.isObject;
 	var isString = via.isString;
 	//#end_merge
 
@@ -23,7 +22,9 @@
 		klass = "class",
 		builtInProps = "mh,vh,class,theme,path,options".split( "," ),
 		allBindings = {},
-		classMatchers = {};
+		classMatchers = {},
+		specialParsers,
+		viaBindingSet;
 
 	defaultOptions.theme = "via";
 
@@ -39,15 +40,15 @@
 	}
 
 	//build binding object from a string
-	function convertBindingTextToBindingObject( bindingText ) {
-		if ( !isString( bindingText ) ) {
+	function buildBinding( text ) {
+		if ( !isString( text ) ) {
 			throw "bindingText must non-empty string";
 		}
 
 		var rtn = {},
 			match, key, value;
 
-		while ( (match = rKeyValue.exec( bindingText )) ) {
+		while ( (match = rKeyValue.exec( text )) ) {
 			key = match[1];
 			value = (match[3] && $.trim( match[3] ) ) || true;
 			rtn[key] = rtn[key] ? rtn[key] + ";" + value : value;
@@ -61,7 +62,7 @@
 	function isThemeCached( themeName ) {
 		themeName = themeName + ".";
 		for ( var key in allBindings ) {
-			if ( key.indexOf( themeName ) === 0 ) {
+			if ( key.beginsWith( themeName ) ) {
 				return true;
 			}
 		}
@@ -75,7 +76,7 @@
 		if ( !themeName ) {
 			return false;
 		}
-		
+
 		if ( isThemeCached( themeName ) ) {
 			return true;
 		}
@@ -121,7 +122,7 @@
 		return rtn;
 	}
 
-	function attacheThemeHandlers( view, parentBinding, handlers ) {
+	function inheritHandlerDataFromTheme( view, parentBinding, handlerData ) {
 
 		//this is to avoid reserved word "class"
 		//if parentBinding.class is null or parentBinding.class === "_" or cannot locate bindingSet of the theme
@@ -138,14 +139,14 @@
 				themeViaData = allBindings[parentBinding.theme + "." + match[1]];
 
 			if ( themeViaData ) {
-				themeBinding = convertBindingTextToBindingObject( themeViaData );
-				themeBinding.path = buildPathWithContextAndIndex( parentBinding.path, match[3] );
+				themeBinding = buildBinding( themeViaData );
+				themeBinding.path = mergePath( parentBinding.path, match[3] );
 				themeBinding.theme = parentBinding.theme;
 				themeBinding.options = match[5] || parentBinding.options;
 				//
-				attacheThemeHandlers( view, themeBinding, handlers );
-				mergeHandlers( view, themeBinding, handlers );
-				applySpecialParser( view, themeBinding, handlers );
+				inheritHandlerDataFromTheme( view, themeBinding, handlerData );
+				buildHandlerData( view, themeBinding, handlerData );
+				applySpecialParser( view, themeBinding, handlerData );
 			}
 		}
 
@@ -167,7 +168,7 @@
 		return "";
 	}
 
-	function buildPathWithContextAndIndex( context, index ) {
+	function mergePath( context, index ) {
 
 		if ( !index || index == "." ) {
 
@@ -183,7 +184,7 @@
 
 			var match = /^(.+)\*/.exec( context );
 
-			if ( match && match[1] && index.indexOf( "*" ) === 0 ) {
+			if ( match && match[1] && index.beginsWith( "*" ) ) {
 				return match[1] + index;
 			} else {
 				//return context + index;
@@ -195,7 +196,7 @@
 	}
 
 	//merge the handlers to handlers object
-	function mergeHandlers( view, binding, handlers ) {
+	function buildHandlerData( view, binding, handlers ) {
 		mergeHandlersByType( "mh", view, binding, handlers );
 		mergeHandlersByType( "vh", view, binding, handlers );
 	}
@@ -217,7 +218,7 @@
 				continue;
 			}
 
-			path = buildPathWithContextAndIndex( binding.path, match[1] );
+			path = mergePath( binding.path, match[1] );
 
 			handlers[handlerType].push( handlerType === "mh" ? {
 				path: path,
@@ -243,81 +244,75 @@
 
 			if ( hasOwn.call( binding, prop ) &&
 			     !builtInProps.contains( prop ) &&
-			     (parse = via.specialParsers[prop]) ) {
+			     (parse = specialParsers[prop]) ) {
 				//if the keys is not defined in builtin processing keywords
 				//it is importer
-				parse( view, binding, handlers, binding[prop]);
+				parse( view, binding, handlers, binding[prop] );
 			}
 		}
 	}
 
-	function buildHandlers( view ) {
+	//this can be call multiple times
+	//it returns handlerData, also persist binding into $(view)data("via")
+	function processViaAttr( view ) {
 
-		var userBinding = $( view ).data( "via" );
+		//process
 
-		if ( !userBinding ) {
+		var binding = $( view ).attr( "via" );
+
+		if ( !binding ) {
 			return;
 		}
 
-		if ( isObject( userBinding ) ) {
-			return userBinding;
-		}
+		binding = buildBinding( binding );
+		$( view ).data( "via", binding );
 
-		userBinding = convertBindingTextToBindingObject( userBinding );
-
-		$( view ).data( "via", userBinding );
-
-		if ( userBinding.path && userBinding.path !== "." ) {
+		if ( binding.path && binding.path !== "." ) {
 			//this is the case when path is not empty, but it is not "."
 
-			if ( rUseBindingPathAsContext.exec( userBinding.path ) ) {
+			if ( rUseBindingPathAsContext.exec( binding.path ) ) {
 				//this is the case when path begin with . or *
 				// like .firstName or *.index,
-				userBinding.path = getPathOfParentView( view ) + userBinding.path;
+				binding.path = getPathOfParentView( view ) + binding.path;
 			}
 
 		} else {
 
 			//this is the case when userBinding.path is not available
 			//or when it is "."
-			userBinding.path = getPathOfParentView( view );
+			binding.path = getPathOfParentView( view );
 		}
 
 		//if userBinding.theme is not available,
 		// if userBinding.path is null, then use default theme
 		// otherwise disable theme
-		userBinding.theme = userBinding.theme || defaultOptions.theme;
+		binding.theme = binding.theme || defaultOptions.theme;
 
-		var rtnHandlers = {
+		var handlerData = {
 			mh: [],
 			vh: []
 		};
 
-		userBinding[klass] = userBinding[klass] || getDefaultClass( view );
-		attacheThemeHandlers( view, userBinding, rtnHandlers );
-		mergeHandlers( view, userBinding, rtnHandlers );
-		applySpecialParser( view, userBinding, rtnHandlers );
+		binding[klass] = binding[klass] || getDefaultClass( view );
+		inheritHandlerDataFromTheme( view, binding, handlerData );
+		buildHandlerData( view, binding, handlerData );
+		applySpecialParser( view, binding, handlerData );
 
-		//#debug
-		userBinding.mh = rtnHandlers.mh;
-		userBinding.vh = rtnHandlers.vh;
-		//#end_debug
-
-		return rtnHandlers;
+		return handlerData;
 	}
 
-	function addHandlers( handlers ) {
-		if ( !handlers ) {
+	function addHandlers( handlerData ) {
+		if ( !handlerData ) {
 			return;
 		}
 		var i,
-			commonModelHandlers = handlers.mh,
-			commonViewHandlers = handlers.vh,
+			modelHandlerData = handlerData.mh,
+			viewHandlerData = handlerData.vh,
 			modelHandler,
 			viewHandler;
 
-		for ( i = 0; i < commonModelHandlers.length; i++ ) {
-			modelHandler = commonModelHandlers[i];
+		for ( i = 0; i < modelHandlerData.length; i++ ) {
+			modelHandler = modelHandlerData[i];
 			via.addModelHandler(
 				modelHandler.path,
 				modelHandler.modelEvents,
@@ -326,8 +321,8 @@
 				modelHandler.options );
 		}
 
-		for ( i = 0; i < commonViewHandlers.length; i++ ) {
-			viewHandler = commonViewHandlers[i];
+		for ( i = 0; i < viewHandlerData.length; i++ ) {
+			viewHandler = viewHandlerData[i];
 			via.addViewHandler(
 				viewHandler.view,
 				viewHandler.viewEvents,
@@ -348,7 +343,7 @@
 		 }
 		 you can use this as extension to add special handlers, such as validation
 		 * */
-		specialParsers: {},
+		specialParsers: specialParsers = {},
 
 		/*an objects that determine if a view match a class
 		 {
@@ -359,38 +354,52 @@
 		 * */
 		classMatchers: classMatchers,
 
-		parseView: function ( views ) {
-			return $( views ).each( function () {
-				var binding = $( this ).data( "via" );
-				if ( !binding || binding.parsed ) {
-					return;
+		view: function ( objects ) {
+			objects = objects || ":via";
+			return $( objects ).each( function () {
+				//prevent a view being parse more than once
+				if ( !$( this ).data( "via" ) ) {
+					addHandlers( processViaAttr( this ) );
 				}
-				addHandlers( buildHandlers( this ) );
-				$( this ).data( "via" ).parsed = true;
 			} );
 		},
 
 		themes: {
 			via: {
 				subThemes: undefined,
-				bindingSet: {}
+				bindingSet: viaBindingSet = {}
 			}
 		}
 	} );
 
-	$.expr[":"].via = function ( elem ) {
-		return !!$( elem ).data( "via" );
+	//@viewEvent:action.edit,
+	specialParsers.viaEvent = function ( view, binding, handlers, specialOptions ) {
+
+		if ( !binding.viewEvents ) {
+			binding.viewEvents = {};
+		}
+		var events = specialOptions.split( "," );
+
+		for ( var i = 0; i < events.length; i++ ) {
+			var parts = events[i].split( "." );
+			binding.viewEvents[parts[0]] = parts[1];
+		}
 	};
 
-	jQueryFn.parseView = function () {
-		return via.parseView( this );
+	$.expr[":"].via = function ( elem ) {
+		return !!$( elem ).attr( "via" );
+	};
+
+	jQueryFn.view = function () {
+		via.view( this.findAll( ":via" ) );
+		return this;
 	};
 
 	//#debug
-	via.debug.convertBindingTextToBindingObject = convertBindingTextToBindingObject;
-	via.debug.buildHandlers = buildHandlers;
+	via.debug.buildBinding = buildBinding;
+	via.debug.processViaAttr = processViaAttr;
 	via.debug.allBindings = allBindings;
-	via.debug.buildPathWithContextAndIndex = buildPathWithContextAndIndex;
+	via.debug.mergePath = mergePath;
 	//#end_debug
 
 	//#merge

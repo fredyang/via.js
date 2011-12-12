@@ -1,5 +1,5 @@
 /*!
- * viaProxy @version
+ * viaProxy.js @version
  * http://semanticsworks.com/p/viaproxy.html
  *
  * Copyright 2011, Fred Yang

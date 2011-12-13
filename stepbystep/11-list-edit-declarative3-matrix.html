@@ -1,0 +1,30 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<!--<link href="../ref/oocss/all.css" rel='stylesheet' type='text/css'/>-->
+</head>
+<body via="@app:listEdit">
+
+</body>
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+<script src="../ref/matrix.debug.js"></script>
+<script src="js/matrix/config.js"></script>
+<script>
+
+	//matrix.debug.enabled = true;
+	//matrix.debug.enabled = false;
+
+	//override the setting in boot.js, by default template.module
+	// use "jsrender.js" as template engine, now I want to jquery template
+	matrix.depend( {
+		"template.module" : "jquery.tmpl.js"
+	} );
+
+	matrix( "viaProxy.all.js" ).done( function () {
+		//this will trigger specialParsers.app, see 10-addon-app.js
+		via.view();
+	} );
+</script>
+</html>

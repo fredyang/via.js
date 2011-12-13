@@ -14,40 +14,54 @@ core_files = ${src_dir}/01-core-proxy.js\
 			${src_dir}/02-core-model-event.js\
 			${src_dir}/03-core-view-event.js
 
+
 feature_files = ${src_dir}/04-feature-declarative.js\
-			${src_dir}/05-feature-template.js
-			
+			${src_dir}/05-feature-template.js\
+			${src_dir}/06-feature-template-engine-registration.js\
+			${src_dir}/07-feature-common-handlers.js\
 
-full:src_files = ${core_files}\
-				 ${feature_files}\
-				${src_dir}/99-tail.txt
+addon_files = ${src_dir}/08-addon-validation.js\
+			${src_dir}/09-addon-list-query.js\
+			${src_dir}/10-addon-list-edit.js\
+			${src_dir}/11-addon-app.js
 
-full:uglyfy_output = ${dist_dir}/via.full.uglyfy.min.js
-full:closure_output = ${dist_dir}/via.full.closure.min.js
-full:out_js = ${dist_dir}/via.full.js
-full:debug_js = ${dist_dir}/via.full.debug.js
+all:src_files = ${core_files}\
+			${feature_files}\
+			${addon_files}\
+			${src_dir}/99-tail.txt
 
+all:uglyfy_output = ${dist_dir}/viaProxy.all.uglyfy.min.js
+all:closure_output = ${dist_dir}/viaProxy.all.closure.min.js
+all:out_js = ${dist_dir}/viaProxy.all.js
+all:debug_js = ${dist_dir}/viaProxy.all.debug.js
 
 core:src_files = ${core_files}\
 				${src_dir}/99-tail.txt
-
+				
 core:uglyfy_output = ${dist_dir}/via.core.uglyfy.min.js
 core:closure_output = ${dist_dir}/via.core.closure.min.js
 core:out_js = ${dist_dir}/via.core.js
 core:debug_js = ${dist_dir}/via.core.debug.js
 
+full:src_files = ${core_files}\
+				${feature_files}\
+				${src_dir}/99-tail.txt
+				
+full:uglyfy_output = ${dist_dir}/viaProxy.full.uglyfy.min.js
+full:closure_output = ${dist_dir}/viaProxy.full.closure.min.js
+full:out_js = ${dist_dir}/viaProxy.full.js
+full:debug_js = ${dist_dir}/viaProxy.full.debug.js
 
 
-
-full: merge closure debug after_merge jslint
+all: merge closure debug after_merge jslint
 core: merge closure debug after_merge
+full: merge closure debug after_merge
 
 merge:
 	@@mkdir -p ${dist_dir}
 	
 	@@cat ${src_files} | sed -e '/\/\/#merge/,/\/\/#end_merge/d' -e '/\/\/#debug/,/\/\/#end_debug/d' -e '/[ \t]*log[ \t]*(.*)/d' > ${out_js}.tmp
 	@@echo merging source file to ${out_js} 
-	
 	@@cat ${src_dir}/00-head.txt ${out_js}.tmp | \
     	                    sed "s/@version/${version}/" | \
     						sed "s/@date/${date}/" > ${out_js}
@@ -76,7 +90,7 @@ uglyfy:
 
 debug:
 	@@cat ${src_files} | sed -e '/\/\/#merge/,/\/\/#end_merge/d' > ${debug_js}.tmp;
-	@@echo merge source file to ${debug_js} with debug facilites
+	@@echo merging debug source file to ${debug_js}
 	@@cat ${src_dir}/00-head.txt ${debug_js}.tmp | \
     	                    sed "s/@version/${version}/" | \
     						sed "s/@date/${date}/" > ${debug_js}
@@ -93,5 +107,6 @@ clean:
 	@@rm -rf ${dist_dir}
 
 delete:
-	@@echo "deleting all files in:" ${dist_dir}
+	@@echo "Removing all files in directory:" ${dist_dir}
 	@@rm  ${dist_dir}/*.*
+

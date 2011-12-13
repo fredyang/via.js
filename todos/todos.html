@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+
+	<link href="todos.css" media="all" rel="stylesheet" type="text/css"/>
+
+	<script src="http://code.jquery.com/jquery.js"></script>
+	<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
+	<script src="../ref/jquery.tmplPlus.js"></script>
+	<script type="text/javascript" src="../dist/viaProxy.all.debug.js"></script>
+</head>
+<body>
+<div id="todoapp">
+
+	<div class="title">
+		<h1>Todos</h1>
+	</div>
+
+	<div class="content">
+
+		<div id="create-todo">
+			<input id="new-todo" placeholder="What needs to be done?" type="text"
+			       via="@class:_ @vh:app.tasks,enter,m.app.addTask"/>
+
+			<span class="ui-tooltip-top" style="display:none;">Press Enter to save this task</span>
+		</div>
+		<div id="todos">
+
+			<ul id="todo-list"
+			    via="@path:app.tasks
+
+			             @class:simpleList,.,#displayItem;
+			                    renderEditItem,.,#editItem
+			                    
+						  @vh:.,dblclick,*editItem;
+								.,action.remove,*removeItem;
+								.,enter,*updateItem;
+								.,action.done,m.app.markTaskDone">
+
+			</ul>
+		</div>
+
+		<div id="todo-stats" via="@class:_ @mh:app.tasks,init|after*,*templateOne,#status"/>
+
+	</div>
+
+	<div class="template">
+		<script type="text/html" id="displayItem">
+			<li>
+				<div class="todo {{if done}}done{{/if}}">
+					<div class="display">
+						<input class="check" type="checkbox" via="@viaEvent:action.done" {{if done}}checked{{/if}} />
+						<div class="todo-text" via="@class:_ @viaEvent:action.edit">${taskName}</div>
+						<span class="todo-destroy" via="@class:_ @viaEvent:action.remove"></span>
+					</div>
+				</div>
+			</li>
+		</script>
+
+		<script type="text/html" id="editItem">
+			<li class="editing">
+				<div class="todo">
+					<div class="edit">
+						<input class="todo-input" type="text" value="${taskName}"
+						       via="@path:*edit.item.taskName @viaEvent:action.update"/>
+					</div>
+				</div>
+			</li>
+		</script>
+
+		<script type="text/html" id="status">
+			{{if $data.length }}
+			<span class="todo-count"/>
+			<span class="number">${ $item.get("app.unfinishedCount") }</span>
+			<span class="word">item{{if $item.get("app.unfinishedCount") > 1 }}s{{/if}}</span> left.
+			</span>
+			{{if $item.get("app.finishedCount") }}
+					 <span class="todo-clear">
+						  <a href="#" via="@vh:app.tasks,click,m.app.clearFinishedTasks">
+							  Clear <span
+							  class="number-done">${ $item.get("app.finishedCount")}</span>
+							  completed <span
+							  class="word-done">item{{if $item.get("app.finishedCount") > 1}}s{{/if}}</span>
+						  </a>
+					</span>
+			{{/if}}
+			{{/if}}
+		</script>
+	</div>
+
+	<script type="text/javascript">
+
+		$( function () {
+
+			via.forwardEvent( "keypress", "enter",
+				function ( e ) {
+					return (e.keyCode === 13);
+				}
+			);
+
+			via().create( "app", {
+
+				tasks: [],
+
+				unfinishedCount: function () {
+					return $( this.tasks ).filter(
+						function () {
+							return !this.done;
+						} ).length;
+				},
+
+				finishedCount: function () {
+					return $( this.tasks ).filter(
+						function () {
+							return this.done;
+						} ).length;
+				},
+
+				clearFinishedTasks: function ( viewEvent ) {
+					var targetProxy = viewEvent.targetProxy();
+					var tasks = targetProxy.get();
+
+					$( tasks ).filter(
+						function () {
+							return this.done;
+						} )
+						.each( function () {
+							targetProxy.removeItem( this );
+						} );
+
+					viewEvent.returnFalse();
+				},
+
+				addTask: function ( viewEvent ) {
+					viewEvent.targetProxy().push( {
+						taskName: $( this ).val(),
+						done: false
+					} );
+
+					$( this ).val( "" );
+				},
+
+				markTaskDone: function ( viewEvent ) {
+
+					var selectedIndex = viewEvent.selectedIndex();
+					var modelProxy = viewEvent.targetProxy();
+					//we need to update the whole item, instead of a property of the item
+					//to trigger the updateViewItem properly
+					var clone = $.extend( {}, modelProxy.get( selectedIndex ) );
+					clone.done = viewEvent.e.target.checked;
+					modelProxy.update( selectedIndex, clone );
+
+				}
+			} );
+
+			via( "app.tasks" ).enableListEdit();
+
+			$( ":via" ).view();
+
+		} );
+
+	</script>
+</body>
+</html>

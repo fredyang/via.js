@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<div>
+	<label>a:
+		<input type="text" id="txt1"/></label>
+</div>
+
+<div>
+	<label>b:
+		<input type="text" id="txt2"/></label>
+</div>
+
+<div><input id="btnAdd" value="Add" type="button"/></div>
+
+<div>
+	Sum of a and b : <span id="spanResult"/>
+</div>
+
+</body>
+<script src="http://code.jquery.com/jquery.js"></script>
+<script type="text/javascript" src="../dist/via.all.debug.js"></script>
+<script>
+	//concern: building our model
+	var path = "result";
+	via().create( path, null );
+
+	//concern: converting user clicking into a talk to our model
+	$( "#btnAdd" ).addViewHandler( "click", path, function( viewHandler ) {
+		var a = Number( $( "#txt1" ).val() );
+		var b = Number( $( "#txt2" ).val() );
+
+		//concern: talk to our model
+		viewHandler.updateModel( a + b );
+	} );
+
+	//concern: when model change, update the view
+	$( "#spanResult" ).addModelHandler( path, "afterUpdate", function ( modelEvent ) {
+		$( this ).text( modelEvent.currentValue() );
+	} );
+
+//	$("#btnAdd").click(function (){
+//		var a = Number( $( "#txt1" ).val() );
+//		var b = Number( $( "#txt2" ).val() );
+//		$("#spanResult").text(a + b);
+//	});
+
+</script>
+</html>

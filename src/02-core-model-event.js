@@ -283,13 +283,13 @@
 	//		proposed: "", //available in beforeUpdate beforeAdd
 	//		removed: "" //available in afterUpdate or afterDel,
 	//	};
-	function ModelEvent( path, target, eventType, proposed, removed ) {
+	function ModelEvent( currentPath, targetPath, eventType, proposed, removed ) {
 
-		if ( isObject( path ) ) {
-			extend( this, path );
+		if ( isObject( currentPath ) ) {
+			extend( this, currentPath );
 		} else {
-			this.path = path;
-			this.target = target;
+			this.path = currentPath;
+			this.target = targetPath;
 			this.eventType = eventType;
 			!isUndefined( proposed ) && (this.proposed = proposed);
 			!isUndefined( removed ) && (this.removed = removed);
@@ -355,7 +355,7 @@
 		}
 	};
 
-	function buildModelHandlerOptions( modelHandler, options ) {
+	function buildModelHandlerOptions(view, modelHandler, options ) {
 
 		if ( isString( modelHandler ) && modelHandler.beginsWith( "*" ) ) {
 
@@ -365,7 +365,7 @@
 
 		if ( isFunction( modelHandler.buildOptions ) ) {
 
-			options = modelHandler.buildOptions( options );
+			options = modelHandler.buildOptions.call(view, options );
 		}
 		return options;
 	}
@@ -419,7 +419,7 @@
 
 			views.each( function () {
 
-				options = buildModelHandlerOptions( modelHandler, options );
+				options = buildModelHandlerOptions(this, modelHandler, options );
 
 				markAsView( this );
 				modelHandlerData[path].push( {
@@ -528,7 +528,7 @@
 
 			$( views ).each( function () {
 
-				options = buildModelHandlerOptions( modelHandler, options );
+				options = buildModelHandlerOptions(this, modelHandler, options );
 
 				//"this" refers to a view
 				invokeModelHandler( this, modelHandler, new ModelEvent( {

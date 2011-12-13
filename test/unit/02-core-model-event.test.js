@@ -29,6 +29,7 @@ test( "shouldUpdateView test", function () {
 
 var emptyDb = {
 	__via: {
+		invalidModelPaths: []
 	}
 };
 

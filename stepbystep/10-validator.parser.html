@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<!-- @number:please input a number-->
+<p>
+	An optional number n1: <input type="text" via="@path:n1 @regex:/^\d+$/,you should enter a number!!!
+														   @inlineError" id="txtn1"/>
+
+</p>
+
+<p>n1 saved value: <span id="n1Saved" via="@path:n1"/></p>
+
+
+<p>
+	An required number n2: <input type="text" via="@path:n2 @required @number @inlineError"
+	                              id="txtn2"/>
+</p>
+
+<p>n2 saved value: <span id="n2Saved" via="@path:n2"/></p>
+
+<p>
+	An optional number n3: <input type="text" id="txtn3" via="@path:n3 @inlineError"/>
+</p>
+
+<p>n3 saved value: <span id="n3Saved" via="@path:n3"/></p>
+
+
+<p>
+	global error: <span id="globalError" via="@path:*invalidModelPaths"></span>
+</p>
+
+<input id="btnSubmit" type="button" value="Submit"/>
+
+<span id="xyz"></span>
+</body>
+<script src="http://code.jquery.com/jquery.js"></script>
+<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
+<script src="../ref/jquery.tmplPlus.js"></script>
+<script type="text/javascript" src="../dist/via.all.debug.js"></script>
+<style type="text/css">
+	.error {
+		border: solid 1px red;
+		background-color: #ffcccc;
+	}
+</style>
+
+<script>
+	via().create( "n1", null );
+	via().create( "n2", null );
+	via().create( "n3", null );
+
+	via.validate( "n3", "number" )
+		.validate( "n3", {
+			isValid:function ( value ) {
+				return !$.isNaN( value ) && (value >= 10);
+			} ,
+			error: "it must be over 9"
+		} );
+</script>
+
+
+<script>
+	$( function() {
+
+		$( ":via" ).view();
+
+		$( "#btnSubmit" ).click(
+			function () {
+				if ( via().isValid() ) {
+					alert( "sending data..." );
+				} else {
+					alert( "please correct highlighted error" );
+				}
+			} ).addModelHandler( "*invalidModelPaths", "init|after*", "*enableIfFalsy" );
+	} );
+</script>
+</html>

@@ -383,27 +383,27 @@
 		_cleanData( elems );
 	};
 
-	via.forwardEvent = function ( oldEvent, newEvent, conditionFn ) {
+	via.forwardEvent = function ( fromEvent, toEvent, whenFn ) {
 
 		var handler = function ( e ) {
-			if ( conditionFn( e ) ) {
+			if ( whenFn( e ) ) {
 				$( e.target ).trigger( extend( {}, e, {
-					type: newEvent,
+					type: toEvent,
 					currentTarget: e.target
 				} ) );
 			}
 		};
 
-		if ( $.event.special[newEvent] ) {
-			throw "event '" + newEvent + "' has been defined";
+		if ( $.event.special[toEvent] ) {
+			throw "event '" + toEvent + "' has been defined";
 		}
 
-		$.event.special[newEvent] = {
+		$.event.special[toEvent] = {
 			setup: function () {
-				$( this ).bind( oldEvent, handler );
+				$( this ).bind( fromEvent, handler );
 			},
 			teardown: function () {
-				$( this ).unbind( oldEvent, handler );
+				$( this ).unbind( fromEvent, handler );
 			}
 		};
 

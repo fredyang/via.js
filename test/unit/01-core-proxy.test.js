@@ -239,6 +239,7 @@ test( "test reference integrity in model remove", function () {
 	rootProxy.del( "b" );
 	var emptyDb = {
 		__via: {
+			invalidModelPaths: []
 		}
 	};
 	var r = rootProxy.get();

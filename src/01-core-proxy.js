@@ -55,7 +55,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 	//#end_debug
 
 	//#merge
-	raiseEvent = function ( path, target, eventType, proposed, removed ) {};
+	raiseEvent = function ( currentPath, targetPath, eventType, proposed, removed ) {};
 
 	via._setRaiseEvent = function( fn ) {
 		raiseEvent = fn;
@@ -95,6 +95,22 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 			this.push( item );
 		}
 		return this;
+	};
+
+	arrayPrototype.sortObject = arrayPrototype.sortObject || function ( by, asc ) {
+		if ( by ) {
+			this.sort( function ( a, b ) {
+				var av = a[by];
+				var bv = b[by];
+				if ( av == bv ) {
+					return 0;
+				}
+				return  asc ? (av > bv) ? 1 : -1 :
+					(av > bv) ? -1 : 1;
+			} );
+		} else {
+			asc ? this.sort() : this.sort().reverse();
+		}
 	};
 
 	var stringPrototype = String.prototype;
@@ -383,6 +399,13 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 			return this.create( this.get().length, item );
 		},
 
+		pushRange: function ( items ) {
+			for ( var i = 0; i < items.length; i++ ) {
+				this.push( items[i] );
+			}
+			return this;
+		},
+
 		pushUnique: function ( item ) {
 			return !this.contains( item ) ?
 				this.push( item ) :
@@ -438,6 +461,10 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 
 		count: function () {
 			return this.get().length;
+		},
+
+		sort: function ( by, asc ) {
+			return via.raiseEvent( this.context, this.context, "init", this.get().sortObject( by, asc ) );
 		}
 	} );
 

@@ -1,6 +1,6 @@
 /*!
- * viaProxy.js @version
- * http://semanticsworks.com/p/viaproxy.html
+ * viaProxy.js JavaScript Library @version
+ * http://semanticsworks.com
  *
  * Copyright 2011, Fred Yang
  * Dual licensed under the MIT or GPL Version 2 licenses.

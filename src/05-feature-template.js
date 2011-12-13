@@ -39,11 +39,33 @@
 			throw "engine '" + engine + "' can not be found.";
 		}
 
-		var $content = $( engine.renderTemplate( templateId, dataSource, options ) );
-		if ( options && options.callback ) {
-			options.callback( $content );
+		var $content;
+
+		if ( engine.isTemplateCompiled( templateId ) ) {
+
+			$content = $( engine.renderTemplate( templateId, dataSource, options ) );
+			if ( options && options.callback ) {
+				options.callback.call(options.view, $content );
+			}
+			return $content;
+
+		} else if ( typeof matrix !== "undefined" ) {
+
+			var defer = $.Deferred();
+			matrix( matrix.resourceName( templateId ) + ".template" ).done( function () {
+				$content = $( engine.renderTemplate( templateId, dataSource, options ) );
+				defer.resolve( $content );
+			} );
+
+			return defer.promise().done( function () {
+				if ( options && options.callback ) {
+					options.callback.call(options.view, $content );
+				}
+			} );
 		}
-		return $content;
+
+		throw "can not locate template for '" + templateId + "'";
+
 	};
 
 	via.compileTemplate = function ( templateId, source, engineName ) {
@@ -63,20 +85,36 @@
 
 	};
 
+	via.isTemplateComplied = function ( templateId, engineName ) {
+		engineName = engineName || defaultOptions.engine;
+
+		if ( !engineName ) {
+			throw "there is not default engine registered";
+		}
+
+		var engine = templateEngines[engineName];
+
+		if ( !engine ) {
+			throw "engine '" + engine + "' can not be found.";
+		}
+		return engine.isTemplateComplied( templateId );
+	};
+
 	function template( modelEvent ) {
 		var dataSource = modelEvent.currentValue();
-		var options = modelEvent.options;
-		options.get = function (fullPath) {
-			return rootProxy.get(fullPath);
-		};
 
 		//dataSource can be an non-empty array
 		//or it can be an non-empty non-array
 		if ( dataSource && ((isArray( dataSource ) && dataSource.length) || !isArray( dataSource ) ) ) {
 
-			var content = via.renderTemplate( options.templateId, dataSource, options );
-			$( this ).html( content );
-			content.view();
+			var options = modelEvent.options;
+			options.callback = function ($content) {
+				$(this).html($content);
+				$content.view();
+			};
+
+			via.renderTemplate( options.templateId, dataSource, options );
+
 		} else {
 			$( this ).empty();
 		}
@@ -96,8 +134,12 @@
 		if ( isString( options ) ) {
 			options = options.split( "," );
 			return {
-				templateId: options[0],
-				engineName: options[1]
+				templateId: $.trim(options[0]),
+				engineName: options[1],
+				get: function ( fullPath ) {
+					return rootProxy.get( fullPath );
+				},
+				view: this
 			};
 		}
 		return options;

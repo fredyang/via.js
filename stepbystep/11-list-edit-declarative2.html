@@ -1,0 +1,277 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<link href="../ref/oocss/all.css" rel='stylesheet' type='text/css'/>
+
+	<script src="http://code.jquery.com/jquery.js"></script>
+	<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
+	<script src="../ref/jquery.tmplPlus.js"></script>
+
+	<script type="text/javascript" src="../dist/viaProxy.all.debug.js"></script>
+</head>
+<body>
+<div class="page" via="@path:contacts">
+
+<h2>original contacts</h2>
+
+<div class="line">
+	<div class="unit size2of3  simpleTable data">
+		<table>
+			<thead>
+			<tr>
+				<th style="cursor: pointer" via="@class:sortModel,.,firstName">First Name</th>
+				<th colspan="2" style="cursor: pointer" via="@class:sortModel,.,lastName">Last Name</th>
+			</tr>
+			</thead>
+
+			<tbody id="allContacts"
+			       via="@editableList:#contactRowEditable,#contactRowInEdit
+			       @class:simpleList,.,#contactRowEditable">
+			</tbody>
+
+			<tfoot>
+			<tr via="@mh:*edit.mode,init|afterUpdate,*showIfFalsy">
+				<td colspan="3">
+					<input type="button" id="btnNewContact" value="create contact"
+					       via="@class:newItemButton"
+						/>
+				</td>
+			</tr>
+			<!--the class syntax is @class:class1[,path,options];class2;class3-->
+			<tr id="trAddContact" via="@path:*edit @class:newItemForm,.,#newContactTemplate"/>
+
+			</tfoot>
+
+		</table>
+	</div>
+</div>
+
+<h2>queried contacts</h2>
+
+
+<div class="line" via="@mh:*hasResult,init|afterUpdate,*showIfTruthy">
+	<div id="divFilter">
+		<select id="searchBy" via="@class:_
+									@path:*query.filter.by
+	                                @mh:.,init|afterUpdate,$val
+	                                @vh:.,change,$val">
+
+			<option value="">search by</option>
+			<option value="firstName">First Name</option>
+			<option value="lastName">Last Name</option>
+		</select>
+
+		<select id="ops" via="@class:_
+							   @path:*query.filter.ops
+							   @mh:.,init|afterUpdate,$val
+							   @vh:.,change,$val">
+
+			<option value="">operator</option>
+			<option value="equals">equals</option>
+			<option value="contains">contains</option>
+		</select>
+
+		<input type="text" id="txtSearch" via="@path:*query.filter.value"/>
+
+		<input type="button" id="btnSearch" value="Search"
+		       via="@mh:*query.filter.enabled,init|after*,*enableIfTruthy
+				     @vh:.,click,p.notifyQueryChange"/>
+
+		<input id="btnClearSearch" value="Clear Search" type="button"
+		       via="@mh:*query.filter.enabled,init|after*,*showIfTruthy
+				   @vh:.,click,p.disableFilter;
+				       .,click,p.notifyQueryChange"/>
+	</div>
+
+	<div class="unit size2of3 simpleTable data">
+		<table id="queryTable">
+			<thead>
+			<tr>
+				<th style="cursor: pointer" via="@class:sortQuery,.,firstName">First Name</th>
+
+				<th style="cursor: pointer" via="@class:sortQuery,.,lastName">Last Name</th>
+
+				<th><input id="btnResetSort" value="reset sort" type="button"
+				           via="@class:resetQuerySort"/></th>
+
+			</tr>
+			</thead>
+
+			<tbody id="queryContacts" via="@editableList:#contactRowEditable,#contactRowInEdit
+										@mh:*queryResult,init|after*,*template,#contactRowEditable"/>
+			</tbody>
+
+			<tfoot id="pager" via="@class:queryPager,.,#pagerTemplate">
+			</tfoot>
+		</table>
+	</div>
+</div>
+
+<p id="lblNoResult" via="@mh:*hasResult, init|afterUpdate,*showIfFalsy">No
+	result found</p>
+
+<p>
+	<a id="btnResetAll" value="reset query"
+	   via="@vh:.,click,p.clearQuery;
+				     .,click,p.notifyQueryChange;
+				     .,click,*returnFalse
+			@mh:*query.enabled,init|afterUpdate,*showIfTruthy" href="#">Reset All</a>
+
+</p>
+
+<div>
+
+	<script type="text/tmpl" id="contactRowRead">
+		<tr>
+			<td>${firstName}</td>
+			<td colspan="2">${lastName}${ts}</td>
+		</tr>
+	</script>
+
+	<script type="text/template" id="newContactTemplate">
+		<td colspan="3">
+			<input type="text" class="firstName" value="${firstName}"
+			       via="@path:.item.firstName"/>
+			<input type="text" class="lastName" value="${lastName}"
+			       via="@path:.item.lastName"/>
+			<input type="button" class="btnAdd" value="Add"
+			       via="@vh:contacts,click,*insertDataItem"/>
+
+			<input type="button" class="btnCancelAdd" value="Cancel"
+			       via="@vh:contacts,click,*cancelNewDataItem"/>
+			${ts}
+		</td>
+	</script>
+
+	<script type="text/tmpl" id="contactRowEditable">
+		<tr>
+			<td>${firstName}</td>
+			<td>${lastName}</td>
+			<td><input type="button" value="edit" via="@viaEvent:action.edit"/>
+				<input type="button" value="remove" via="@viaEvent:action.remove"/>${ts}
+			</td>
+		</tr>
+	</script>
+
+	<script type="text/template" id="contactRowInEdit">
+		<tr>
+			<td>
+				<input type="text" class="firstName" value="${firstName}"
+				       via="@path:*edit.item.firstName"/>
+			</td>
+
+			<td>
+				<input type="text" class="lastName" value="${lastName}"
+				       via="@path:*edit.item.lastName"/>
+			</td>
+			<td>
+				<input type="button" value="Update" via="@viaEvent:action.update"/>
+				<input type="button" value="Cancel" via="@viaEvent:action.cancelEdit"/>
+				${ts}
+			</td>
+		</tr>
+	</script>
+
+	<script type="text/tmpl" id="pagerTemplate">
+		<tr via="@vh:.,click,p.setPageIndex;
+					  .,click,p.notifyQueryChange;
+					  .,click,*returnFalse">
+			<td colspan="3">
+				{{if enabled}}
+
+				<a href="#" class="pageDisable" page="disabled">Show All</a>
+
+				{{if index !== 0 }}
+				<a href="#" page="first">First</a>
+				{{else}}
+				<span>First</span>
+				{{/if}}
+
+				{{if index !== 0 }}
+				<a href="#" page="previous">Previous</a>
+				{{else}}
+				<span>Previous</span>
+				{{/if}}
+
+				{{if index !== count -1 }}
+				<a href="#" page="next">Next</a>
+				{{else}}
+				<span>Next</span>
+				{{/if}}
+
+				{{if index !== count -1 }}
+				<a href="#" page="last">Last</a>
+				{{else}}
+				<span>Last</span>
+				{{/if}}
+
+				<span>Page ${ index + 1} of ${count } </span>
+
+
+				{{else}}
+
+				page size: <input type="text" class="pageSize" via="@path:*query.page.size"/>
+
+				<input class="pageEnable" value="enable paging" type="button"
+				       via="@class:enablePaging"/>
+
+				{{/if}}
+				${ts}
+			</td>
+
+		</tr>
+	</script>
+	<script>
+
+		var showTimeStamp = false;
+
+		function ts() {
+			return showTimeStamp ? (+new Date() + "").substring( 7, 10 ) : "";
+		}
+		var contacts = [
+			{
+				firstName: "John",
+				lastName:"Smith"
+			},
+			{
+				firstName: "Joe",
+				lastName:"Davis"
+			},
+			{
+				firstName: "Mary",
+				lastName:"Curtis"
+			},
+			{
+				firstName: "Tim",
+				lastName:"Hud"
+			},
+			{
+				firstName: "Boys",
+				lastName:"Mee"
+			},
+			{
+				firstName: "Yuki",
+				lastName:"Kim"
+			}
+		];
+		via().create( "contacts", contacts );
+
+		via( "contacts" ).enableQuery().enableListEdit( {
+			firstName: "",
+			lastName:""
+		} ).enableSorter();
+
+		var editMode = via.editMode;
+		var commonViewHandlers = via.commonViewHandlers;
+
+		$( ":via" ).view();
+
+	</script>
+</div>
+</div>
+
+</body>
+
+</html>

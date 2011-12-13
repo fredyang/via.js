@@ -372,7 +372,7 @@
 		}
 	} );
 
-	//@viewEvent:action.edit,
+	//@viaEvent:action.edit,
 	specialParsers.viaEvent = function ( view, binding, handlers, specialOptions ) {
 
 		if ( !binding.viewEvents ) {

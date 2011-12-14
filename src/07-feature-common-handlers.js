@@ -71,11 +71,8 @@
 		//add a new item to to list view
 		pushViewItem: function ( modelEvent ) {
 
-			via.renderTemplate( modelEvent.options, modelEvent.targetValue(), {
-				callback: function ( $content ) {
-					$content.appendTo( this ).view();
-				},
-				view: this
+			$( this ).renderTemplate( modelEvent.options, modelEvent.targetValue(), function ( $content ) {
+				$content.appendTo( this ).view();
 			} );
 
 		},
@@ -87,13 +84,11 @@
 
 		//update an item in the list view
 		updateViewItem: function ( modelEvent ) {
-			via.renderTemplate( modelEvent.options, modelEvent.targetValue(), {
-				callback: function ( $content ) {
+			$( this ).renderTemplate( modelEvent.options, modelEvent.targetValue(),
+				function ( $content ) {
 					$( this ).children().eq( modelEvent.targetIndex() ).replaceWith( $content );
 					$content.view();
-				},
-				view: this
-			} );
+				} );
 		},
 
 		//show a view if model is not empty
@@ -198,7 +193,7 @@
 		}
 	} );
 
-	viaBindingSet.simpleList = "@mh:.,init,*template;" +
+	viaBindingSet.simpleList = "@mh:.,init|afterUpdate,*template;" +
 	                           ".,afterCreate.child,*pushViewItem;" +
 	                           ".,afterUpdate.child,*updateViewItem;" +
 	                           ".,afterDel.child,*removeViewItem,_";

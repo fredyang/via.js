@@ -239,30 +239,32 @@
 			var dataSource = mainProxy.get( "*edit.item" );
 			var mainPath = mainProxy.context;
 
-			var content = via.renderTemplate( "#newContactTemplate", dataSource );
-			content.find( ".firstName" )
-				.addViewHandler( "blur", mainPath + "*edit.item.firstName", "$val" )
-				.end()
-				.find( ".lastName" )
-				.addViewHandler( "blur", mainPath + "*edit.item.lastName", "$val" )
-				.end()
-				.find( ".btnAdd" )
-				.addViewHandler( "click", "contacts", function ( viewEvent ) {
-					var modelProxy = viewEvent.targetProxy();
-					modelProxy.push( modelProxy.get( "*edit.item" ) )
-						.update( "*edit.item", null )
-						.update( "*edit.mode", editMode.none );
-				} )
-				.end()
-				.find( ".btnCancelAdd" )
-				.addViewHandler( "click", "contacts", function ( viewEvent ) {
-					viewEvent
-						.targetProxy()
-						.update( "*edit.item", null )
-						.update( "*edit.mode", editMode.none );
-				} );
+			$( this ).renderTemplate( "#newContactTemplate", dataSource, function ( content ) {
+				content.find( ".firstName" )
+					.addViewHandler( "blur", mainPath + "*edit.item.firstName", "$val" )
+					.end()
+					.find( ".lastName" )
+					.addViewHandler( "blur", mainPath + "*edit.item.lastName", "$val" )
+					.end()
+					.find( ".btnAdd" )
+					.addViewHandler( "click", "contacts", function ( viewEvent ) {
+						var modelProxy = viewEvent.targetProxy();
+						modelProxy.push( modelProxy.get( "*edit.item" ) )
+							.update( "*edit.item", null )
+							.update( "*edit.mode", editMode.none );
+					} )
+					.end()
+					.find( ".btnCancelAdd" )
+					.addViewHandler( "click", "contacts", function ( viewEvent ) {
+						viewEvent
+							.targetProxy()
+							.update( "*edit.item", null )
+							.update( "*edit.mode", editMode.none );
+					} );
 
-			$( this ).html( content );
+				$( this ).html( content );
+
+			} );
 
 		} );
 
@@ -279,17 +281,18 @@
 			//change back to display
 			if ( selectedIndex !== -1 ) {
 
-				$content = via.renderTemplate( modelEvent.options, mainProxy.get( "*edit.item" ) );
+				$( this ).renderTemplate( modelEvent.options, mainProxy.get( "*edit.item" ), function ( $content ) {
 
-				$content.find( ".firstName" )
-					.addViewHandler( "blur", mainProxy.context + "*edit.item.firstName", "$val" )
-					.end()
-					.find( ".lastName" )
-					.addViewHandler( "blur", mainProxy.context + "*edit.item.lastName", "$val" )
-					.end();
+					$content.find( ".firstName" )
+						.addViewHandler( "blur", mainProxy.context + "*edit.item.firstName", "$val" )
+						.end()
+						.find( ".lastName" )
+						.addViewHandler( "blur", mainProxy.context + "*edit.item.lastName", "$val" )
+						.end();
 
-				$( this ).children().eq( selectedIndex ).replaceWith( $content );
-				$content.view();
+					$( this ).children().eq( selectedIndex ).replaceWith( $content );
+					$content.view();
+				} );
 
 			}
 		}, "#contactRowInEdit" )

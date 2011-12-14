@@ -8,14 +8,14 @@
 
 <p><span id="datepicker"/></p>
 
-<p id="lblDate"></p>
+<input type="text" id="txtDate"/>
 
 
-<input type="button" value="today" id="btnTest"/>
+<input type="button" value="Set Date" id="btnTest"/>
 
 </body>
 <script src="http://code.jquery.com/jquery.js"></script>
-<script type="text/javascript" src="../dist/via.all.debug.js"></script>
+<script type="text/javascript" src="../dist/viaProxy.all.debug.js"></script>
 <script type="text/javascript"
         src=" https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/jquery-ui.min.js"></script>
 <link rel="stylesheet"
@@ -24,11 +24,11 @@
 
 
 <script>
-	via.commonModelHandlers.datepickerModelHandler = function ( modelEvent ) {
+	via.commonModelHandlers.datepicker = function ( modelEvent ) {
 		$( this ).datepicker().datepicker( "setDate", modelEvent.currentValue() );
 	};
 
-	via.commonViewHandlers.datepickerViewHandler = $.extend(
+	via.commonViewHandlers.datepicker = $.extend(
 		function ( viewHandler ) {
 			viewHandler.updateModel( $( this ).datepicker( "getDate" ) );
 		},
@@ -45,15 +45,22 @@
 
 	$( function() {
 
-		via().create( "a", new Date( "1/1/2000" ) );
+		via().create( "date", new Date() );
 
-		$( "#lblDate" ).addModelHandler( "a", "init|afterUpdate", "$text" );
+		$( "#txtDate" ).addModelHandler( "date", "init|afterUpdate", function ( modelEvent ) {
+			var d = modelEvent.targetValue();
+			var dateString = (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear();
+			if ( dateString != this.value ) {
+				this.value = dateString;
+			}
+		} );
 
-		$( "#datepicker" ).addModelHandler( "a", "init|afterUpdate", "*datepickerModelHandler" )
-			.addViewHandler( "changeDate", "a", "*datepickerViewHandler" );
+		$( "#datepicker" ).addModelHandler( "date", "init|afterUpdate", "*datepicker" )
+			.addViewHandler( "changeDate", "date", "*datepicker" );
 
-		$( "#btnTest" ).addViewHandler( "click", "a", function ( viewEvent ) {
-			viewEvent.updateModel( new Date() );
+		$( "#btnTest" ).addViewHandler( "click", "date", function ( viewEvent ) {
+			var d = new Date( $( "#txtDate" ).val() );
+			viewEvent.updateModel( d );
 		} );
 	} );
 

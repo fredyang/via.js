@@ -1,0 +1,19 @@
+<script id="pageLayout" engine="jsrender">
+	<div via="@mh:gmail.folders,init,*template,gmail.folderList"></div>
+	<div via="@class:simpleList,gmail.selectedEmails,gmail.emailList"></div>
+</script>
+
+
+<script id="folderList" engine="jsrender">
+	<div>
+	    <a via="@vh:gmail.currentFolder,click,$attr,href;
+					 .,click,*returnFalse"
+				href="{{=$data}}">{{=$data}}</a>
+	</div>
+</script>
+
+
+<script id="emailList" engine="jsrender">
+	<p>{{=message}}</p>
+</script>
+

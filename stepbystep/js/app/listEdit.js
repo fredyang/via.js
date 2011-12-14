@@ -11,17 +11,15 @@
 			load: function ( view ) {
 				//_singleton = view
 				view = $( view )[0];
-				if ( views.contains(view) ) {
+				if ( views.contains( view ) ) {
 					return;
 				}
 				views.push( view );
 				//dynamically construct a model to be used by template later
 				matrix( "listDemoModel.js" ).done( function () {
 					//load the skeleton into the view
-					via.renderTemplate( "listEdit.layout", null, {
-						callback: function ( $content ) {
-							$( view ).append( $content ).view();
-						}
+					$( this ).renderTemplate( "listEdit.layout", null, function ( $content ) {
+						$( view ).append( $content ).view();
 					} );
 				} );
 			},

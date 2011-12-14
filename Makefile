@@ -31,27 +31,31 @@ all:src_files = ${core_files}\
 			${src_dir}/99-tail.txt
 
 all:uglyfy_output = ${dist_dir}/viaProxy.all.uglyfy.min.js
-all:closure_output = ${dist_dir}/viaProxy.all.closure.min.js
+all:closure_output = ${dist_dir}/viaProxy.all.min.js
 all:out_js = ${dist_dir}/viaProxy.all.js
 all:debug_js = ${dist_dir}/viaProxy.all.debug.js
 
 core:src_files = ${core_files}\
 				${src_dir}/99-tail.txt
 				
-core:uglyfy_output = ${dist_dir}/via.core.uglyfy.min.js
-core:closure_output = ${dist_dir}/via.core.closure.min.js
-core:out_js = ${dist_dir}/via.core.js
-core:debug_js = ${dist_dir}/via.core.debug.js
+core:uglyfy_output = ${dist_dir}/viaProxy.core.uglyfy.min.js
+core:closure_output = ${dist_dir}/viaProxy.core.min.js
+core:out_js = ${dist_dir}/viaProxy.core.js
+core:debug_js = ${dist_dir}/viaProxy.core.debug.js
 
 full:src_files = ${core_files}\
 				${feature_files}\
 				${src_dir}/99-tail.txt
 				
-full:uglyfy_output = ${dist_dir}/viaProxy.full.uglyfy.min.js
-full:closure_output = ${dist_dir}/viaProxy.full.closure.min.js
-full:out_js = ${dist_dir}/viaProxy.full.js
-full:debug_js = ${dist_dir}/viaProxy.full.debug.js
+full:uglyfy_output = ${dist_dir}/viaProxy.uglyfy.min.js
+full:closure_output = ${dist_dir}/viaProxy.min.js
+full:out_js = ${dist_dir}/viaProxy.js
+full:debug_js = ${dist_dir}/viaProxy.debug.js
 
+default: 
+		@@make all
+		@@make full
+		@@make core
 
 all: merge closure debug after_merge jslint
 core: merge closure debug after_merge

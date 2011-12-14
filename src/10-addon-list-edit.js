@@ -146,14 +146,10 @@
 			if ( modelEvent.targetValue() === 1 ) {
 				var dataSource = modelEvent.targetProxy().mainProxy().get( "*edit.item" );
 
-				via.renderTemplate( modelEvent.options, dataSource,
-					{
-						callback: function ( $content ) {
-							$( this ).html( $content );
-							$content.view();
-						},
-						view:this
-					} );
+				$( this ).renderTemplate( modelEvent.options, dataSource, function ( $content ) {
+					$( this ).html( $content );
+					$content.view();
+				} );
 
 			} else {
 				$( this ).empty();
@@ -168,13 +164,11 @@
 
 			//change back to display
 			if ( selectedIndex !== -1 ) {
-				via.renderTemplate( modelEvent.options, mainProxy.get( "*edit.item" ),
-					{
-						callback: function ( $content ) {
-							$( this ).children().eq( selectedIndex ).replaceWith( $content );
-							$content.view();
-						},
-						view: this
+
+				$( this ).renderTemplate( modelEvent.options, mainProxy.get( "*edit.item" ),
+					function ( $content ) {
+						$( this ).children().eq( selectedIndex ).replaceWith( $content );
+						$content.view();
 					}
 				);
 			}
@@ -187,13 +181,17 @@
 
 			if ( selectedIndex === -1 ) {
 				var mainProxy = modelEvent.targetProxy().mainProxy();
-				via.renderTemplate( modelEvent.options, (mainProxy.get( "*queryResult" ) || mainProxy.get())[modelEvent.removed],
-					{
-						callback:function ( $content ) {
-							$( this ).children().eq( modelEvent.removed ).replaceWith( $content );
-							$content.view();
-						},
-						view: this
+				$( this ).renderTemplate(
+					//templateId
+					modelEvent.options,
+
+					//dataSource
+					(mainProxy.get( "*queryResult" ) || mainProxy.get())[modelEvent.removed],
+
+					//callback
+					function ( $content ) {
+						$( this ).children().eq( modelEvent.removed ).replaceWith( $content );
+						$content.view();
 					}
 				);
 			}
@@ -204,8 +202,8 @@
 
 	specialParsers.editableList = function ( view, binding, handlers, specialOptions ) {
 		var options = specialOptions.split( "," );
-		var templateRead = $.trim(options[0]);
-		var templateEdit = $.trim(options[1]);
+		var templateRead = $.trim( options[0] );
+		var templateEdit = $.trim( options[1] );
 		var engineName = options[2];
 		var path = binding.path;
 

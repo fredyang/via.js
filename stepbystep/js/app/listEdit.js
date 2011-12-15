@@ -18,9 +18,7 @@
 				//dynamically construct a model to be used by template later
 				matrix( "listDemoModel.js" ).done( function () {
 					//load the skeleton into the view
-					$( this ).renderTemplate( "listEdit.layout", null, function ( $content ) {
-						$( view ).append( $content ).view();
-					} );
+					$( view ).renderTemplate( "html", "listEdit.layout" );
 				} );
 			},
 			unload: function ( view ) {

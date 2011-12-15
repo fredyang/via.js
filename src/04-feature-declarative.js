@@ -168,24 +168,29 @@
 		return "";
 	}
 
-	function mergePath( context, index ) {
+	var mergePath = via.mergePath = function ( context, index ) {
 
 		if ( !index || index == "." ) {
 
 			return context;
 
+			//if index is like ..xyz or .*xyz
 		} else if ( rUseBindingContextAsContext.test( index ) ) {
 
 			//use binding's context as context
 			//.. or .*
 			return  index.replace( rUseBindingContextAsContext, via.contextOfPath( context ) + "$1" );
 
+			//if index is like .ab or *ab
 		} else if ( rUseBindingPathAsContext.test( index ) ) {
 
 			var match = /^(.+)\*/.exec( context );
 
+			//if context is is like a.b.c* and index is like *d
 			if ( match && match[1] && index.beginsWith( "*" ) ) {
+				//return a.b.c*d
 				return match[1] + index;
+
 			} else {
 				//return context + index;
 				return index.replace( rUseBindingPathAsContext, context + "$&" );
@@ -193,8 +198,10 @@
 
 		}
 		return index;
-	}
+	};
 
+
+	
 	//merge the handlers to handlers object
 	function buildHandlerData( view, binding, handlers ) {
 		mergeHandlersByType( "mh", view, binding, handlers );
@@ -399,7 +406,6 @@
 	via.debug.buildBinding = buildBinding;
 	via.debug.processViaAttr = processViaAttr;
 	via.debug.allBindings = allBindings;
-	via.debug.mergePath = mergePath;
 	//#end_debug
 
 	//#merge

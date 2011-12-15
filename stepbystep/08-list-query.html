@@ -6,7 +6,7 @@
 	<script src="http://code.jquery.com/jquery.js"></script>
 	<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
 	<script src="../ref/jquery.tmplPlus.js"></script>
-	<script type="text/javascript" src="http://code.semanticsworks.com/assets/js/viaProxy.all.debug.js"></script>
+	<script type="text/javascript" src="/assets/js/viaProxy.all.debug.js"></script>
 </head>
 <body>
 <h3>original contacts</h3>
@@ -211,6 +211,7 @@
 					.addModelHandler( "contacts*query.page.size", "init", "$val" )
 					.end()
 					.find( ".pageEnable" )
+					.addModelHandler("contacts*query.page.size", "init|afterUpdate", "*enableIfTruthy")
 					.addViewHandler( "click", "contacts*query.page.enabled", "*value", true )
 					.addViewHandler( "click", "contacts", "p.notifyQueryChange" )
 					.end()

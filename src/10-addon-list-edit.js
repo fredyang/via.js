@@ -132,6 +132,13 @@
 			var editProxy = targetProxy.childProxy( "*edit" );
 			var queryItems = targetProxy.get( "*queryResult" ) || targetProxy.get();
 
+			//prevent editing two item at the same time
+			if ( editProxy.get( "mode" ) !== via.editMode.none ) {
+				editProxy.update( "item", null )
+					.update( "mode", via.editMode.none )
+					.update( "selectedIndex", -1 );
+			}
+
 			editProxy
 				.update( "item", $.extend( {}, queryItems[selectedIndex] ) )
 				.update( "selectedIndex", selectedIndex )
@@ -146,10 +153,7 @@
 			if ( modelEvent.targetValue() === 1 ) {
 				var dataSource = modelEvent.targetProxy().mainProxy().get( "*edit.item" );
 
-				$( this ).renderTemplate( modelEvent.options, dataSource, function ( $content ) {
-					$( this ).html( $content );
-					$content.view();
-				} );
+				$( this ).renderTemplate( "html", modelEvent.options, dataSource );
 
 			} else {
 				$( this ).empty();
@@ -165,12 +169,8 @@
 			//change back to display
 			if ( selectedIndex !== -1 ) {
 
-				$( this ).renderTemplate( modelEvent.options, mainProxy.get( "*edit.item" ),
-					function ( $content ) {
-						$( this ).children().eq( selectedIndex ).replaceWith( $content );
-						$content.view();
-					}
-				);
+				$( this ).children().eq( selectedIndex )
+					.renderTemplate( "replaceWith", modelEvent.options, mainProxy.get( "*edit.item" ) );
 			}
 		},
 
@@ -181,18 +181,15 @@
 
 			if ( selectedIndex === -1 ) {
 				var mainProxy = modelEvent.targetProxy().mainProxy();
-				$( this ).renderTemplate(
+				$( this ).children().eq( modelEvent.removed ).renderTemplate(
+
+					"replaceWith",
+
 					//templateId
 					modelEvent.options,
 
 					//dataSource
-					(mainProxy.get( "*queryResult" ) || mainProxy.get())[modelEvent.removed],
-
-					//callback
-					function ( $content ) {
-						$( this ).children().eq( modelEvent.removed ).replaceWith( $content );
-						$content.view();
-					}
+					(mainProxy.get( "*queryResult" ) || mainProxy.get())[modelEvent.removed]
 				);
 			}
 		}

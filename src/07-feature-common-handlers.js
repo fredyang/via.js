@@ -71,9 +71,7 @@
 		//add a new item to to list view
 		pushViewItem: function ( modelEvent ) {
 
-			$( this ).renderTemplate( modelEvent.options, modelEvent.targetValue(), function ( $content ) {
-				$content.appendTo( this ).view();
-			} );
+			$( this ).renderTemplate( "append", modelEvent.options, modelEvent.targetValue() );
 
 		},
 
@@ -84,11 +82,10 @@
 
 		//update an item in the list view
 		updateViewItem: function ( modelEvent ) {
-			$( this ).renderTemplate( modelEvent.options, modelEvent.targetValue(),
-				function ( $content ) {
-					$( this ).children().eq( modelEvent.targetIndex() ).replaceWith( $content );
-					$content.view();
-				} );
+
+			$( this ).children().eq( modelEvent.targetIndex() )
+				.renderTemplate("replaceWith", modelEvent.options, modelEvent.targetValue() );
+			
 		},
 
 		//show a view if model is not empty
@@ -199,17 +196,17 @@
 	                           ".,afterDel.child,*removeViewItem,_";
 
 	specialParsers.lookup = function( view, binding, handlers, specialOptions ) {
-		var rLookupOptions = /^(.+?),(.*)$/;
+		var rLookupOptions = /^(.+?)(,(.*))*$/;
 		var match = rLookupOptions.exec( specialOptions );
 		var path = binding.path;
 
 		handlers.mh.push(
 			{
-				path: match[1],
+				path: via.mergePath(binding.path, match[1]),
 				modelEvents: "init",
 				view: view,
 				modelHandler: "*dropdown",
-				options: match[2]
+				options: match[3]
 			}
 		);
 

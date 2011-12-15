@@ -98,6 +98,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 	};
 
 	arrayPrototype.sortObject = arrayPrototype.sortObject || function ( by, asc ) {
+		asc = isUndefined( asc ) ? true : false;
 		if ( by ) {
 			this.sort( function ( a, b ) {
 				var av = a[by];

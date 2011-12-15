@@ -33,13 +33,7 @@
 			load: function ( view ) {
 				_singleton = view;
 				loadData();
-
-				$( view ).renderTemplate( "gmail.pageLayout", null,
-					function ( $content ) {
-						$( this ).append( $content );
-						$content.view();
-					} );
-
+				$( view ).renderTemplate( "html", "gmail.pageLayout" );
 			},
 
 			unload: function () {

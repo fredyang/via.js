@@ -18,15 +18,15 @@
 	Full Name <span via="@path:.fullName @class:label"/>
 </p>
 
+<!--<select id="ddl3" via="@path:c @lookup:a,name,value"/>-->
+
 <p>
-	Age <select via="@path:.ageLookup @vh:..age,change,$val"></select>
+	Age <select via="@path:.age @lookup:..ageLookup"></select>
 	<span via="@path:.age @class:label" />
 </p>
 
 <p>
-	Hobbies: <select via="@path:.HobbiesLookup
-								@vh:..hobbies,change,$val
-								@options:name,value"></select>
+	Hobbies: <select via="@path:.hobbies @lookup:..HobbiesLookup,name,value"></select>
 	<span via="@path:.hobbies @class:label" />
 </p>
 
@@ -35,7 +35,7 @@
 <script src="http://code.jquery.com/jquery.js"></script>
 <script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
 <script src="../ref/jquery.tmplPlus.js"></script>
-<script type="text/javascript" src="http://code.semanticsworks.com/assets/js/viaProxy.all.debug.js"></script>
+<script type="text/javascript" src="/assets/js/viaProxy.all.debug.js"></script>
 <style type="text/css">
 	.error {
 		border: solid 1px red;

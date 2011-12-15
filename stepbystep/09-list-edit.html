@@ -6,7 +6,7 @@
 	<script src="http://code.jquery.com/jquery.js"></script>
 	<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
 	<script src="../ref/jquery.tmplPlus.js"></script>
-	<script type="text/javascript" src="http://code.semanticsworks.com/assets/js/viaProxy.all.debug.js"></script>
+	<script type="text/javascript" src="/assets/js/viaProxy.all.debug.js"></script>
 </head>
 <body>
 <h3>original contacts</h3>
@@ -239,7 +239,7 @@
 			var dataSource = mainProxy.get( "*edit.item" );
 			var mainPath = mainProxy.context;
 
-			$( this ).renderTemplate( "#newContactTemplate", dataSource, function ( content ) {
+			$( this ).renderTemplate( "html", "#newContactTemplate", dataSource, function ( content ) {
 				content.find( ".firstName" )
 					.addViewHandler( "blur", mainPath + "*edit.item.firstName", "$val" )
 					.end()
@@ -261,9 +261,6 @@
 							.update( "*edit.item", null )
 							.update( "*edit.mode", editMode.none );
 					} );
-
-				$( this ).html( content );
-
 			} );
 
 		} );
@@ -281,7 +278,7 @@
 			//change back to display
 			if ( selectedIndex !== -1 ) {
 
-				$( this ).renderTemplate( modelEvent.options, mainProxy.get( "*edit.item" ), function ( $content ) {
+				$( this ).children().eq( selectedIndex ).renderTemplate( "replaceWith", modelEvent.options, mainProxy.get( "*edit.item" ), function ( $content ) {
 
 					$content.find( ".firstName" )
 						.addViewHandler( "blur", mainProxy.context + "*edit.item.firstName", "$val" )
@@ -289,9 +286,6 @@
 						.find( ".lastName" )
 						.addViewHandler( "blur", mainProxy.context + "*edit.item.lastName", "$val" )
 						.end();
-
-					$( this ).children().eq( selectedIndex ).replaceWith( $content );
-					$content.view();
 				} );
 
 			}

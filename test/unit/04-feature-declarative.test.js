@@ -118,7 +118,7 @@ test( "theme extension", function () {
 
 test( "buildPathWithContextAndIndex", function () {
 
-	var buildPathWithContextAndIndex = debug.mergePath;
+	var buildPathWithContextAndIndex = via.mergePath;
 
 	equal( buildPathWithContextAndIndex( "a.b", undefined ), "a.b", "if index is not defined, use context as path" );
 

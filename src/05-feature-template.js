@@ -31,14 +31,14 @@
 	//callback is a function ($content) {
 	// //this refers to the view
 	//}
-	via.renderTemplate = function ( templateId, dataSource, options, engineName ) {
+	function _renderTemplate( view, templateId, dataSource, options, engineName ) {
 		engineName = engineName || options && options.engine || defaultOptions.engine;
 
 		if ( !engineName ) {
 			throw "there is not default engine registered";
 		}
 
-		var view = this,
+		var $content,
 			callback = options && ($.isFunction( options ) ? options : options.callback),
 			engine = templateEngines[engineName || options && options.engine || defaultOptions.engine];
 
@@ -50,8 +50,6 @@
 		if ( !engine ) {
 			throw "engine '" + engine + "' can not be found.";
 		}
-
-		var $content;
 
 		if ( engine.isTemplateCompiled( templateId ) ) {
 
@@ -73,13 +71,44 @@
 		}
 
 		throw "can not locate template for '" + templateId + "'";
+	}
 
-	};
+	//here we use postAction like html, append, replaceWith, 
+	//support function ( postAction, templateId, dataSource, callback, engineName )
+	//and  function ( postAction, templateId, dataSource, options, engineName )
+	$.fn.renderTemplate = function ( postAction, templateId, dataSource, options, engineName ) {
 
-	$.fn.renderTemplate = function ( templateId, dataSource, options, engineName ) {
 		return this.each( function () {
-			via.renderTemplate.call( this, templateId, dataSource, options, engineName );
+
+			var newOptions,
+				view = this,
+				externalCallback = options && ($.isFunction( options ) ? options : options.callback);
+
+			function mergedCallback( $content ) {
+
+				if ( postAction ) {
+					$( view )[postAction]( $content );
+					$content.view();
+				}
+
+				externalCallback && externalCallback.call( view, $content );
+			}
+
+			if ( typeof options === "object" ) {
+
+				options.callback = mergedCallback;
+
+				newOptions = options;
+
+			} else {
+
+				newOptions = mergedCallback;
+			}
+
+			_renderTemplate( view, templateId, dataSource, newOptions, engineName );
+
 		} );
+
 	};
 
 	via.compileTemplate = function ( templateId, source, engineName ) {
@@ -99,20 +128,10 @@
 
 	};
 
-	via.isTemplateComplied = function ( templateId, engineName ) {
-		engineName = engineName || defaultOptions.engine;
-
-		if ( !engineName ) {
-			throw "there is not default engine registered";
-		}
-
-		var engine = templateEngines[engineName];
-
-		if ( !engine ) {
-			throw "engine '" + engine + "' can not be found.";
-		}
-		return engine.isTemplateComplied( templateId );
-	};
+	function wrapContentIntoView( $content ) {
+		$( this ).html( $content );
+		$content.view();
+	}
 
 	function template( modelEvent ) {
 		var dataSource = modelEvent.currentValue();
@@ -122,12 +141,18 @@
 		if ( dataSource && ((isArray( dataSource ) && dataSource.length) || !isArray( dataSource ) ) ) {
 
 			var options = modelEvent.options;
-			options.callback = function ( $content ) {
-				$( this ).html( $content );
-				$content.view();
-			};
 
-			via.renderTemplate.call( this, options.templateId, dataSource, options );
+			var userCallback = options.callback;
+			if ( userCallback ) {
+				options.callback = function ( $content ) {
+					wrapContentIntoView.call( this, $content );
+					userCallback.call( this, $content );
+				};
+			} else {
+				options.callback = wrapContentIntoView;
+			}
+
+			_renderTemplate( this, options.templateId, dataSource, options );
 
 		} else {
 			$( this ).empty();

@@ -1,15 +1,44 @@
 module( "01-core-proxy.js" );
 var ns = via.ns();
 
-test( "Array prototype test", function () {
+test( "helper function test", function () {
 
-	var x = [1, 2];
-	equal( 0, x.indexOf( 1 ), "indexOf array always works" );
-	x.remove( 1 );
-	equal( -1, x.indexOf( 1 ), "array.remove(item1) can remove item1, and item1 is in array" );
+	var items = [1, 2];
+	equal( 0, items.indexOf( 1 ), "indexOf array always works" );
+	ok( items.contains( 1 ), "array 'contains' method returns true when array contain element" );
 
-	x.pushUnique( 2 );
-	equal( 1, x.length, "array.pushUnique will not push an item, if an item is already in the list" );
+	items.remove( 1 );
+
+	ok( !items.contains( 1 ), "array 'contains' method return false when array does not contain element" );
+
+	equal( -1, items.indexOf( 1 ), "array.remove(item1) can remove item1, and item1 is in array" );
+
+	items.pushUnique( 2 );
+	equal( 1, items.length, "array.pushUnique will not push an item, if an item is already in the list" );
+
+	var objects = [
+		{name:"b"},
+		{name:"a"},
+		{name:"c"}
+	];
+
+	objects.sortObject( "name" );
+
+	equal( $.map( objects,
+		function ( elem, index ) {
+			return elem.name;
+		} ).join( "" ), "abc", "array.sortObject(propertyName) can sort array in asc order" );
+
+	objects.sortObject( "name", false );
+
+	equal( $.map( objects,
+		function ( elem, index ) {
+			return elem.name;
+		} ).join( "" ), "cba", "array.sortObject(propertyName, false) can sort array in desc order" );
+
+	var testString = "abcdefg";
+	ok(testString.beginsWith("abc"), "string.beginsWith(x) return true if it begins with x");
+	ok(testString.contains("bcd"), "string.contains(x) return true if it contains x");
 
 } );
 
@@ -51,21 +80,21 @@ test( "proxy creation test", function () {
 
 } );
 
-test("via.physicalPath and via.logicalPath test", function () {
+test( "via.physicalPath and via.logicalPath test", function () {
 
-	equal("", via.physicalPath(''), "via.physicalPath('') == ''");
-	equal("__via", via.physicalPath('*'), "via.physicalPath('') == '__via'");
-	equal("a.b", via.physicalPath('a.b'), "via.physicalPath('a.b') == 'a.b'");
-	equal("__via.a_b", via.physicalPath('a.b*'), "via.physicalPath('a.b*') == '__via.a_b'");
-	equal("__via.a_b.c.d", via.physicalPath('a.b*c.d'), "via.physicalPath('a.b*c.d') == '__via.a_b.c.d'");
-	equal("__via.c.d", via.physicalPath('*c.d'), "via.physicalPath('*c.d') == '__via.c.d'");
+	equal( "", via.physicalPath( '' ), "via.physicalPath('') == ''" );
+	equal( "__via", via.physicalPath( '*' ), "via.physicalPath('') == '__via'" );
+	equal( "a.b", via.physicalPath( 'a.b' ), "via.physicalPath('a.b') == 'a.b'" );
+	equal( "__via.a_b", via.physicalPath( 'a.b*' ), "via.physicalPath('a.b*') == '__via.a_b'" );
+	equal( "__via.a_b.c.d", via.physicalPath( 'a.b*c.d' ), "via.physicalPath('a.b*c.d') == '__via.a_b.c.d'" );
+	equal( "__via.c.d", via.physicalPath( '*c.d' ), "via.physicalPath('*c.d') == '__via.c.d'" );
 
-	equal("*", via.logicalPath('__via'), "via.logicalPath('__via') == '*'");
-	equal("a.b", via.logicalPath('a.b'), "via.logicalPath('a.b') == 'a.b'");
-	equal("a.b*", via.logicalPath('__via.a_b'), "via.logicalPath('__via.a_b') == 'a.b*'");
-	equal("a.b*c.d", via.logicalPath('__via.a_b.c.d'), "via.logicalPath('__via.a_b.c.d') == 'a.b*c.d'");
+	equal( "*", via.logicalPath( '__via' ), "via.logicalPath('__via') == '*'" );
+	equal( "a.b", via.logicalPath( 'a.b' ), "via.logicalPath('a.b') == 'a.b'" );
+	equal( "a.b*", via.logicalPath( '__via.a_b' ), "via.logicalPath('__via.a_b') == 'a.b*'" );
+	equal( "a.b*c.d", via.logicalPath( '__via.a_b.c.d' ), "via.logicalPath('__via.a_b.c.d') == 'a.b*c.d'" );
 
-});
+} );
 
 test( "test proxy prototype extension", function () {
 	var fn = via.fn;
@@ -204,12 +233,12 @@ test( "test reference integrity in model remove", function () {
 	}, "rootProxy.create(jsonObject) will extend objDb" );
 
 	deepEqual( via.modelReferences["a"], ["d"], "via.create() will parse dependencies" +
-	                                                  "within value, and do something like " +
-	                                                  "via.modelReferences[referencedPath].push(referencingPath)" );
+	                                            "within value, and do something like " +
+	                                            "via.modelReferences[referencedPath].push(referencingPath)" );
 
 	deepEqual( via.modelReferences["d"], ["e"], "via.create() will parse dependencies" +
-	                                                  "within value, and do something like " +
-	                                                  "via.modelReferences[referencedPath].push(referencingPath)" );
+	                                            "within value, and do something like " +
+	                                            "via.modelReferences[referencedPath].push(referencingPath)" );
 
 	equal( rootProxy.get( "d" ), "a", "proxy.get(functionPath) will evaluate " +
 	                                  "the function instead of returning the function" );
@@ -333,29 +362,29 @@ test( "helpers", function () {
 		}
 	}
 
-	via.clearObj(obj);
-	deepEqual(obj, {
+	via.clearObj( obj );
+	deepEqual( obj, {
 		a: null,
 		b: null,
 		c: {
 			d: null
 		}
-	}, "via.clearObj(obj) can empty primitive value inside");
+	}, "via.clearObj(obj) can empty primitive value inside" );
 
-	via.addRef("a", "b");
-	deepEqual(via.modelReferences["b"], ["a"], "via.addRef will make via.modelReferences increment");
-	via.addRef("a", "b");
-	equal(via.modelReferences["b"].length, 1, "adding the same ref using via.addRef will not succeed");
-	via.removeRef("a", "b");
-	ok(!via.modelReferences["b"], "via.removeRef will remove the reference");
+	via.addRef( "a", "b" );
+	deepEqual( via.modelReferences["b"], ["a"], "via.addRef will make via.modelReferences increment" );
+	via.addRef( "a", "b" );
+	equal( via.modelReferences["b"].length, 1, "adding the same ref using via.addRef will not succeed" );
+	via.removeRef( "a", "b" );
+	ok( !via.modelReferences["b"], "via.removeRef will remove the reference" );
 
 	var options = via.options();
-	ok(options, "via.options() will return the options object");
-	via.options("a", "a");
-	equal(options.a, "a", "via.options(key, value) can set options");
-	equal(via.options("a"), "a", "via.options(key) can get value");
-	via.options("a", undefined);
-	ok(!("a" in options), "via.options(key, undefined) will delete the key in options");
+	ok( options, "via.options() will return the options object" );
+	via.options( "a", "a" );
+	equal( options.a, "a", "via.options(key, value) can set options" );
+	equal( via.options( "a" ), "a", "via.options(key) can get value" );
+	via.options( "a", undefined );
+	ok( !("a" in options), "via.options(key, undefined) will delete the key in options" );
 
 } );
 
@@ -384,7 +413,7 @@ test( "proxy array method test", function () {
 
 	var modelEventForCompare;
 	var originalModelEvent;
-	
+
 	via.addModelHandler( path, "after*|init", view, function ( modelEvent ) {
 		modelEventForCompare = getModelEventForCompare( modelEvent );
 		originalModelEvent = modelEvent;
@@ -465,8 +494,8 @@ test( "proxy array method test", function () {
 
 	deepEqual( array, ["b", "c", "a"], "the result before sort is expected" );
 
-	via().del(path);
-	via.removeView(view);
+	via().del( path );
+	via.removeView( view );
 	assertEmptyDb();
 
 } );

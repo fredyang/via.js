@@ -8,24 +8,25 @@
 
 <select id="ddl"></select>
 <select id="ddl2"></select>
+<select id="ddl3" via="@path:c @lookup:a,name,value"/>
 
 </body>
 <script src="http://code.jquery.com/jquery.js"></script>
 <script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
-<script type="text/javascript" src="/assets/js/viaProxy.all.debug.js"></script>
+<script type="text/javascript" src="../dist/viaProxy.all.debug.js"></script>
 <script>
 	via().create( "a", [
-		{
-			name: "one",
-			value: 1
-		},
-		{
-			name: "two",
-			value: 2
-		}
-	] );
-
-	via().create( "b", [1, 2, 3] );
+			{
+				name: "one",
+				value: 1
+			},
+			{
+				name: "two",
+				value: 2
+			}
+		] )
+			.create( "b", [1, 2, 3] )
+			.create( "c", null );
 
 </script>
 
@@ -34,6 +35,7 @@
 	$( function() {
 		$( "#ddl" ).addModelHandler( "a", "init", "*dropdown", "name,value" );
 		$( "#ddl2" ).renderViews( "b", "*dropdown" );
+		$( "#ddl3" ).view();
 	} );
 
 

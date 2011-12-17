@@ -4,7 +4,7 @@ matrix.resourceBaseUrl = "js/";
 matrix.url( {
 	"jquery.tmpl.js" : "http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js",
 	"jsrender.js" : "http://borismoore.github.com/jsrender/jsrender.js",
-	"viaProxy.all.js": "/assets/js/viaProxy.all.debug.js"
+	"viaProxy.all.js": "../dist/viaProxy.all.debug.js"
 } );
 
 matrix.depend( {

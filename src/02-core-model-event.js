@@ -8,12 +8,12 @@
 	var extend = $.extend;
 	var modelReferences = via.modelReferences;
 	var isFunction = $.isFunction;
-	var ns = via.ns();
+	var shadowNamespace = via.shadowNamespace();
 	var rootProxy = via();
 	var isString = via.isString;
 	var isObject = via.isObject;
 	var raiseEvent;
-	var toPhysicalPath = via.physicalPath;
+	var toPhysicalPath = via.toPhysicalPath;
 	var isUndefined = via.isUndefined;
 	//#end_merge
 
@@ -85,7 +85,7 @@
 
 				modelHandlerObj = modelHandlerObjects[i];
 
-				if ( shouldUpdateView( modelHandlerObj.modelEvents, modelEvent.eventType ) ) {
+				if ( shouldInvokeModelHandler( modelHandlerObj.modelEvents, modelEvent.eventType ) ) {
 
 					//important!!
 					modelEvent.options = modelHandlerObj.options;
@@ -95,7 +95,7 @@
 				}
 
 				if ( !modelEvent.continueEventing ) {
-					break;
+					return;
 				}
 			}
 		}
@@ -115,7 +115,7 @@
 				);
 
 				if ( !tempModelEvent.continueEventing ) {
-					break;
+					return;
 				}
 
 				if ( tempModelEvent.hasError ) {
@@ -130,7 +130,7 @@
 	function invokeModelHandler( view, modelHandler, modelEvent ) {
 		//#debug
 		var value = modelEvent.targetValue( true );
-		log( "mh", modelEvent.eventType, via.logicalPath( modelEvent.target ), modelHandler, (view === dummyView ? "dummyView" : view), isFunction( value ) ? "function call" : value, modelEvent.options );
+		log( "mh", modelEvent.eventType, via.toLogicalPath( modelEvent.target ), modelHandler, (view === dummyView ? "dummyView" : view), isFunction( value ) ? "function call" : value, modelEvent.options );
 		//#end_debug
 
 		if ( view === dummyView ) {
@@ -212,7 +212,7 @@
 		}
 	}
 
-	function shouldUpdateView( subscribedEvents, event ) {
+	function shouldInvokeModelHandler( subscribedEvents, event ) {
 		var regex;
 		if ( subscribedEvents === "*" ) {
 			return true;
@@ -372,7 +372,7 @@
 
 	//this is for the use of isView function
 	function markAsView( elem ) {
-		$( elem ).data( ns, true );
+		$( elem ).data( shadowNamespace, true );
 	}
 
 	markAsView( dummyView );
@@ -380,7 +380,7 @@
 	//this is to make removeModelHandler and getModelHandlerData function
 	//runs faster by Short-circuit
 	function isView( elem ) {
-		return $( elem ).data( ns ) === true;
+		return $( elem ).data( shadowNamespace ) === true;
 	}
 
 	extend( via, {
@@ -429,7 +429,7 @@
 					options: options
 				} );
 
-				if ( shouldUpdateView( modelEvents, "init" ) ) {
+				if ( shouldInvokeModelHandler( modelEvents, "init" ) ) {
 					//"this" refers to a view
 					invokeModelHandler( this, modelHandler, new ModelEvent( {
 						path: path,
@@ -580,7 +580,7 @@
 	via.commonModelHandlers.log = function ( modelEvent ) {
 
 		var value = modelEvent.targetValue( true );
-		log( modelEvent.eventType.replace( ".child", "" ), via.logicalPath( modelEvent.target ), isFunction( value ) ? "function call" : value );
+		log( modelEvent.eventType.replace( ".child", "" ), via.toLogicalPath( modelEvent.target ), isFunction( value ) ? "function call" : value );
 
 		var enableDebugger = via.debug.enableDebugger;
 		if ( isFunction( enableDebugger ) ) {
@@ -605,7 +605,7 @@
 		via.removeModelHandler( logger );
 	}
 
-	via.debug.shouldUpdateView = shouldUpdateView;
+	via.debug.shouldInvokeModelHandler = shouldInvokeModelHandler;
 	via.debug.dummyView = dummyView;
 	via.debug.isView = isView;
 	//#end_debug

@@ -1,5 +1,19 @@
 module( "01-core-proxy.js" );
-var ns = via.ns();
+var shadowNamespace = via.shadowNamespace();
+
+function assertEmptyDb() {
+	//	ok( $.isEmptyObject( via.getAll() ), "The root is empty" );
+	//	ok( $.isEmptyObject( via.modelReferences ), "modelReferences is empty" );
+	//	ok( $.isEmptyObject(via.getModelHandlerData()), "modelHandlerData is empty" );
+	//	ok( $.isEmptyObject(via.getViewHandlerData()), "viewHandlerData is empty" );
+
+	var empty = $.isEmptyObject( via.getAll() )
+		    && $.isEmptyObject( via.modelReferences )
+		    && $.isEmptyObject( via.getModelHandlerData() )
+		&& $.isEmptyObject( via.getViewHandlerData() );
+	
+	strictEqual(empty , true, "The root is empty");
+}
 
 test( "helper function test", function () {
 
@@ -37,8 +51,8 @@ test( "helper function test", function () {
 		} ).join( "" ), "cba", "array.sortObject(propertyName, false) can sort array in desc order" );
 
 	var testString = "abcdefg";
-	ok(testString.beginsWith("abc"), "string.beginsWith(x) return true if it begins with x");
-	ok(testString.contains("bcd"), "string.contains(x) return true if it contains x");
+	ok( testString.beginsWith( "abc" ), "string.beginsWith(x) return true if it begins with x" );
+	ok( testString.contains( "bcd" ), "string.contains(x) return true if it contains x" );
 
 } );
 
@@ -47,10 +61,10 @@ test( "proxy creation test", function () {
 	strictEqual( "", rootProxy.context, "via() return rootProxy, and its context is empty string" );
 
 	var rootShadowProxy = via( "*" );
-	strictEqual( ns, rootShadowProxy.context, "via(\"*\") return rootShadowProxy, and its context is via namespace" );
+	strictEqual( shadowNamespace, rootShadowProxy.context, "via(\"*\") return rootShadowProxy, and its context is via namespace" );
 
 	var childProxy1 = rootProxy.childProxy( "*" );
-	strictEqual( ns, childProxy1.context, "proxy.subProxy(\"*\") return rootShadowProxy, and its context is via namespace" );
+	strictEqual( shadowNamespace, childProxy1.context, "proxy.subProxy(\"*\") return rootShadowProxy, and its context is via namespace" );
 
 	ok( rootProxy === childProxy1.popProxy(), "proxy.popProxy() can return the popProxy" );
 
@@ -65,34 +79,35 @@ test( "proxy creation test", function () {
 
 	var invalidShadowProxy = via( "invalid*" );
 	ok( true, "via(invalidShadowPath*) will not throw exception" );
-	strictEqual( invalidShadowProxy.get(), undefined, "after a path has not value, then its shadow will not be automatic created" );
+	strictEqual( invalidShadowProxy.get(), undefined, "If a model has no value, then its shadow will not be automatic created" );
 
 	via().create( "invalid", {} );
-	strictEqual( invalidShadowProxy.get(), undefined, "after a path has value, the original shadowProxy still gets nothing" );
+	strictEqual( invalidShadowProxy.get(), undefined, "If a model has no value, the original shadowProxy still gets nothing" );
+
 	via().del( "invalid" );
-	strictEqual( invalidProxy.get(), undefined, "after a path of a proxy is deleted, proxy.get() will get undefined" );
+	strictEqual( invalidProxy.get(), undefined, "After a model, proxy.get() will get undefined" );
 
 	//
 	via().create( "valid", {} );
-	ok( via().get( "valid*" ), "if a path has value, then its shadow will be automatic created" );
+	ok( via().get( "valid*" ), "If a model has value, then its shadow will be automatic created" );
 	via().del( "valid" );
 	strictEqual( via().get( "valid*" ), undefined, "after a path of a proxy is deleted, then its shadow will be automatic deleted" );
 
 } );
 
-test( "via.physicalPath and via.logicalPath test", function () {
+test( "via.toPhysicalPath and via.toLogicalPath test", function () {
 
-	equal( "", via.physicalPath( '' ), "via.physicalPath('') == ''" );
-	equal( "__via", via.physicalPath( '*' ), "via.physicalPath('') == '__via'" );
-	equal( "a.b", via.physicalPath( 'a.b' ), "via.physicalPath('a.b') == 'a.b'" );
-	equal( "__via.a_b", via.physicalPath( 'a.b*' ), "via.physicalPath('a.b*') == '__via.a_b'" );
-	equal( "__via.a_b.c.d", via.physicalPath( 'a.b*c.d' ), "via.physicalPath('a.b*c.d') == '__via.a_b.c.d'" );
-	equal( "__via.c.d", via.physicalPath( '*c.d' ), "via.physicalPath('*c.d') == '__via.c.d'" );
+	equal( "", via.toPhysicalPath( '' ), "via.toPhysicalPath('') == ''" );
+	equal( "__via", via.toPhysicalPath( '*' ), "via.toPhysicalPath('') == '__via'" );
+	equal( "a.b", via.toPhysicalPath( 'a.b' ), "via.toPhysicalPath('a.b') == 'a.b'" );
+	equal( "__via.a_b", via.toPhysicalPath( 'a.b*' ), "via.toPhysicalPath('a.b*') == '__via.a_b'" );
+	equal( "__via.a_b.c.d", via.toPhysicalPath( 'a.b*c.d' ), "via.toPhysicalPath('a.b*c.d') == '__via.a_b.c.d'" );
+	equal( "__via.c.d", via.toPhysicalPath( '*c.d' ), "via.toPhysicalPath('*c.d') == '__via.c.d'" );
 
-	equal( "*", via.logicalPath( '__via' ), "via.logicalPath('__via') == '*'" );
-	equal( "a.b", via.logicalPath( 'a.b' ), "via.logicalPath('a.b') == 'a.b'" );
-	equal( "a.b*", via.logicalPath( '__via.a_b' ), "via.logicalPath('__via.a_b') == 'a.b*'" );
-	equal( "a.b*c.d", via.logicalPath( '__via.a_b.c.d' ), "via.logicalPath('__via.a_b.c.d') == 'a.b*c.d'" );
+	equal( "*", via.toLogicalPath( '__via' ), "via.toLogicalPath('__via') == '*'" );
+	equal( "a.b", via.toLogicalPath( 'a.b' ), "via.toLogicalPath('a.b') == 'a.b'" );
+	equal( "a.b*", via.toLogicalPath( '__via.a_b' ), "via.toLogicalPath('__via.a_b') == 'a.b*'" );
+	equal( "a.b*c.d", via.toLogicalPath( '__via.a_b.c.d' ), "via.toLogicalPath('__via.a_b.c.d') == 'a.b*c.d'" );
 
 } );
 
@@ -109,7 +124,7 @@ test( "test proxy prototype extension", function () {
 	ok( !rootProxy.member1, "after delete member1 from proxy prototype, proxy does not have member1" );
 } );
 
-test( "basic CRUD operation", function () {
+test( "basic CRUD method of proxy", function () {
 
 	var rootProxy = via();
 	var path = "a";
@@ -120,7 +135,7 @@ test( "basic CRUD operation", function () {
 	var root = rootProxy.get();
 
 	ok( rootProxy.get(), "rootProxy.get() return the root" );
-	ok( root[ns], "root has private storage as root[ns]" );
+	ok( root[shadowNamespace], "root has private storage as root[shadowNamespace]" );
 
 	result = rootProxy.create( path, value );
 	equal( result, rootProxy, "rootProxy.create(path, value) return the proxy itself" );
@@ -168,7 +183,7 @@ test( "basic CRUD operation", function () {
 
 } );
 
-test( "other CRUD method", function () {
+test( "other CRUD method of proxy", function () {
 
 	var obj = {
 		a: "a",
@@ -266,18 +281,10 @@ test( "test reference integrity in model remove", function () {
 	ok( true, "after referencing path is removed, referenced path can be removed" );
 
 	rootProxy.del( "b" );
-	var emptyDb = {
-		__via: {
-			invalidModelPaths: []
-		}
-	};
-	var r = rootProxy.get();
-	delete r.__via.validated;
-
-	deepEqual( r, emptyDb, "via.clear() will empty via.debug.objDb" );
+	assertEmptyDb();
 } );
 
-test( "test removed by forced", function () {
+test( "remove model by force", function () {
 	via().create( {
 		a: "a",
 		b: function () {
@@ -297,18 +304,18 @@ test( "test removed by forced", function () {
 
 } );
 
-test( "test get keep original", function () {
+test( "get function or function result in model using keepOriginal parameter", function () {
 	var fn = function () {
 		return "x";
 	};
 
+	var keepOriginal = true;
+
 	via().create( "f", fn );
-
-	equal( via().get( true, "f" ), fn, "if the keepOriginal parameter in get(keepOriginal, path) is true, then it will return the original" );
-
+	equal( via().get( keepOriginal, "f" ), fn, "if the keepOriginal parameter in get(keepOriginal, path) is true, then it will return the original" );
 	equal( via().get( "f" ), "x", "if the keepOriginal parameter in get(keepOriginal, path) is false, then it will return evaluation" );
-
 	via().del( "f" );
+
 } );
 
 test( "proxy navigation1", function () {
@@ -373,40 +380,46 @@ test( "helpers", function () {
 
 	via.addRef( "a", "b" );
 	deepEqual( via.modelReferences["b"], ["a"], "via.addRef will make via.modelReferences increment" );
+
 	via.addRef( "a", "b" );
 	equal( via.modelReferences["b"].length, 1, "adding the same ref using via.addRef will not succeed" );
+
 	via.removeRef( "a", "b" );
 	ok( !via.modelReferences["b"], "via.removeRef will remove the reference" );
 
 	var options = via.options();
 	ok( options, "via.options() will return the options object" );
+
 	via.options( "a", "a" );
 	equal( options.a, "a", "via.options(key, value) can set options" );
 	equal( via.options( "a" ), "a", "via.options(key) can get value" );
+
 	via.options( "a", undefined );
 	ok( !("a" in options), "via.options(key, undefined) will delete the key in options" );
 
 } );
 
-function getModelEventForCompare( modelEvent ) {
-	var rtn = {
-		path: modelEvent.path,
-		eventType: modelEvent.eventType,
-		target: modelEvent.target
-	};
+test( "array method of proxy", function () {
 
-	if ( "removed" in modelEvent ) {
-		rtn.removed = modelEvent.removed;
+	function getModelEventForCompare( modelEvent ) {
+		var rtn = {
+			path: modelEvent.path,
+			eventType: modelEvent.eventType,
+			target: modelEvent.target
+		};
+
+		if ( "removed" in modelEvent ) {
+			rtn.removed = modelEvent.removed;
+		}
+
+		return rtn;
 	}
 
-	return rtn;
-}
-
-test( "proxy array method test", function () {
 	ok( via.fn.indexOf, "proxy array is defined" );
 	var path = "array";
 	var array = ["a", "b", "c"];
 	var item1 = "d";
+
 	via().create( path, array );
 	var proxy = via( path );
 	var view = {};
@@ -434,6 +447,7 @@ test( "proxy array method test", function () {
 	}, "proxy.appendItem will trigger expected event" );
 
 	var removedItem = proxy.pop();
+
 	deepEqual( modelEventForCompare, {
 		path: path,
 		eventType: "afterDel.child",

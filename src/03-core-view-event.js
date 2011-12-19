@@ -7,7 +7,7 @@
 
 	//#merge
 	var extend = $.extend;
-	var ns = via.ns();
+	var shadowNamespace = via.shadowNamespace();
 	var isFunction = $.isFunction;
 	var rootProxy = via();
 	var rEventSeparator = /\s*\|\s*/;
@@ -15,21 +15,21 @@
 	var jQueryFn = $.fn;
 	var isString = via.isString;
 	var isObject = via.isObject;
-	var toPhysicalPath = via.physicalPath;
+	var toPhysicalPath = via.toPhysicalPath;
 	var hasOwn = {}.hasOwnProperty;
 
 	function markAsView( elem ) {
-		$( elem ).data( ns, true );
+		$( elem ).data( shadowNamespace, true );
 	}
 
 	function isView( elem ) {
-		return $( elem ).data( ns ) === true;
+		return $( elem ).data( shadowNamespace ) === true;
 	}
 
 	//#end_merge
 
 	function unmarkView( elem ) {
-		$( elem ).removeData( ns );
+		$( elem ).removeData( shadowNamespace );
 	}
 
 	/* {
@@ -138,24 +138,24 @@
 				viewHandler.initialize( views );
 			}
 
+			//if original viewEvents is "click,dblClick",
+			//and it bind to path "firstName", it will convert to
+			//click.__via.firstName,dblClick.__via.firstName, the reason is that
+			//when path is deleted, the method removeViewHandler(pathOrView) need to unbind
+			// event by a namespace, if firstName is deleted, we can unbind ".__via.firstName"
+			viewEvents = $.map(
+
+				viewEvents.split( rEventSeparator ),
+
+				function ( originalEventName ) {
+					return originalEventName + "." + shadowNamespace + "." + path;
+				}
+
+			).join(" ");
+
 			$( views ).each( function () {
 
 				markAsView( this );
-
-				//if original viewEvents is "click,dblClick",
-				//and it bind to path "firstName", it will convert to
-				//click.__via.firstName,dblClick.__via.firstName, the reason is that
-				//when path is deleted, the method removeViewHandler(pathOrView) need to unbind
-				// event by a namespace, if firstName is deleted, we can unbind ".__via.firstName"
-				viewEvents = $.map(
-
-					viewEvents.split( rEventSeparator ),
-
-					function ( originalEventName ) {
-						return originalEventName + "." + ns + "." + path;
-					}
-
-				).toString();
 
 				//bind an event with a namespace
 				//pass the binding through event data
@@ -189,14 +189,14 @@
 
 				var path = toPhysicalPath( pathOrViews );
 
-				$( viewHandlerData[path] ).unbind( "." + ns + "." + path );
+				$( viewHandlerData[path] ).unbind( "." + shadowNamespace + "." + path );
 
 				delete viewHandlerData[path];
 
 				//remove viewHandler by view
 			} else if ( isObject( pathOrViews ) ) {
 
-				$( pathOrViews ).unbind( "." + ns );
+				$( pathOrViews ).unbind( "." + shadowNamespace );
 
 				$( pathOrViews ).each( function () {
 
@@ -288,7 +288,7 @@
 			viewEvent = new ViewEvent( eventData.path, options, e, triggerData ),
 			viewHandler = eventData.viewHandler;
 
-		log( "vh", viewEvent.e.type, via.logicalPath( viewEvent.path ), eventData.originalHandler, eventData.options );
+		log( "vh", viewEvent.e.type, via.toLogicalPath( viewEvent.path ), eventData.originalHandler, eventData.options );
 
 		if ( isFunction( viewHandler ) ) {
 
@@ -416,6 +416,10 @@
 			viaData = $( e.target ).data( "via" ),
 			viaEventName = viaData && viaData.viewEvents && viaData.viewEvents[viaEventType];
 
+		//raise event only when viaEventName is available,
+		//the reason is that we want to be very specific about full event name
+		//we don't want to raise "action" event, otherwise all "action.delete", "action.cancel", ..
+		//will be raise. This cause a undesired effect
 		if ( viaEventName ) {
 			$( e.target ).trigger( extend( {}, e, {
 				type: viaEventType + "." + viaEventName,
@@ -424,19 +428,25 @@
 		}
 	}
 
-	//viaEvent is a special kind of view event, different from normal event like "click"
-	//it is something like "action.delete", the "action" is 
-	//via.addViewEvent("action", "click")
-	via.addViaEvent = function ( viaEventType, originalEvent ) {
+	//viaEvent is a special kind of jQuery event, different from normal event like "click"
+	//if you want to raise and "action.delete" event, when user click an element
+	//you can use write like:
+	// via.addViaEvent("action", "click");
+	//the full via event name is "action.delete"
+	//here only take care of "action", the "delete" will be taken care in the raiseViaEvent function
+	via.addViaEvent = function ( viaEventType, originalEventName ) {
 		$.event.special[viaEventType] = {
 			setup: function () {
 				//TODO: think again
 				//make sure the handler is not double bound to the element
 				//$( this ).unbind( originalEvent, raiseViewEvent );
-				$( this ).bind( originalEvent, viaEventType, raiseViaEvent );
+
+				//.bind( eventType [, eventData] , handler(eventObject) )
+				//viaEventType will be passed in as e.data
+				$( this ).bind( originalEventName, viaEventType, raiseViaEvent );
 			},
 			teardown: function () {
-				$( this ).unbind( originalEvent, raiseViaEvent );
+				$( this ).unbind( originalEventName, raiseViaEvent );
 			}
 		};
 		return via;

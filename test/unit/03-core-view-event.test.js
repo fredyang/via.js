@@ -2,8 +2,9 @@ module( "03-core-view-event.js" );
 
 var debug = via.debug;
 
-test( "addViewHandler --> handler as a ad-hoc function", function () {
-	assertEmptyDb();
+var viewHandlerData = via.getViewHandlerData();
+
+test( "via.addViewHandler -->ad-hoc function as view handler", function () {
 	var path = "a";
 	var value = "a";
 
@@ -15,48 +16,48 @@ test( "addViewHandler --> handler as a ad-hoc function", function () {
 		view2
 	];
 
+	var $views = $( views );
+
 	var oldValues = ["a", "a1"];
 	var newValues = ["a1", "a2"];
 
-	var viewEvents = "click|dblClick";
+	var viewEvents = "click|dblclick";
 	var options = {};
 
 	via().create( path, value );
 
 	var index = 0;
 
-	function viewHandler( viewEvent ) {
-		var expected = new via.ViewEvent( {
-			path: path,
-			options: options
-		} );
+	via.addViewHandler( views, viewEvents, path, function ( viewEvent ) {
 
-		equal(viewEvent.path, path);
-		equal(viewEvent.options, options);
+		debugger;
+		
+		equal( viewEvent.path, path );
+		equal( viewEvent.options, options );
 
-		equal( this, views[index % 2], "'this' in viewHandler refer to the view itself" );
+		ok( this === views[index % 2], "'this' in viewHandler refer to the view itself" );
 		equal( viewEvent.targetValue(), oldValues[index], "viewEvent.targetValue() return the value at the path" );
 
 		viewEvent.updateModel( newValues[index] );
-		equal( via().get( path ), newValues[index], "viewEvent.updateModel(newValue) can update the value at the path" );
+		equal( viewEvent.targetValue(), newValues[index], "viewEvent.updateModel(newValue) can update the value at the path" );
 
 		index ++;
-	}
 
-	via.addViewHandler( views, viewEvents, path, viewHandler, options );
+	}, options );
 
-	//
-	deepEqual( via.getViewHandlerData(path), views, "via.debug.viewHandlerData[path] is pushed with the views" );
+	ok( viewHandlerData[path][0] === view1 && viewHandlerData[path][1] === view2, "via.getViewHandlerData(path) is an array of views" );
 
-	$( views ).click().dblclick();
+	$views.click();
+	//$views.dblclick();
+
 	via.removeView( views );
-	equal( debug.isView( view1 ), false, "after view1 is removed from via, it is not marked as view" );
-	equal( debug.isView( view2 ), false, "after view2 is removed from via, it is not marked as view" );
+	ok( debug.isView( view1 ) === false && debug.isView( view2 ) === false, "after views is removed from via, they are not marked as view" );
 
 	via().del( path );
+	assertEmptyDb();
 } );
 
-test( "addViewHandler --> viewHandler as common viewHandler", function () {
+test( "via.addViewHandler --> commond view handler function as viewHandler", function () {
 	assertEmptyDb();
 	var path = "a";
 	var value = "a";
@@ -67,7 +68,7 @@ test( "addViewHandler --> viewHandler as common viewHandler", function () {
 
 	via.commonViewHandlers.test = function ( viewEvent ) {
 		viewEvent.updateModel( value2 );
-		equal( via().get( path ), value2, "you can use '*test' as viewHandler, which link to via.commonViewHandlers.test" );
+		equal( viewEvent.targetValue(), value2, "you can use '*test' as viewHandler, which link to via.commonViewHandlers.test" );
 	};
 
 	via.addViewHandler( view, "click", path, "*test" );
@@ -75,59 +76,37 @@ test( "addViewHandler --> viewHandler as common viewHandler", function () {
 
 	via.removeView( view );
 	via().del( path );
+	assertEmptyDb();
 } );
 
-test( "addViewHandler --> viewHandler as member of view", function () {
+test( "via.addViewHandler --> use a member of view as viewHandler", function () {
 	assertEmptyDb();
 
 	var path = "a";
-	var value = "a";
-	var value2 = "a2";
+	var oldValue = "a";
+	var newValue = "a2";
 
-	via().create( path, value );
+	via().create( path, oldValue );
 	var view = {
 		method: function ( viewEvent ) {
-			viewEvent.updateModel( value2 );
+			viewEvent.updateModel( newValue );
 		}
 	};
 
 	via.addViewHandler( view, "click", path, "v.method" );
 	$( view ).click();
 
-	equal( via().get( path ), value2, "if view has a member function fn, it will call this[fn](viewEvent)" );
+	equal( via().get( path ), newValue, "if view has a member function fn, it will call this[fn](viewEvent)" );
 
 	via().del( path );
 	via.removeView( view );
 	delete via.commonViewHandlers.test;
+	assertEmptyDb();
 } );
 
-/*test( "addViewHandler --> viewHandler as a member of the Proxy", function () {
-
-	assertEmptyDb();
-
-	via.fn.setMessage = function ( options ) {
-		this.update( "hello " + options );
-	};
-
-	var path = "message";
-
-	var view = {};
-
-	via().create( path, "" );
-	via.addViewHandler( view, "click", path, "setMessage", "fred" );
-	$( view ).click();
-
-	equal( via().get( path ), "hello fred", "a proxy member can be used as viewHandler" );
-	delete via.fn.setMessage;
-	via().del( path );
-	via.removeView( view );
-
-} );*/
-
-test( "addViewHandler --> a converter to be used to convert string to a typed value before used to update model",
+test( "via.addViewHandler -->converter to be used to convert string to a typed value before it is used to update model",
 	function () {
-		assertEmptyDb();
-		var content = $( "<div>100</div>" ).appendTo( "#qunit-fixture" );
+		var $content = $( "<div>100</div>" ).appendTo( "#qunit-fixture" );
 		var path = "number";
 
 		via().create( path, 0 );
@@ -137,17 +116,18 @@ test( "addViewHandler --> a converter to be used to convert string to a typed va
 			return +value;
 		};
 
-		content.change();
+		//trigger change event
+		$content.change();
 
-		equal( via().get( path ), 100, "*Converter can used as option to convert value before value is used to update model" )
-		content.remove();
+		strictEqual( via().get( path ), 100, "*Converter can used as option to convert value before value is used to update model" );
+
+		$content.remove();
 		via().del( path );
-
+		assertEmptyDb();
 	} );
 
-test( "addViewHandler --> viewHandler's viewEvent", function () {
+test( "via.addViewHandler --> viewHandler's viewEvent", function () {
 
-	assertEmptyDb();
 	var path = "a";
 	var value = "a";
 	var value2 = "a2";
@@ -158,7 +138,7 @@ test( "addViewHandler --> viewHandler's viewEvent", function () {
 	via.addViewHandler( view, "click", path, function ( viewEvent ) {
 		equal( viewEvent.path, path, "viewEvent has a path" );
 		equal( viewEvent.options, options, "viewEvent has a option" );
-		deepEqual( viewEvent.triggerData, 100, "viewEvent has triggerData" );
+		strictEqual( viewEvent.triggerData, 100, "viewEvent has triggerData" );
 		ok( viewEvent.e, "viewEvent has e as original event argument" );
 		equal( viewEvent.targetValue(), value, "viewEvent.targetValue can get value" );
 		equal( viewEvent.targetIndex(), path, "viewEvent.targetIndex() can get index" );
@@ -171,6 +151,7 @@ test( "addViewHandler --> viewHandler's viewEvent", function () {
 
 	via().del( path );
 	view.remove();
+	assertEmptyDb();
 } );
 
 test( "addViewHandler --> options test", function () {

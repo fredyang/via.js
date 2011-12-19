@@ -3,58 +3,31 @@ module( "02-core-model-event.js" );
 var debug = via.debug;
 var modelHandlerData = via.getModelHandlerData();
 
-test( "shouldUpdateView test", function () {
+test( "when a model event handler should be called", function () {
 
-	var shouldUpdateView = debug.shouldUpdateView;
-	//function shouldmodelHandler( event, subscribedEvents ) {
-	ok( shouldUpdateView( "*", "whatever" ), "* match all what ever event" );
-	ok( shouldUpdateView( "*", "whatever.whatever" ), "* match all what ever event" );
+	var shouldInvokeModelHandler = debug.shouldInvokeModelHandler;
+	//function shouldInvokeModelHandler( event, subscribedEvents ) {
+	ok( shouldInvokeModelHandler( "*", "whatever" ), "* match all what ever event" );
+	ok( shouldInvokeModelHandler( "*", "whatever.whatever" ), "* match all what ever event" );
 
-	ok( shouldUpdateView( "*.", "whatever" ), "*. match all current node" );
-	ok( !shouldUpdateView( "*.", "whatever.whatever" ), "*. does not match event with extension" );
+	ok( shouldInvokeModelHandler( "*.", "whatever" ), "*. match all current node" );
+	ok( !shouldInvokeModelHandler( "*.", "whatever.whatever" ), "*. does not match event with extension" );
 
-	ok( shouldUpdateView( "before*", "beforeUpdate" ), "before* match beforeUpdate" );
-	ok( shouldUpdateView( "before*", "beforeUpdate.parent" ), "before* match beforeUpdate.parent" );
+	ok( shouldInvokeModelHandler( "before*", "beforeUpdate" ), "before* match beforeUpdate" );
+	ok( shouldInvokeModelHandler( "before*", "beforeUpdate.parent" ), "before* match beforeUpdate.parent" );
 
-	ok( shouldUpdateView( "before*.", "beforeUpdate" ), "before* match beforeUpdate" );
-	ok( !shouldUpdateView( "before*.", "beforeUpdate.parent" ), "before*.  does not match beforeUpdate.parent" ); //
+	ok( shouldInvokeModelHandler( "before*.", "beforeUpdate" ), "before* match beforeUpdate" );
+	ok( !shouldInvokeModelHandler( "before*.", "beforeUpdate.parent" ), "before*.  does not match beforeUpdate.parent" ); //
 
-	ok( shouldUpdateView( "before*.parent", "beforeUpdate.parent" ), "before*.parent matches beforeUpdate.parent" );
-	ok( !shouldUpdateView( "before*.parent", "beforeUpdate" ), "before*.parent  does not match beforeUpdate.parent" );
-	ok( !shouldUpdateView( "before*.parent", "update.parent" ), "before*.parent  does not match update.parent" );
+	ok( shouldInvokeModelHandler( "before*.parent", "beforeUpdate.parent" ), "before*.parent matches beforeUpdate.parent" );
+	ok( !shouldInvokeModelHandler( "before*.parent", "beforeUpdate" ), "before*.parent  does not match beforeUpdate.parent" );
+	ok( !shouldInvokeModelHandler( "before*.parent", "update.parent" ), "before*.parent  does not match update.parent" );
 
-	ok( shouldUpdateView( "*.parent", "update.parent" ), "*.parent match update.parent" );
-	ok( !shouldUpdateView( "*.parent", "beforeUpdate" ), "*.parent does not match beforeUpdate" );
+	ok( shouldInvokeModelHandler( "*.parent", "update.parent" ), "*.parent match update.parent" );
+	ok( !shouldInvokeModelHandler( "*.parent", "beforeUpdate" ), "*.parent does not match beforeUpdate" );
 } );
 
-var emptyDb = {
-	__via: {
-		invalidModelPaths: []
-	}
-};
-
-function assertEmptyDb() {
-	deepEqual( via().get(), emptyDb, "The root is empty" );
-	ok( $.isEmptyObject( via.modelReferences ), "modelReferences is empty" );
-	ok( isModelHandlerDataEmpty(), "modelHandlerData is empty" );
-	ok( $.isEmptyObject(via.getViewHandlerData()), "viewHandlerData is empty" );
-}
-
-function isModelHandlerDataEmpty() {
-	//	var modelHandlerData = via.getModelHandlerData();
-	//	for ( var path in modelHandlerData ) {
-	//		for ( var i = 0; i < modelHandlerData[path].length; i++ ) {
-	//			if ( modelHandlerData[path][i].view !== debug.dummyView ) {
-	//				return false;
-	//			}
-	//		}
-	//	}
-	//	return true;
-	var data = via.getModelHandlerData()
-	return $.isEmptyObject( data );
-}
-
-test( "addModelHandler -->internal modelHandlerData", function () {
+test( "via.addModelHandler -> how via.addModelHandler change internal modelHandlerData data structure", function () {
 
 	assertEmptyDb();
 
@@ -96,8 +69,9 @@ test( "addModelHandler -->internal modelHandlerData", function () {
 	rootProxy.del( path );
 	//you don't need to call
 	//rootProxy.remove(subPath);
-	deepEqual( modelHandlerData[path] && modelHandlerData[subPath], undefined, "after path is remove, modelHandlerData of " +
-	                                                                           "the path and its subPath is automatically removed" );
+	strictEqual( modelHandlerData[path] && modelHandlerData[subPath], undefined,
+		"after path is remove, modelHandlerData of " +
+		"the path and its subPath is automatically removed" );
 
 	//add the value and handler again, to test removeView
 	rootProxy.create( path, value );
@@ -119,14 +93,16 @@ test( "addModelHandler -->internal modelHandlerData", function () {
 			modelEvents: events,
 			options: options
 		}
-	], "if you omit the view parameter in addHandler the missing view will be used" );
+	], "if you omit the view parameter in addHandler the dummy view will be used" );
 
 	rootProxy.del( path );
 
-	deepEqual( modelHandlerData[path], undefined, "remove path will clean up its related record in modelHandlerData object" );
+	strictEqual( modelHandlerData[path], undefined,
+		"Removing a model will clean up its related record in modelHandlerData object" );
+
 } );
 
-test( "addModelHandler -->shadow & ModelEvent & order of event raising", function () {
+test( "via.addModelHandler -->shadow & ModelEvent & order of event raising", function () {
 
 	assertEmptyDb();
 
@@ -146,22 +122,13 @@ test( "addModelHandler -->shadow & ModelEvent & order of event raising", functio
 	var options = {};
 
 	var shadow = via().get( "a*" );
-	ok( shadow, "when via().get('a') is defined,  use \"via().get('a*'')\" directly access shadow object, " +
-	            "the access shadow object will be created automatically " );
 
-	via.addModelHandler( "a*", "bogus", view, function() {}, options );
+	ok( shadow, "when a model is created,  its shadow is accessible by using proxy.get " );
 
-	shadow = via().get( "a*" );
+	via.addModelHandler( "a*", "eventName", view, function() {}, options );
 
-	//shadow.model && shadow.modelPath
-	ok( shadow, "when use \"via.modelHandler('a*', 'bogus', view, function() {}, data);\" first," +
-	            " then shadow object is created, then you can" +
-	            " access path using \"via().get('a*');\"" );
-
-	ok( shadow.mainModel && shadow.mainPath, "by default shadow has member shadow.model() && shadow.modelPath() " );
-
-	deepEqual( shadow.mainPath, "a", "shadow.modelPath point back the original path" );
-	deepEqual( shadow.mainModel(), value.a, "shadow.model() return the value at original path" );
+	strictEqual( shadow.mainPath, "a", "shadow.mainPath equals the path of its main model" );
+	strictEqual( shadow.mainModel(), value.a, "shadow.mainModel() return this the value of main model" );
 
 	via().del( "a" );
 	shadow = via().get( "a*" );
@@ -181,6 +148,8 @@ test( "addModelHandler -->shadow & ModelEvent & order of event raising", functio
 
 	via.addModelHandler( "a.b.c.d", "init", view, function ( modelEvent ) {
 
+		strictEqual( this, view, "the context 'this' is the view itself" );
+
 		var expectedContext = new via.ModelEvent( {
 			path: "a.b.c.d",
 			target: "a.b.c.d",
@@ -191,16 +160,16 @@ test( "addModelHandler -->shadow & ModelEvent & order of event raising", functio
 		deepEqual( modelEvent, expectedContext, "modelEvent in init event is expected" );
 
 		equal( value.a.b.c.d, modelEvent.currentValue(), "modelEvent.currentValue() return the current " +
-		                                                   "value of model" );
+		                                                 "value of model" );
 
 		equal( value.a.b.c.d, modelEvent.targetValue(), "modelEvent.targetValue() return " +
-		                                                  "the target value of model" );
+		                                                "the target value of model" );
 
 		equal( "d", modelEvent.targetIndex(), "modelEvent.targetIndex() return " +
-		                                        "the last part of the path" );
+		                                      "the last part of the path" );
 
 		equal( "a.b.c", modelEvent.targetContext(), "modelEvent.targetContext() return " +
-		                                              "the part before targetIndex in the path" );
+		                                            "the part before targetIndex in the path" );
 
 	}, options );
 
@@ -208,7 +177,7 @@ test( "addModelHandler -->shadow & ModelEvent & order of event raising", functio
 
 	via.addModelHandler( "a.b.c", "beforeUpdate", view, function ( modelEvent ) {
 
-		equal( 1, order, "when change, the event for the target node happens first" );
+		equal( 1, order, "when change, the beforeUpdate event for the model happens first" );
 		order++;
 
 		var expectedContext = new via.ModelEvent( {
@@ -223,14 +192,15 @@ test( "addModelHandler -->shadow & ModelEvent & order of event raising", functio
 
 		deepEqual( modelEvent, expectedContext, "modelEvent in beforeUpdate event is expected" );
 		deepEqual( { d: "d"}, modelEvent.currentValue(), "beforeUpdate modelEvent.currentValue() return " +
-		                                                   "the current value" );
+		                                                 "the current value" );
 
 	}, options );
 
 	//bubble up
 	via.addModelHandler( "a.b", "beforeUpdate.child", view, function ( modelEvent ) {
-		equal( 2, order, "after event trigger for the target node, it bubbles up to parent" );
+		equal( 2, order, "after event trigger for the model, it bubbles up to parent" );
 		order++;
+
 		var expectedContext = new via.ModelEvent( {
 			path: "a.b",
 			target: "a.b.c",
@@ -244,17 +214,17 @@ test( "addModelHandler -->shadow & ModelEvent & order of event raising", functio
 		deepEqual( modelEvent, expectedContext, "modelEvent in beforeUpdate.child event is expected" );
 
 		deepEqual( {c: { d: "d"}}, modelEvent.currentValue(), "in event beforeUpdate.child the modelEvent.currentValue()" +
-		                                                        " return current value of current path" );
+		                                                      " return current value of current path" );
 
 		deepEqual( { d: "d"}, modelEvent.targetValue(), "in event beforeUpdate.child," +
-		                                                  " modelEvent.targetValue() return the value" +
-		                                                  " is the current value of target path" );
+		                                                " modelEvent.targetValue() return the value" +
+		                                                " is the current value of target path" );
 
 	}, options );
 
 	via.addModelHandler( "a.b.c", "afterUpdate", view, function ( modelEvent ) {
 
-		equal( 3, order, "after beforeUpdate event, it is afterUpdate" );
+		equal( 3, order, "after beforeUpdate event, afterUpdate will be triggered" );
 		order++;
 
 		var expectedContext = new via.ModelEvent( {
@@ -273,7 +243,7 @@ test( "addModelHandler -->shadow & ModelEvent & order of event raising", functio
 
 	via.addModelHandler( "a.b", "afterUpdate.child", view, function ( modelEvent ) {
 
-		equal( 4, order, "after beforeUpdate event, it is afterUpdate" );
+		equal( 4, order, "afterUpdate event will bubble up to model's parent" );
 		order++;
 
 		var expectedContext = new via.ModelEvent( {
@@ -289,11 +259,11 @@ test( "addModelHandler -->shadow & ModelEvent & order of event raising", functio
 		deepEqual( modelEvent, expectedContext, "modelEvent in afterUpdate.child event is expected" );
 
 		deepEqual( {c: { d: "d1"}}, modelEvent.currentValue(), "in event afterUpdate.child the modelEvent.currentValue()" +
-		                                                         " return new value of current path" );
+		                                                       " return new value of current path" );
 
 		deepEqual( { d: "d1"}, modelEvent.targetValue(), "in event afterUpdate.child," +
-		                                                   " modelEvent.targetValue() return the value" +
-		                                                   " is the new value of target path" );
+		                                                 " modelEvent.targetValue() return the value" +
+		                                                 " is the new value of target path" );
 
 	}, options );
 
@@ -305,7 +275,7 @@ test( "addModelHandler -->shadow & ModelEvent & order of event raising", functio
 	via.removeView( view );
 } );
 
-test( "addModelHandler -->modelHandler function as jQuery method", function() {
+test( "via.addModelHandler -->use jQuery method as modelHandler", function() {
 	assertEmptyDb();
 	var path = "a";
 	var value = "a";
@@ -344,12 +314,10 @@ test( "addModelHandler -->modelHandler function as jQuery method", function() {
 	via().del( "color" );
 	$view.remove();
 	assertEmptyDb();
-	ok( true, "when jQuery object is remove from dom, cleanup method also remove the view from via" );
 } );
 
-test( "addModelHandler -->modelHandler function as common modelHandler function", function () {
+test( "via.addModelHandler -->use common model handler as modelHandler", function () {
 
-	assertEmptyDb();
 	var path = "a";
 	var value = "a";
 
@@ -377,11 +345,11 @@ test( "addModelHandler -->modelHandler function as common modelHandler function"
 	via.removeView( view );
 	via().del( path );
 
+	assertEmptyDb();
 } );
 
-test( "addModelHandler -->modelHandler function as a member of view", function () {
+test( "via.addModelHandler -->use a member of view as modelHandler", function () {
 
-	assertEmptyDb();
 	var path = "b";
 	var value = "b";
 
@@ -401,25 +369,31 @@ test( "addModelHandler -->modelHandler function as a member of view", function (
 	equal( view.method(), value, "view.method can be used as modelHandler in init event" );
 	via.removeView( view );
 	via().del( path );
-
+	assertEmptyDb();
 } );
 
-test( "addModelHandler without view", function () {
+test( "via.addModelHandler without view", function () {
 	assertEmptyDb();
 	var path = "a";
-	var value = "a";
+	var oldValue = "a";
+	var newValue = "a2";
 	var options = {};
-	via().create( path, value );
+	via().create( path, oldValue );
 
-	via.addModelHandler( "a", "beforeUpdate|beforeDel", function ( modelEvent ) {
+	via.addModelHandler( path, "beforeUpdate|beforeDel", function ( modelEvent ) {
+		equal( this, window, "when via.addModelHandler without view, the 'this' context in the " +
+		                     "modelHandler refers to global object 'window'" )
 		modelEvent.hasError = true;
 	}, options );
 
-	via().update( path, "a2" );
-	equal( via().get( path ), value, "when before* modelHandler return false, update is not run" );
+	via().update( path, newValue );
+
+	equal( via().get( path ), oldValue, "In before* modelHandler, if modelEvent.hasError is true, " +
+	                                    "update will fail" );
 
 	via().del( path );
-	equal( via().get( path ), value, "when before* modelHandler return false, remove is not run" );
+
+	equal( via().get( path ), oldValue, "when before* modelHandler return false, remove is not run" );
 
 	var path2 = "b";
 	via.addModelHandler( path2, "beforeCreate", function ( modelEvent ) {
@@ -427,49 +401,91 @@ test( "addModelHandler without view", function () {
 	}, options );
 
 	via().create( path2, "b" );
-	equal( via().get( path2 ), undefined, "when before* modelHandler return false, create is not run" );
-	via.removeModelHandler(path2);
+	equal( via().get( path2 ), undefined, "In before* modelHandler, if modelEvent.hasError is true," +
+	                                      " create will fail" );
+	via.removeModelHandler( path );
+	via.removeModelHandler( path2 );
 
-	via.empty();
+	via().del( path );
+	via().del( path2 );
+	assertEmptyDb();
 } );
 
-test( "model event bubbling test", function () {
-	assertEmptyDb();
+test( "via.addModelHandler --> disable model bubbling/eventing", function () {
 
-	via().create( {
+	var model = {
 		a: {
 			b: {
-				c: "c"
+				c: "c",
+				d: function () {
+					return this.c;
+				}
 			}
 		}
-	} );
+	};
+
+	via().create( model );
 
 	var parentHandlerTriggered = false;
+	var referencingHandlerTriggered = false;
 
 	via.addModelHandler( "a", "after*", function ( modelEvent ) {
 		parentHandlerTriggered = true;
 	} );
 
+	via.addModelHandler( "a.b.d", "after*", function ( modelEvent ) {
+		referencingHandlerTriggered = true;
+		modelEvent.bubbleUp = false;
+	} );
+
 	via().update( "a.b.c", "c2" );
+
 	ok( parentHandlerTriggered, "by default event bubble up" );
+	ok( referencingHandlerTriggered, "by default event spread out" );
+
 	parentHandlerTriggered = false;
+	referencingHandlerTriggered = false;
 
 	via.addModelHandler( "a.b.c", "after*", function ( modelEvent ) {
 		modelEvent.bubbleUp = false;
 	} );
 
-	ok( !parentHandlerTriggered, "bubbling up can be stopped by setting modelEvent.bubleUp to false" );
+	via().update( "a.b.c", "c3" );
 
-	via().del( "a" );
+	ok( !parentHandlerTriggered, "bubbling up can be stopped by setting modelEvent.bubbleUp to false" );
+	ok( referencingHandlerTriggered, "bubblingUp does not stop event spreading out" );
+
+	via.removeModelHandler( "a.b.c" );
+
+	strictEqual( modelHandlerData["a.b.c"], undefined, "via.removeModelHandler(path) can remove model handler data" );
+
+	parentHandlerTriggered = false;
+	referencingHandlerTriggered = false;
+
+	via.addModelHandler( "a.b.c", "after*", function ( modelEvent ) {
+		//modelEvent.bubbleUp = false;
+		modelEvent.continueEventing = false;
+	} );
+
+
+	via().update( "a.b.c", "c4" );
+	ok( !parentHandlerTriggered && !referencingHandlerTriggered, "modelEvent.continueEventing can stop bubbling and spreading out" );
+
+	via.removeModelHandler( "a" );
+	strictEqual( modelHandlerData.a, undefined, "via.removeModelHandler(path) can remove model handler data" );
+
+	via().del( "a", true );
+	assertEmptyDb();
+
 } );
 
-test( "addModelHandler --> options", function () {
-	assertEmptyDb();
+test( "via.addModelHandler --> options", function () {
+
 	var path = "a";
 	var value = "a";
 	via().create( path, value );
 	via.addModelHandler( path, "afterUpdate", function ( modelEvent ) {
-		deepEqual( modelEvent.options, undefined, "modelHandler options can be explicitly set to undefined using '_'" );
+		strictEqual( modelEvent.options, undefined, "modelHandler options can be explicitly set to undefined using '_'" );
 
 	}, "_" );
 
@@ -479,8 +495,13 @@ test( "addModelHandler --> options", function () {
 	var fakeOptions = {};
 
 	var modelHandler = function ( modelEvent ) {
-		deepEqual( modelEvent.options, fakeOptions, "a modelHandler can have a options function to seed a default options or convert a string options into typed options" );
+
+		equal( modelEvent.options, fakeOptions,
+			"a modelHandler can have a options function to seed a default options or " +
+			"convert a string options into typed options" );
+
 	};
+
 	modelHandler.buildOptions = function ( options ) {
 		return fakeOptions;
 	};
@@ -491,10 +512,10 @@ test( "addModelHandler --> options", function () {
 
 	via().del( path );
 
+	assertEmptyDb();
 } );
 
-test( "renderViews and once", function () {
-	assertEmptyDb();
+test( "via.addModelHandler --> renderViews and once", function () {
 	var path = "a";
 	var value = "a";
 	via().create( path, value );
@@ -502,15 +523,50 @@ test( "renderViews and once", function () {
 	var view = {};
 
 	via.renderViews( path, view, function ( modelEvent ) {
-		this.value = modelEvent.currentValue();
+		this.v1 = modelEvent.currentValue();
 	} );
 
-	equal( view.value, value, "via.renderViews can call the modelHandler once" );
+	equal( view.v1, value, "via.renderViews can call the modelHandler once" );
+
+	strictEqual( modelHandlerData[path], undefined, "via.renderViews(path, view, modelHandler) will not keep modelHandler" +
+	                                                " in modelHandlerData" );
+
+	via.addModelHandler( path, "once", view, function ( modelEvent ) {
+		this.v2 = modelEvent.currentValue();
+	} );
+
+	equal( view.v2, value, "via.addModelHandler(path, 'once', modelHandler) will call the modelHandler once" );
+
+	strictEqual( modelHandlerData[path], undefined, "via.addModelHandler(path, 'once', modelHandler) will not keep modelHandler" +
+	                                                " in modelHandlerData" );
+
+	via.addModelHandler( path, "init", view, function ( modelEvent ) {
+		this.v3 = modelEvent.currentValue();
+	} );
+
+	equal( view.v3, value, "via.addModelHandler(path, 'init', ..) will call the modelHandler once" );
+
+	strictEqual( modelHandlerData[path].length, 1, "via.addModelHandler(path, 'init', modelHandler) will keep modelHandler" +
+	                                               " in modelHandlerData" );
+
+	via.removeView( view )
 	via().del( path );
 	assertEmptyDb();
 
 } );
 
-test( "jquery.fn.addHandler", function () {
-	ok( $().addModelHandler, "jQuery object has addModelHandler method" );
+test( "via.addModelHandler --> using jQuery object", function () {
+	ok( $.fn.addModelHandler, "jQuery object has addModelHandler method" );
+	var view = {};
+	var path = "a";
+	var value = "v";
+	via().create( path, value );
+
+	$( view ).addModelHandler( path, "once", function ( modelEvent ) {
+		equal( this, view, "the view wrapped in the jQuery object is passed as 'this' model handler " );
+	} );
+
+	via().del( path );
+	assertEmptyDb();
+	expect( 3 );
 } );

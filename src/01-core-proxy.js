@@ -13,7 +13,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		isFunction = $.isFunction,
 		rObjectMember = /this\.((?:\.?\w+)+)/g,
 		primitiveTypes = { 'undefined':undefined, 'boolean':undefined, 'number':undefined, 'string':undefined },
-		ns = "__via",
+		shadowNamespace = "__via",
 		rShadowRootPath = /__via\.(\w+)/,
 		rPhysicalPath = /__via\.(\w+)(\.(.+))*/,
 		/*
@@ -25,7 +25,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		modelReferences = {},
 		defaultOptions = {},
 		rootProxy,
-		shadowRoot = root[ns] = {},
+		shadowRoot = root[shadowNamespace] = {},
 		rUnderScore = /_/g,
 		rDot = /\./g,
 		hasOwn = root.hasOwnProperty,
@@ -156,7 +156,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		},
 
 		childProxy: function( childPath ) {
-			return this.pushProxy( new Proxy( via.joinPath( this.context, childPath ) ) );
+			return this.pushProxy( new Proxy( joinPath( this.context, childPath ) ) );
 		},
 
 		parentProxy: function () {
@@ -176,7 +176,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 
 		mainProxy: function () {
 			var mainProxyContext;
-			if ( this.context === ns ) {
+			if ( this.context === shadowNamespace ) {
 				mainProxyContext = "";
 			} else {
 				var match = rShadowRootPath.exec( this.context );
@@ -198,12 +198,12 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 
 		//to get the logicalPath of current proxy, leave subPath empty
 		logicalPath: function ( subPath ) {
-			return toLogicalPath( via.joinPath( this.context, subPath ) );
+			return toLogicalPath( joinPath( this.context, subPath ) );
 		},
 
 		//to get the physicalPath of current proxy, leave subPath empty
 		physicalPath: function ( subPath ) {
-			return toPhysicalPath( via.joinPath( this.context, subPath ) );
+			return toPhysicalPath( joinPath( this.context, subPath ) );
 		},
 
 		get: function( keepOriginal, subPath ) {
@@ -322,7 +322,10 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 			}
 			var removedValue = accessor.hostObj[accessor.index];
 
-			traverseModel( physicalPath, removedValue, false, removePath );
+			traverseModel( physicalPath, removedValue, false, function ( contextPath, index ) {
+				log( "deleting children of " + contextPath + "." + index );
+				rootProxy.del( contextPath + "." + index, force );
+			} );
 
 			if ( isArray( accessor.hostObj ) ) {
 
@@ -478,7 +481,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		var i,
 			index,
 			hostObj = root,
-			logicalPath = via.joinPath( context, subPath ),
+			logicalPath = joinPath( context, subPath ),
 			physicalPath = toPhysicalPath( logicalPath, true ),
 			parts = physicalPath.split( "." );
 
@@ -531,7 +534,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		}
 
 		if ( logicalPath === "*" ) {
-			return ns;
+			return shadowNamespace;
 		}
 
 		var pathParts = logicalPath.split( "*" );
@@ -547,21 +550,21 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 
 		if ( tryCreateShadow && mainPath ) {
 
-			var fullShadowPath = ns + "." + flatPhysicalMainPath;
+			var fullShadowPath = shadowNamespace + "." + flatPhysicalMainPath;
 			if ( !shadowRoot[flatPhysicalMainPath] && rootProxy.get( mainPath ) !== undefined ) {
 				rootProxy.create( fullShadowPath, new Shadow( mainPath ) );
 			}
 		}
 
 		return !flatPhysicalMainPath ?
-			ns + "." + childPath : //this is the case of "*b"
+			shadowNamespace + "." + childPath : //this is the case of "*b"
 			childPath ?
-				ns + "." + flatPhysicalMainPath + "." + childPath : //this is the case of "a*b"
-				ns + "." + flatPhysicalMainPath; //this is the case of "a*"
+				shadowNamespace + "." + flatPhysicalMainPath + "." + childPath : //this is the case of "a*b"
+				shadowNamespace + "." + flatPhysicalMainPath; //this is the case of "a*"
 	}
 
 	function toLogicalPath( physicalPath ) {
-		if ( physicalPath === ns ) {
+		if ( physicalPath === shadowNamespace ) {
 			return "*";
 		}
 		var match = rPhysicalPath.exec( physicalPath );
@@ -630,9 +633,14 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		}
 	}
 
-	function removePath( contextPath, index ) {
-		log( "deleting children of " + contextPath + "." + index );
-		rootProxy.del( contextPath + "." + index );
+	//combine context and subPath to be a full a path
+	//input : "a", "b" -> "a.b"
+	//"a*" , "b" -> "a*b"
+	//"a", "*"b" -> "a*b"
+	function joinPath( context, subPath ) {
+		return !subPath ? context :
+			context ? context + (subPath.toString().beginsWith( "*" ) ? subPath : "." + subPath)
+				: subPath;
 	}
 
 	//helpers
@@ -640,17 +648,11 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 
 		fn: proxyPrototype,
 
-		joinPath: function ( context, subPath ) {
-			return !subPath ? context :
-				context ? context + (subPath.toString().beginsWith( "*" ) ? subPath : "." + subPath)
-					: subPath;
-		},
-
 		accessor: getAccessor,
 
-		physicalPath : toPhysicalPath,
+		toPhysicalPath : toPhysicalPath,
 
-		logicalPath : toLogicalPath,
+		toLogicalPath : toLogicalPath,
 
 		clearObj : function clearObj( obj ) {
 			if ( isPrimitive( obj ) ) {
@@ -672,8 +674,8 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 
 		isObject: isObject,
 
-		ns: function () {
-			return ns;
+		shadowNamespace: function () {
+			return shadowNamespace;
 		},
 
 		Shadow: Shadow,
@@ -701,8 +703,8 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 			}
 
 			//delete shadow object
-			if ( !path.beginsWith( ns ) ) {
-				rootProxy.del( ns + "." + path.replace( rDot, "_" ) );
+			if ( !path.beginsWith( shadowNamespace ) ) {
+				rootProxy.del( shadowNamespace + "." + path.replace( rDot, "_" ) );
 			}
 
 		}],
@@ -757,14 +759,14 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		//get the model except the shadow
 		getAll: function () {
 			var rtn = extend( {}, root );
-			delete rtn[ns];
+			delete rtn[shadowNamespace];
 			return rtn;
 		},
 
 		//empty everything in the repository
 		empty: function () {
 			for ( var key in root ) {
-				if ( key !== ns ) {
+				if ( key !== shadowNamespace ) {
 					rootProxy.del( key, true );
 				}
 			}

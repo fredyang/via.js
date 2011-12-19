@@ -11,7 +11,7 @@
 	var RegExp = window.RegExp;
 	var isArray = $.isArray;
 	var raiseEvent = via.raiseEvent;
-	var toPhysicalPath = via.physicalPath;
+	var toPhysicalPath = via.toPhysicalPath;
 	var commonModelHandlers = via.commonModelHandlers;
 	var isString = via.isString;
 	var proxyPrototype = via.fn;

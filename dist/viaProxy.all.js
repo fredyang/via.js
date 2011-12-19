@@ -7,7 +7,7 @@
  * http://www.opensource.org/licenses/mit-license
  * http://www.opensource.org/licenses/gpl-2.0
  *
- * Date: Sat Dec 17 08:00:40 2011 -0500
+ * Date: Sat Dec 17 09:00:22 2011 -0500
  */
  window.jQuery && window.via || (function( $, window, undefined ) {
 
@@ -24,7 +24,7 @@
 		isFunction = $.isFunction,
 		rObjectMember = /this\.((?:\.?\w+)+)/g,
 		primitiveTypes = { 'undefined':undefined, 'boolean':undefined, 'number':undefined, 'string':undefined },
-		ns = "__via",
+		shadowNamespace = "__via",
 		rShadowRootPath = /__via\.(\w+)/,
 		rPhysicalPath = /__via\.(\w+)(\.(.+))*/,
 		/*
@@ -36,7 +36,7 @@
 		modelReferences = {},
 		defaultOptions = {},
 		rootProxy,
-		shadowRoot = root[ns] = {},
+		shadowRoot = root[shadowNamespace] = {},
 		rUnderScore = /_/g,
 		rDot = /\./g,
 		hasOwn = root.hasOwnProperty,
@@ -141,7 +141,7 @@
 		},
 
 		childProxy: function( childPath ) {
-			return this.pushProxy( new Proxy( via.joinPath( this.context, childPath ) ) );
+			return this.pushProxy( new Proxy( joinPath( this.context, childPath ) ) );
 		},
 
 		parentProxy: function () {
@@ -161,7 +161,7 @@
 
 		mainProxy: function () {
 			var mainProxyContext;
-			if ( this.context === ns ) {
+			if ( this.context === shadowNamespace ) {
 				mainProxyContext = "";
 			} else {
 				var match = rShadowRootPath.exec( this.context );
@@ -183,12 +183,12 @@
 
 		//to get the logicalPath of current proxy, leave subPath empty
 		logicalPath: function ( subPath ) {
-			return toLogicalPath( via.joinPath( this.context, subPath ) );
+			return toLogicalPath( joinPath( this.context, subPath ) );
 		},
 
 		//to get the physicalPath of current proxy, leave subPath empty
 		physicalPath: function ( subPath ) {
-			return toPhysicalPath( via.joinPath( this.context, subPath ) );
+			return toPhysicalPath( joinPath( this.context, subPath ) );
 		},
 
 		get: function( keepOriginal, subPath ) {
@@ -307,7 +307,9 @@
 			}
 			var removedValue = accessor.hostObj[accessor.index];
 
-			traverseModel( physicalPath, removedValue, false, removePath );
+			traverseModel( physicalPath, removedValue, false, function ( contextPath, index ) {
+				rootProxy.del( contextPath + "." + index, force );
+			} );
 
 			if ( isArray( accessor.hostObj ) ) {
 
@@ -463,7 +465,7 @@
 		var i,
 			index,
 			hostObj = root,
-			logicalPath = via.joinPath( context, subPath ),
+			logicalPath = joinPath( context, subPath ),
 			physicalPath = toPhysicalPath( logicalPath, true ),
 			parts = physicalPath.split( "." );
 
@@ -516,7 +518,7 @@
 		}
 
 		if ( logicalPath === "*" ) {
-			return ns;
+			return shadowNamespace;
 		}
 
 		var pathParts = logicalPath.split( "*" );
@@ -532,21 +534,21 @@
 
 		if ( tryCreateShadow && mainPath ) {
 
-			var fullShadowPath = ns + "." + flatPhysicalMainPath;
+			var fullShadowPath = shadowNamespace + "." + flatPhysicalMainPath;
 			if ( !shadowRoot[flatPhysicalMainPath] && rootProxy.get( mainPath ) !== undefined ) {
 				rootProxy.create( fullShadowPath, new Shadow( mainPath ) );
 			}
 		}
 
 		return !flatPhysicalMainPath ?
-			ns + "." + childPath : //this is the case of "*b"
+			shadowNamespace + "." + childPath : //this is the case of "*b"
 			childPath ?
-				ns + "." + flatPhysicalMainPath + "." + childPath : //this is the case of "a*b"
-				ns + "." + flatPhysicalMainPath; //this is the case of "a*"
+				shadowNamespace + "." + flatPhysicalMainPath + "." + childPath : //this is the case of "a*b"
+				shadowNamespace + "." + flatPhysicalMainPath; //this is the case of "a*"
 	}
 
 	function toLogicalPath( physicalPath ) {
-		if ( physicalPath === ns ) {
+		if ( physicalPath === shadowNamespace ) {
 			return "*";
 		}
 		var match = rPhysicalPath.exec( physicalPath );
@@ -615,8 +617,14 @@
 		}
 	}
 
-	function removePath( contextPath, index ) {
-		rootProxy.del( contextPath + "." + index );
+	//combine context and subPath to be a full a path
+	//input : "a", "b" -> "a.b"
+	//"a*" , "b" -> "a*b"
+	//"a", "*"b" -> "a*b"
+	function joinPath( context, subPath ) {
+		return !subPath ? context :
+			context ? context + (subPath.toString().beginsWith( "*" ) ? subPath : "." + subPath)
+				: subPath;
 	}
 
 	//helpers
@@ -624,17 +632,11 @@
 
 		fn: proxyPrototype,
 
-		joinPath: function ( context, subPath ) {
-			return !subPath ? context :
-				context ? context + (subPath.toString().beginsWith( "*" ) ? subPath : "." + subPath)
-					: subPath;
-		},
-
 		accessor: getAccessor,
 
-		physicalPath : toPhysicalPath,
+		toPhysicalPath : toPhysicalPath,
 
-		logicalPath : toLogicalPath,
+		toLogicalPath : toLogicalPath,
 
 		clearObj : function clearObj( obj ) {
 			if ( isPrimitive( obj ) ) {
@@ -656,8 +658,8 @@
 
 		isObject: isObject,
 
-		ns: function () {
-			return ns;
+		shadowNamespace: function () {
+			return shadowNamespace;
 		},
 
 		Shadow: Shadow,
@@ -685,8 +687,8 @@
 			}
 
 			//delete shadow object
-			if ( !path.beginsWith( ns ) ) {
-				rootProxy.del( ns + "." + path.replace( rDot, "_" ) );
+			if ( !path.beginsWith( shadowNamespace ) ) {
+				rootProxy.del( shadowNamespace + "." + path.replace( rDot, "_" ) );
 			}
 
 		}],
@@ -741,14 +743,14 @@
 		//get the model except the shadow
 		getAll: function () {
 			var rtn = extend( {}, root );
-			delete rtn[ns];
+			delete rtn[shadowNamespace];
 			return rtn;
 		},
 
 		//empty everything in the repository
 		empty: function () {
 			for ( var key in root ) {
-				if ( key !== ns ) {
+				if ( key !== shadowNamespace ) {
 					rootProxy.del( key, true );
 				}
 			}
@@ -825,7 +827,7 @@
 
 				modelHandlerObj = modelHandlerObjects[i];
 
-				if ( shouldUpdateView( modelHandlerObj.modelEvents, modelEvent.eventType ) ) {
+				if ( shouldInvokeModelHandler( modelHandlerObj.modelEvents, modelEvent.eventType ) ) {
 
 					//important!!
 					modelEvent.options = modelHandlerObj.options;
@@ -835,7 +837,7 @@
 				}
 
 				if ( !modelEvent.continueEventing ) {
-					break;
+					return;
 				}
 			}
 		}
@@ -855,7 +857,7 @@
 				);
 
 				if ( !tempModelEvent.continueEventing ) {
-					break;
+					return;
 				}
 
 				if ( tempModelEvent.hasError ) {
@@ -948,7 +950,7 @@
 		}
 	}
 
-	function shouldUpdateView( subscribedEvents, event ) {
+	function shouldInvokeModelHandler( subscribedEvents, event ) {
 		var regex;
 		if ( subscribedEvents === "*" ) {
 			return true;
@@ -1108,7 +1110,7 @@
 
 	//this is for the use of isView function
 	function markAsView( elem ) {
-		$( elem ).data( ns, true );
+		$( elem ).data( shadowNamespace, true );
 	}
 
 	markAsView( dummyView );
@@ -1116,7 +1118,7 @@
 	//this is to make removeModelHandler and getModelHandlerData function
 	//runs faster by Short-circuit
 	function isView( elem ) {
-		return $( elem ).data( ns ) === true;
+		return $( elem ).data( shadowNamespace ) === true;
 	}
 
 	extend( via, {
@@ -1165,7 +1167,7 @@
 					options: options
 				} );
 
-				if ( shouldUpdateView( modelEvents, "init" ) ) {
+				if ( shouldInvokeModelHandler( modelEvents, "init" ) ) {
 					//"this" refers to a view
 					invokeModelHandler( this, modelHandler, new ModelEvent( {
 						path: path,
@@ -1317,7 +1319,7 @@
 
 
 	function unmarkView( elem ) {
-		$( elem ).removeData( ns );
+		$( elem ).removeData( shadowNamespace );
 	}
 
 	/* {
@@ -1426,24 +1428,24 @@
 				viewHandler.initialize( views );
 			}
 
+			//if original viewEvents is "click,dblClick",
+			//and it bind to path "firstName", it will convert to
+			//click.__via.firstName,dblClick.__via.firstName, the reason is that
+			//when path is deleted, the method removeViewHandler(pathOrView) need to unbind
+			// event by a namespace, if firstName is deleted, we can unbind ".__via.firstName"
+			viewEvents = $.map(
+
+				viewEvents.split( rEventSeparator ),
+
+				function ( originalEventName ) {
+					return originalEventName + "." + shadowNamespace + "." + path;
+				}
+
+			).join(" ");
+
 			$( views ).each( function () {
 
 				markAsView( this );
-
-				//if original viewEvents is "click,dblClick",
-				//and it bind to path "firstName", it will convert to
-				//click.__via.firstName,dblClick.__via.firstName, the reason is that
-				//when path is deleted, the method removeViewHandler(pathOrView) need to unbind
-				// event by a namespace, if firstName is deleted, we can unbind ".__via.firstName"
-				viewEvents = $.map(
-
-					viewEvents.split( rEventSeparator ),
-
-					function ( originalEventName ) {
-						return originalEventName + "." + ns + "." + path;
-					}
-
-				).toString();
 
 				//bind an event with a namespace
 				//pass the binding through event data
@@ -1477,14 +1479,14 @@
 
 				var path = toPhysicalPath( pathOrViews );
 
-				$( viewHandlerData[path] ).unbind( "." + ns + "." + path );
+				$( viewHandlerData[path] ).unbind( "." + shadowNamespace + "." + path );
 
 				delete viewHandlerData[path];
 
 				//remove viewHandler by view
 			} else if ( isObject( pathOrViews ) ) {
 
-				$( pathOrViews ).unbind( "." + ns );
+				$( pathOrViews ).unbind( "." + shadowNamespace );
 
 				$( pathOrViews ).each( function () {
 
@@ -1703,6 +1705,10 @@
 			viaData = $( e.target ).data( "via" ),
 			viaEventName = viaData && viaData.viewEvents && viaData.viewEvents[viaEventType];
 
+		//raise event only when viaEventName is available,
+		//the reason is that we want to be very specific about full event name
+		//we don't want to raise "action" event, otherwise all "action.delete", "action.cancel", ..
+		//will be raise. This cause a undesired effect
 		if ( viaEventName ) {
 			$( e.target ).trigger( extend( {}, e, {
 				type: viaEventType + "." + viaEventName,
@@ -1711,19 +1717,25 @@
 		}
 	}
 
-	//viaEvent is a special kind of view event, different from normal event like "click"
-	//it is something like "action.delete", the "action" is 
-	//via.addViewEvent("action", "click")
-	via.addViaEvent = function ( viaEventType, originalEvent ) {
+	//viaEvent is a special kind of jQuery event, different from normal event like "click"
+	//if you want to raise and "action.delete" event, when user click an element
+	//you can use write like:
+	// via.addViaEvent("action", "click");
+	//the full via event name is "action.delete"
+	//here only take care of "action", the "delete" will be taken care in the raiseViaEvent function
+	via.addViaEvent = function ( viaEventType, originalEventName ) {
 		$.event.special[viaEventType] = {
 			setup: function () {
 				//TODO: think again
 				//make sure the handler is not double bound to the element
 				//$( this ).unbind( originalEvent, raiseViewEvent );
-				$( this ).bind( originalEvent, viaEventType, raiseViaEvent );
+
+				//.bind( eventType [, eventData] , handler(eventObject) )
+				//viaEventType will be passed in as e.data
+				$( this ).bind( originalEventName, viaEventType, raiseViaEvent );
 			},
 			teardown: function () {
-				$( this ).unbind( originalEvent, raiseViaEvent );
+				$( this ).unbind( originalEventName, raiseViaEvent );
 			}
 		};
 		return via;

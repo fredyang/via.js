@@ -98,7 +98,9 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 	};
 
 	arrayPrototype.sortObject = arrayPrototype.sortObject || function ( by, asc ) {
-		asc = isUndefined( asc ) ? true : false;
+		if ( isUndefined( asc ) ) {
+			asc = true;
+		}
 		if ( by ) {
 			this.sort( function ( a, b ) {
 				var av = a[by];
@@ -757,10 +759,11 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		},
 
 		//get the model except the shadow
-		getAll: function () {
-			var rtn = extend( {}, root );
+		pureModel: function ( path, stringified ) {
+			var rtn = extend( {}, rootProxy.get( true, path ) );
 			delete rtn[shadowNamespace];
-			return rtn;
+			rtn = JSON.stringify( rtn );
+			return stringified ? rtn : JSON.parse( rtn );
 		},
 
 		//empty everything in the repository

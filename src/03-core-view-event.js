@@ -151,7 +151,7 @@
 					return originalEventName + "." + shadowNamespace + "." + path;
 				}
 
-			).join(" ");
+			).join( " " );
 
 			$( views ).each( function () {
 
@@ -264,15 +264,28 @@
 		getHandlerData: function ( pathOrView ) {
 			var modelData = via.getModelHandlerData( pathOrView );
 			var viewData = via.getViewHandlerData( pathOrView );
-			if ( isString( pathOrView ) ) {
+			var isModel = isString( pathOrView );
+			if ( isModel ) {
+				var viewsToBeUpdated;
+				for (var i = 0; i < modelData.length; i++) {
+					viewsToBeUpdated = viewsToBeUpdated || [];
+					viewsToBeUpdated.pushUnique(modelData[i].view);
+				}
 				return {
-					viewsToBeUpdated: modelData,
+					viewsToBeUpdated: viewsToBeUpdated,
 					viewsUpdatingMe: viewData
 				};
 			} else {
+
+				var pathsUpdatingMe;
+				for (var path in modelData) {
+					pathsUpdatingMe = pathsUpdatingMe || [];
+					pathsUpdatingMe.pushUnique(path);
+				}
+
 				return {
-					modelsUpdatingMe: modelData,
-					modelsToBeUpdated: viewData
+					pathsUpdatingMe: pathsUpdatingMe,
+					pathsToBeUpdated: viewData
 				};
 			}
 		}

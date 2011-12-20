@@ -4,7 +4,7 @@ var debug = via.debug;
 
 var viewHandlerData = via.getViewHandlerData();
 
-test( "via.addViewHandler -->ad-hoc function as view handler", function () {
+test( "via.addViewHandler --> support multiple views and multiple events", function () {
 	var path = "a";
 	var value = "a";
 
@@ -16,43 +16,70 @@ test( "via.addViewHandler -->ad-hoc function as view handler", function () {
 		view2
 	];
 
-	var $views = $( views );
+	var view1Events = [];
+	var view2Events = [];
 
-	var oldValues = ["a", "a1"];
-	var newValues = ["a1", "a2"];
+	var $views = $( views );
 
 	var viewEvents = "click|dblclick";
 	var options = {};
 
 	via().create( path, value );
 
-	var index = 0;
-
 	via.addViewHandler( views, viewEvents, path, function ( viewEvent ) {
+		if ( this === view1 ) {
+			view1Events.push( viewEvent.e.type );
+		}
 
-		debugger;
-		
-		equal( viewEvent.path, path );
-		equal( viewEvent.options, options );
-
-		ok( this === views[index % 2], "'this' in viewHandler refer to the view itself" );
-		equal( viewEvent.targetValue(), oldValues[index], "viewEvent.targetValue() return the value at the path" );
-
-		viewEvent.updateModel( newValues[index] );
-		equal( viewEvent.targetValue(), newValues[index], "viewEvent.updateModel(newValue) can update the value at the path" );
-
-		index ++;
+		if ( this === view2 ) {
+			view2Events.push( viewEvent.e.type );
+		}
 
 	}, options );
 
 	ok( viewHandlerData[path][0] === view1 && viewHandlerData[path][1] === view2, "via.getViewHandlerData(path) is an array of views" );
 
 	$views.click();
-	//$views.dblclick();
+	$views.dblclick();
+
+	ok( view1Events[0] === "click" && view1Events[1] === "dblclick"
+		    && view2Events[0] === "click" && view2Events[1] === "dblclick",
+		"via.addViewHandler support multiple views and multiple events" );
 
 	via.removeView( views );
-	ok( debug.isView( view1 ) === false && debug.isView( view2 ) === false, "after views is removed from via, they are not marked as view" );
+	via().del( path );
+	assertEmptyDb();
+} );
 
+test( "via.addViewHandler -->ad-hoc function as view handler", function () {
+	var path = "a";
+	var oldValue = "a";
+	var newValue = "a1";
+
+	var view = {};
+
+	var options = {};
+
+	via().create( path, oldValue );
+
+	via.addViewHandler( view, "click", path, function ( viewEvent ) {
+
+		equal( viewEvent.path, path );
+		equal( viewEvent.options, options );
+
+		ok( this === view, "'this' in viewHandler refer to the view itself" );
+		equal( viewEvent.targetValue(), oldValue, "viewEvent.targetValue() return the value at the path" );
+
+		viewEvent.updateModel( newValue );
+		equal( viewEvent.targetValue(), newValue, "viewEvent.updateModel(newValue) can update the value at the path" );
+
+	}, options );
+
+	ok( viewHandlerData[path][0] === view, "via.getViewHandlerData(path) is an array of views" );
+
+	$( view ).click();
+	via.removeView( view );
+	ok( debug.isView( view ) === false, "after views is removed from via, they are not marked as view" );
 	via().del( path );
 	assertEmptyDb();
 } );
@@ -154,8 +181,7 @@ test( "via.addViewHandler --> viewHandler's viewEvent", function () {
 	assertEmptyDb();
 } );
 
-test( "addViewHandler --> options test", function () {
-	assertEmptyDb();
+test( "via.addViewHandler --> options test", function () {
 
 	var path = "a";
 	var value = "a";
@@ -183,5 +209,57 @@ test( "addViewHandler --> options test", function () {
 
 	via().del( path );
 	via.removeView( view );
+	assertEmptyDb();
 
+} );
+
+test( "via.addViewHandler --> initialize view", function () {
+	var view = {};
+	var path = "a";
+	var value = "a";
+	via().create( path, value );
+
+	via.addViewHandler( view, "afterUpdate", "a", $.extend( function ( viewEvent ) {
+
+	}, {
+		initialize: function ( theView ) {
+			theView.extra = true;
+		}
+	} ) );
+
+	ok( view.extra === true, "if an event handler has a initialize function, it will be called" +
+	                         "when handler is used in addViewHandler" );
+
+	via().del( path );
+	assertEmptyDb();
+} );
+
+test( "via.addViewHandler --> getHandlerData", function () {
+	var view = {};
+	var path = "a";
+	var value = "a";
+	via().create( path, value );
+
+	function viewHandler( viewEvent ) {}
+
+	function modelHandler( modelEvent ) {}
+
+	via.addViewHandler( view, "afterUpdate", "a", viewHandler );
+	via.addModelHandler( path, "click", view, modelHandler );
+
+	var handlerDataOfModel = via.getHandlerData( path );
+
+	ok(handlerDataOfModel.viewsToBeUpdated[0] === view &&
+	   handlerDataOfModel.viewsUpdatingMe[0] === view,
+		"getHandlerData(path) returns the views associated with the path");
+
+
+	var handlerDataOfView = via.getHandlerData( view );
+
+	ok(handlerDataOfView.pathsUpdatingMe[0] === path &&
+	   handlerDataOfView.pathsToBeUpdated[0] === path,
+		"getHandlerData(view) returns the paths associated with the view");
+
+	via().del( path );
+	assertEmptyDb();
 } );

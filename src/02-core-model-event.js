@@ -501,7 +501,7 @@
 					return;
 				}
 
-				var rtn = {};
+				var rtn;
 
 				for ( var path in modelHandlerData ) {
 
@@ -510,6 +510,7 @@
 					for ( var i = commonModelHandlers.length - 1; i >= 0; i-- ) {
 
 						if ( commonModelHandlers[i].view === pathOrView ) {
+							rtn = rtn || {};
 							rtn[path] = rtn[path] || [];
 							rtn[path].push( commonModelHandlers[i] );
 						}

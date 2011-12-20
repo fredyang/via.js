@@ -2,12 +2,12 @@ module( "01-core-proxy.js" );
 var shadowNamespace = via.shadowNamespace();
 
 function assertEmptyDb() {
-	//	ok( $.isEmptyObject( via.getAll() ), "The root is empty" );
+	//	ok( $.isEmptyObject( via.pureModel() ), "The root is empty" );
 	//	ok( $.isEmptyObject( via.modelReferences ), "modelReferences is empty" );
 	//	ok( $.isEmptyObject(via.getModelHandlerData()), "modelHandlerData is empty" );
 	//	ok( $.isEmptyObject(via.getViewHandlerData()), "viewHandlerData is empty" );
 
-	var empty = $.isEmptyObject( via.getAll() )
+	var empty = $.isEmptyObject( via.pureModel() )
 		    && $.isEmptyObject( via.modelReferences )
 		    && $.isEmptyObject( via.getModelHandlerData() )
 		&& $.isEmptyObject( via.getViewHandlerData() );
@@ -191,7 +191,7 @@ test( "other CRUD method of proxy", function () {
 	};
 	via().create( obj );
 
-	deepEqual( via.getAll(), obj, "you can create complex object like proxy.create(obj) as a shortcut to proxy.create(path, obj)" );
+	deepEqual( via.pureModel(), obj, "you can create complex object like proxy.create(obj) as a shortcut to proxy.create(path, obj)" );
 
 	var obj2 = {
 		a: "a2",
@@ -199,7 +199,7 @@ test( "other CRUD method of proxy", function () {
 	};
 
 	via().updateAll( obj2 );
-	deepEqual( via.getAll(), obj2, "you can create complex object like proxy.create(obj) as a shortcut to proxy.create(path, obj)" );
+	deepEqual( via.pureModel(), obj2, "you can create complex object like proxy.create(obj) as a shortcut to proxy.create(path, obj)" );
 
 	via().createOrUpdate( "a", "a2" );
 	equal( via().get( "a" ), "a2", "createOrUpdate will update if path exists" );

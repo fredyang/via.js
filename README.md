@@ -27,13 +27,22 @@ If you don't need that, using core is just fine. The "all" package is includes f
  version.
 
  If you want to build core package only, type
+
  make core
 
  If you want to build full package only, type
+
  make full
 
  If you want to build "all" package only, type
+
  make all
+
+Learn
+---------------------------------------
+<a href="http://code.semanticsworks.com/viaProxy.js/">Step by step</a>
+
+<a href="http://code.semanticsworks.com/viaProxy.js/todos/todos.html">Using viaProxy.js to implement backbone's Todos</a>
 
 
 Questions?

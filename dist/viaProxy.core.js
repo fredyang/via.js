@@ -7,7 +7,7 @@
  * http://www.opensource.org/licenses/mit-license
  * http://www.opensource.org/licenses/gpl-2.0
  *
- * Date: Sat Dec 17 09:00:22 2011 -0500
+ * Date: Wed Dec 21 22:32:20 2011 -0500
  */
  window.jQuery && window.via || (function( $, window, undefined ) {
 
@@ -83,7 +83,9 @@
 	};
 
 	arrayPrototype.sortObject = arrayPrototype.sortObject || function ( by, asc ) {
-		asc = isUndefined( asc ) ? true : false;
+		if ( isUndefined( asc ) ) {
+			asc = true;
+		}
 		if ( by ) {
 			this.sort( function ( a, b ) {
 				var av = a[by];
@@ -741,10 +743,11 @@
 		},
 
 		//get the model except the shadow
-		getAll: function () {
-			var rtn = extend( {}, root );
+		pureModel: function ( path, stringified ) {
+			var rtn = extend( {}, rootProxy.get( true, path ) );
 			delete rtn[shadowNamespace];
-			return rtn;
+			rtn = JSON.stringify( rtn );
+			return stringified ? rtn : JSON.parse( rtn );
 		},
 
 		//empty everything in the repository
@@ -1239,7 +1242,7 @@
 					return;
 				}
 
-				var rtn = {};
+				var rtn;
 
 				for ( var path in modelHandlerData ) {
 
@@ -1248,6 +1251,7 @@
 					for ( var i = commonModelHandlers.length - 1; i >= 0; i-- ) {
 
 						if ( commonModelHandlers[i].view === pathOrView ) {
+							rtn = rtn || {};
 							rtn[path] = rtn[path] || [];
 							rtn[path].push( commonModelHandlers[i] );
 						}
@@ -1441,7 +1445,7 @@
 					return originalEventName + "." + shadowNamespace + "." + path;
 				}
 
-			).join(" ");
+			).join( " " );
 
 			$( views ).each( function () {
 
@@ -1554,15 +1558,28 @@
 		getHandlerData: function ( pathOrView ) {
 			var modelData = via.getModelHandlerData( pathOrView );
 			var viewData = via.getViewHandlerData( pathOrView );
-			if ( isString( pathOrView ) ) {
+			var isModel = isString( pathOrView );
+			if ( isModel ) {
+				var viewsToBeUpdated;
+				for (var i = 0; i < modelData.length; i++) {
+					viewsToBeUpdated = viewsToBeUpdated || [];
+					viewsToBeUpdated.pushUnique(modelData[i].view);
+				}
 				return {
-					viewsToBeUpdated: modelData,
+					viewsToBeUpdated: viewsToBeUpdated,
 					viewsUpdatingMe: viewData
 				};
 			} else {
+
+				var pathsUpdatingMe;
+				for (var path in modelData) {
+					pathsUpdatingMe = pathsUpdatingMe || [];
+					pathsUpdatingMe.pushUnique(path);
+				}
+
 				return {
-					modelsUpdatingMe: modelData,
-					modelsToBeUpdated: viewData
+					pathsUpdatingMe: pathsUpdatingMe,
+					pathsToBeUpdated: viewData
 				};
 			}
 		}

@@ -44,6 +44,7 @@ Learn
 
 <a href="http://code.semanticsworks.com/viaProxy.js/todos/todos.html">Using viaProxy.js to implement backbone's Todos</a>
 
+<a href="http://code.semanticsworks.com/viaProxy.js/test/index.html">Unit test</a>
 
 Questions?
 ----------

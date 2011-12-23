@@ -1,4 +1,4 @@
-window.jQuery && window.via || (function( $, window, undefined ) {
+window.jQuery && window.via || (function ( $, window, undefined ) {
 
 	/**
 	 * a wrapper over a Proxy constructor
@@ -47,7 +47,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 	via.debug.enableLog = true;
 	via.debug.enableDebugger = false;
 
-	window.log = window.log || function() {
+	window.log = window.log || function () {
 		if ( via.debug.enableLog && this.console ) {
 			console.log( Array.prototype.slice.call( arguments ) );
 		}
@@ -57,7 +57,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 	//#merge
 	raiseEvent = function ( currentPath, targetPath, eventType, proposed, removed ) {};
 
-	via._setRaiseEvent = function( fn ) {
+	via._setRaiseEvent = function ( fn ) {
 		raiseEvent = fn;
 	};
 	//#end_merge
@@ -148,35 +148,35 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 
 	extend( proxyPrototype, {
 
-		version: "@version",
+		version:"@version",
 
-		constructor: Proxy,
+		constructor:Proxy,
 
-		pushProxy: function ( newProxy ) {
+		pushProxy:function ( newProxy ) {
 			newProxy.oldProxy = this;
 			return newProxy;
 		},
 
-		childProxy: function( childPath ) {
+		childProxy:function ( childPath ) {
 			return this.pushProxy( new Proxy( joinPath( this.context, childPath ) ) );
 		},
 
-		parentProxy: function () {
+		parentProxy:function () {
 			return this.pushProxy( new via( via.contextOfPath( this.context ) ) );
 		},
 
-		popProxy: function() {
+		popProxy:function () {
 			if ( this.oldProxy ) {
 				return this.oldProxy;
 			}
 			throw "invalid operation, proxy.popProxy() failed because oldProxy is empty";
 		},
 
-		shadowProxy: function () {
+		shadowProxy:function () {
 			return this.childProxy( "*" );
 		},
 
-		mainProxy: function () {
+		mainProxy:function () {
 			var mainProxyContext;
 			if ( this.context === shadowNamespace ) {
 				mainProxyContext = "";
@@ -191,7 +191,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 			return this.pushProxy( via( mainProxyContext ) );
 		},
 
-		triggerChange: function ( subPath ) {
+		triggerChange:function ( subPath ) {
 			var physicalPath = this.physicalPath( subPath );
 
 			raiseEvent( physicalPath, physicalPath, "afterUpdate" );
@@ -199,22 +199,25 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		},
 
 		//to get the logicalPath of current proxy, leave subPath empty
-		logicalPath: function ( subPath ) {
+		logicalPath:function ( subPath ) {
 			return toLogicalPath( joinPath( this.context, subPath ) );
 		},
 
 		//to get the physicalPath of current proxy, leave subPath empty
-		physicalPath: function ( subPath ) {
+		physicalPath:function ( subPath ) {
 			return toPhysicalPath( joinPath( this.context, subPath ) );
 		},
 
-		get: function( keepOriginal, subPath ) {
+		get:function ( keepOriginal, subPath ) {
 			if ( isString( keepOriginal ) || isNumber( keepOriginal ) ) {
 				subPath = "" + keepOriginal;
 				keepOriginal = false;
 			}
 
-			var accessor = getAccessor( this.context, subPath );
+			var accessor = getAccessor( this.context, subPath, true );
+			if ( !accessor ) {
+				return;
+			}
 			var rtn = !accessor.index ?
 				accessor.hostObj :
 				accessor.hostObj[accessor.index];
@@ -227,7 +230,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 				rtn;
 		},
 
-		call: function ( subPath ) {
+		call:function ( subPath ) {
 
 			var accessor = getAccessor( this.context, subPath );
 			var fn = accessor.hostObj[accessor.index];
@@ -238,7 +241,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 			return fn.apply( accessor.hostObj, slice.call( arguments, 1 ) );
 		},
 
-		create: function( subPath, value, accessor /* accessor is used internally */ ) {
+		create:function ( subPath, value, accessor /* accessor is used internally */ ) {
 			var rtn;
 			if ( isPlainObject( subPath ) ) {
 				for ( var key in subPath ) {
@@ -274,7 +277,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		},
 
 		/* accessor is used internally */
-		update: function( subPath, value, accessor ) {
+		update:function ( subPath, value, accessor ) {
 			if ( this.context !== "" && arguments.length === 1 ) {
 				//allow you update like via("a").update(a);
 				return rootProxy.update( this.context, subPath );
@@ -306,7 +309,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 			return this;
 		},
 
-		del: function ( subPath, force ) {
+		del:function ( subPath, force ) {
 			if ( subPath === undefined ) {
 				return rootProxy.del( this.context );
 			}
@@ -348,7 +351,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 			return this;
 		},
 
-		createOrUpdate: function ( subPath, valueToSet ) {
+		createOrUpdate:function ( subPath, valueToSet ) {
 
 			var accessor = getAccessor( this.context, subPath );
 			return ( accessor.index in accessor.hostObj ) ?
@@ -356,14 +359,14 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 				this.create( subPath, valueToSet, accessor );
 		},
 
-		createIfUndefined: function ( subPath, valueToSet ) {
+		createIfUndefined:function ( subPath, valueToSet ) {
 			var accessor = getAccessor( this.context, subPath );
 			return ( accessor.index in accessor.hostObj ) ?
 				this :
 				this.create( subPath, valueToSet, accessor );
 		},
 
-		updateAll: function ( pairs ) {
+		updateAll:function ( pairs ) {
 			var rtn;
 			for ( var key in pairs ) {
 				if ( hasOwn.call( pairs, key ) ) {
@@ -376,7 +379,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 			return this;
 		},
 
-		isModelEmpty : function ( keepOriginal, subPath ) {
+		isModelEmpty:function ( keepOriginal, subPath ) {
 			var value = this.get( keepOriginal, subPath );
 			return !value ? true :
 				!isArray( value ) ? false :
@@ -384,15 +387,15 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		},
 
 		//the following are array methods
-		indexOf: function ( item ) {
+		indexOf:function ( item ) {
 			return this.get().indexOf( item );
 		},
 
-		contains: function ( item ) {
+		contains:function ( item ) {
 			return (this.indexOf( item ) !== -1);
 		},
 
-		first: function () {
+		first:function () {
 			return this.get( "0" );
 		},
 
@@ -401,46 +404,46 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 			return value[value.length - 1];
 		},
 
-		push: function ( item ) {
+		push:function ( item ) {
 			return this.create( this.get().length, item );
 		},
 
-		pushRange: function ( items ) {
+		pushRange:function ( items ) {
 			for ( var i = 0; i < items.length; i++ ) {
 				this.push( items[i] );
 			}
 			return this;
 		},
 
-		pushUnique: function ( item ) {
+		pushUnique:function ( item ) {
 			return !this.contains( item ) ?
 				this.push( item ) :
 				this;
 		},
 
-		pop: function () {
+		pop:function () {
 			return this.removeAt( this.get().length - 1 );
 		},
 
-		insertAt: function ( index, item ) {
+		insertAt:function ( index, item ) {
 			this.get().splice( index, 0, item );
 			raiseEvent( this.context, this.context + "." + index, "afterCreate" );
 			return this;
 		},
 
-		updateAt: function ( index, item ) {
+		updateAt:function ( index, item ) {
 			return this.update( index, item );
 		},
 
-		removeAt: function ( index ) {
+		removeAt:function ( index ) {
 			return this.del( index );
 		},
 
-		prepend: function ( item ) {
+		prepend:function ( item ) {
 			return this.insertAt( 0, item );
 		},
 
-		swap: function ( oldItem, newItem ) {
+		swap:function ( oldItem, newItem ) {
 			if ( oldItem == newItem ) {
 				return this;
 			}
@@ -453,28 +456,28 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 			throw "oldItem not found";
 		},
 
-		removeItem: function( item ) {
+		removeItem:function ( item ) {
 			var index = this.indexOf( item );
 			return index !== -1 ? this.removeAt( index ) : this;
 		},
 
-		clear: function () {
+		clear:function () {
 			var items = this.get();
 			items.splice( 0, items.length );
 			raiseEvent( this.context, this.context, "init" );
 			return this;
 		},
 
-		count: function () {
+		count:function () {
 			return this.get().length;
 		},
 
-		sort: function ( by, asc ) {
+		sort:function ( by, asc ) {
 			return via.raiseEvent( this.context, this.context, "init", this.get().sortObject( by, asc ) );
 		}
 	} );
 
-	function getAccessor( context, subPath ) {
+	function getAccessor( context, subPath, readOnly ) {
 
 		if ( subPath === 0 ) {
 			subPath = "0";
@@ -506,14 +509,19 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		}
 
 		if ( isPrimitive( hostObj ) ) {
-			throw "invalid access proxy using path:" + logicalPath;
+			if ( readOnly ) {
+				return;
+			}
+			else {
+				throw "invalid access proxy using path:" + logicalPath;
+			}
 		}
 
 		return {
-			physicalPath: physicalPath,
-			logicalPath: logicalPath,
-			hostObj: hostObj,
-			index: index
+			physicalPath:physicalPath,
+			logicalPath:logicalPath,
+			hostObj:hostObj,
+			index:index
 		};
 	}
 
@@ -522,8 +530,8 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 	}
 
 	Shadow.prototype = {
-		constructor: Shadow,
-		mainModel: function () {
+		constructor:Shadow,
+		mainModel:function () {
 			return rootProxy.get( this.mainPath );
 		}
 	};
@@ -648,15 +656,15 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 	//helpers
 	extend( via, {
 
-		fn: proxyPrototype,
+		fn:proxyPrototype,
 
-		accessor: getAccessor,
+		accessor:getAccessor,
 
-		toPhysicalPath : toPhysicalPath,
+		toPhysicalPath:toPhysicalPath,
 
-		toLogicalPath : toLogicalPath,
+		toLogicalPath:toLogicalPath,
 
-		clearObj : function clearObj( obj ) {
+		clearObj:function clearObj( obj ) {
 			if ( isPrimitive( obj ) ) {
 				return null;
 			}
@@ -668,24 +676,24 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 			return obj;
 		},
 
-		isUndefined: isUndefined,
+		isUndefined:isUndefined,
 
-		isPrimitive : isPrimitive,
+		isPrimitive:isPrimitive,
 
-		isString: isString,
+		isString:isString,
 
-		isObject: isObject,
+		isObject:isObject,
 
-		shadowNamespace: function () {
+		shadowNamespace:function () {
 			return shadowNamespace;
 		},
 
-		Shadow: Shadow,
+		Shadow:Shadow,
 
 		//the is an array of cleanup functions to clean all resource
 		//such as dependencies data, shadow object
 		//when a path is deleted from repository
-		modelCleanups: [function ( path ) {
+		modelCleanups:[function ( path ) {
 
 			//remove reference that path is in referencing role
 			for ( var referencedPath in modelReferences ) {
@@ -712,7 +720,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		}],
 
 		//this is useful for adding dependency manually
-		addRef: function ( referencingPath, referencedPath ) {
+		addRef:function ( referencingPath, referencedPath ) {
 			referencingPath = toPhysicalPath( referencingPath );
 			referencedPath = toPhysicalPath( referencedPath );
 			modelReferences[referencedPath] = modelReferences[referencedPath] || [];
@@ -721,7 +729,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		},
 
 		//this is useful for removing dependency manually
-		removeRef: function ( referencingPath, referencedPath ) {
+		removeRef:function ( referencingPath, referencedPath ) {
 			referencingPath = toPhysicalPath( referencingPath );
 			referencedPath = toPhysicalPath( referencedPath );
 			modelReferences[referencedPath].remove( referencingPath );
@@ -731,10 +739,10 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 			return this;
 		},
 
-		modelReferences: modelReferences,
+		modelReferences:modelReferences,
 
 		//use this for configure options
-		options: function( name, value ) {
+		options:function ( name, value ) {
 			if ( name === undefined ) {
 				return defaultOptions;
 			}
@@ -759,7 +767,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		},
 
 		//get the model except the shadow
-		pureModel: function ( path, stringified ) {
+		pureModel:function ( path, stringified ) {
 			var rtn = extend( {}, rootProxy.get( true, path ) );
 			delete rtn[shadowNamespace];
 			rtn = JSON.stringify( rtn );
@@ -767,7 +775,7 @@ window.jQuery && window.via || (function( $, window, undefined ) {
 		},
 
 		//empty everything in the repository
-		empty: function () {
+		empty:function () {
 			for ( var key in root ) {
 				if ( key !== shadowNamespace ) {
 					rootProxy.del( key, true );

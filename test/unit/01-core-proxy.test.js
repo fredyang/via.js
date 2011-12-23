@@ -8,11 +8,11 @@ function assertEmptyDb() {
 	//	ok( $.isEmptyObject(via.getViewHandlerData()), "viewHandlerData is empty" );
 
 	var empty = $.isEmptyObject( via.pureModel() )
-		    && $.isEmptyObject( via.modelReferences )
-		    && $.isEmptyObject( via.getModelHandlerData() )
+		            && $.isEmptyObject( via.modelReferences )
+		            && $.isEmptyObject( via.getModelHandlerData() )
 		&& $.isEmptyObject( via.getViewHandlerData() );
-	
-	strictEqual(empty , true, "The root is empty");
+
+	strictEqual( empty, true, "The root is empty" );
 }
 
 test( "helper function test", function () {
@@ -153,12 +153,7 @@ test( "basic CRUD method of proxy", function () {
 
 	var invalidPath = "djfkjdfk.jkjdfkj";
 
-	raises( function () {
-		rootProxy.get( invalidPath );
-	}, function ( e ) {
-		var reg = new RegExp( invalidPath );
-		return !!reg.exec( e );
-	}, "rootProxy.get(invalidPath) will result invalid path exception" );
+	strictEqual( rootProxy.get( invalidPath ), undefined, "rootProxy.get(invalidPath) will return undefined" );
 
 	raises( function () {
 		rootProxy.create( invalidPath, value );
@@ -186,16 +181,16 @@ test( "basic CRUD method of proxy", function () {
 test( "other CRUD method of proxy", function () {
 
 	var obj = {
-		a: "a",
-		b: "b"
+		a:"a",
+		b:"b"
 	};
 	via().create( obj );
 
 	deepEqual( via.pureModel(), obj, "you can create complex object like proxy.create(obj) as a shortcut to proxy.create(path, obj)" );
 
 	var obj2 = {
-		a: "a2",
-		b: "b2"
+		a:"a2",
+		b:"b2"
 	};
 
 	via().updateAll( obj2 );
@@ -220,31 +215,31 @@ test( "test reference integrity in model remove", function () {
 	var rootProxy = via();
 
 	var jsonObject = {
-		a: "a",
-		b: {
-			c: "c"
+		a:"a",
+		b:{
+			c:"c"
 		},
-		d: function() {
+		d:function () {
 			return this.a;
 		},
-		e: function () {
+		e:function () {
 			return this.d();
 		}
 	};
 
 	rootProxy.create( jsonObject );
 	deepEqual( {
-		a: "a",
-		b: {
-			c: "c"
+		a:"a",
+		b:{
+			c:"c"
 		},
-		d: "a",
-		e: "a"
+		d:"a",
+		e:"a"
 	}, {
-		a: rootProxy.get( "a" ),
-		b: rootProxy.get( "b" ),
-		d: rootProxy.get( "d" ),
-		e: rootProxy.get( "e" )
+		a:rootProxy.get( "a" ),
+		b:rootProxy.get( "b" ),
+		d:rootProxy.get( "d" ),
+		e:rootProxy.get( "e" )
 	}, "rootProxy.create(jsonObject) will extend objDb" );
 
 	deepEqual( via.modelReferences["a"], ["d"], "via.create() will parse dependencies" +
@@ -286,8 +281,8 @@ test( "test reference integrity in model remove", function () {
 
 test( "remove model by force", function () {
 	via().create( {
-		a: "a",
-		b: function () {
+		a:"a",
+		b:function () {
 			return this.a;
 		}
 	} );
@@ -334,9 +329,9 @@ test( "proxy navigation1", function () {
 
 test( "proxy navigation2", function () {
 	via().create( {
-		a: {
-			b: {
-				c: "c"
+		a:{
+			b:{
+				c:"c"
 			}
 		}
 	} );
@@ -362,19 +357,19 @@ test( "helpers", function () {
 	ok( via.isPrimitive( "s" ), "string is primitive" );
 
 	var obj = {
-		a: "a",
-		b: "b",
-		c: {
-			d: "d"
+		a:"a",
+		b:"b",
+		c:{
+			d:"d"
 		}
 	}
 
 	via.clearObj( obj );
 	deepEqual( obj, {
-		a: null,
-		b: null,
-		c: {
-			d: null
+		a:null,
+		b:null,
+		c:{
+			d:null
 		}
 	}, "via.clearObj(obj) can empty primitive value inside" );
 
@@ -403,9 +398,9 @@ test( "array method of proxy", function () {
 
 	function getModelEventForCompare( modelEvent ) {
 		var rtn = {
-			path: modelEvent.path,
-			eventType: modelEvent.eventType,
-			target: modelEvent.target
+			path:modelEvent.path,
+			eventType:modelEvent.eventType,
+			target:modelEvent.target
 		};
 
 		if ( "removed" in modelEvent ) {
@@ -441,44 +436,44 @@ test( "array method of proxy", function () {
 	equal( array[3], item1, "proxy.appendItem return the index" );
 
 	deepEqual( modelEventForCompare, {
-		path: path,
-		eventType: "afterCreate.child",
-		target: path + "." + (array.length - 1)
+		path:path,
+		eventType:"afterCreate.child",
+		target:path + "." + (array.length - 1)
 	}, "proxy.appendItem will trigger expected event" );
 
 	var removedItem = proxy.pop();
 
 	deepEqual( modelEventForCompare, {
-		path: path,
-		eventType: "afterDel.child",
-		target: path + ".3",
-		removed: item1
+		path:path,
+		eventType:"afterDel.child",
+		target:path + ".3",
+		removed:item1
 	}, "proxy.popItem will trigger expected event" );
 
 	proxy.insertAt( 1, item1 );
 	deepEqual( proxy.get(), ["a", "d", "b", "c"], "proxy.insertItemAt will can create the " +
 	                                              "value at the index" );
 	deepEqual( modelEventForCompare, {
-		path: path,
-		eventType: "afterCreate",
-		target: path + ".1"
+		path:path,
+		eventType:"afterCreate",
+		target:path + ".1"
 	}, "the modelEvent in modelHandler is expected, after calling proxy.insertItemAt" );
 
 	proxy.removeItem( item1 );
 	deepEqual( modelEventForCompare, {
-		path: path,
-		eventType: "afterDel.child",
-		target: path + ".1",
-		removed: item1
+		path:path,
+		eventType:"afterDel.child",
+		target:path + ".1",
+		removed:item1
 	}, "the modelEvent in modelHandler is expected, after calling proxy.removeItem" );
 
 	deepEqual( array, ["a", "b", "c"], "proxy.removeItem is success" );
 
 	proxy.prepend( item1 );
 	deepEqual( modelEventForCompare, {
-		path: path,
-		eventType: "afterCreate",
-		target: path + ".0"
+		path:path,
+		eventType:"afterCreate",
+		target:path + ".0"
 	}, " the modelEvent in modelHandler is expected, after calling proxy.prependItem" );
 
 	proxy.removeItem( item1 );
@@ -486,19 +481,19 @@ test( "array method of proxy", function () {
 
 	proxy.swap( "a", "a1" );
 	deepEqual( modelEventForCompare, {
-		path: path,
-		eventType: "afterUpdate.child",
-		target: path + ".0",
-		removed: "a"
+		path:path,
+		eventType:"afterUpdate.child",
+		target:path + ".0",
+		removed:"a"
 	}, " the modelEvent in modelHandler is expected, after calling proxy.replaceItem" );
 	proxy.swap( "a1", "a" );
 	deepEqual( array, ["a", "b", "c"], "array is reset by proxy.replaceItem()" );
 
 	proxy.clear();
 	deepEqual( modelEventForCompare, {
-		path: path,
-		eventType: "init",
-		target: path
+		path:path,
+		eventType:"init",
+		target:path
 	}, " the modelEvent in modelHandler is expected, after calling proxy.clearItems" );
 	deepEqual( array, [], "after proxy.clearItems() is called, the array is empty" );
 

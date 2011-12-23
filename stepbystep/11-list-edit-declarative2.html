@@ -25,14 +25,16 @@
 				<th style="cursor: pointer" via="@class:sortModel,.,lastName">Last
 					Name
 				</th>
-				<th>
-				</th>
+				<!--<th>-->
+				<!--</th>-->
 			</tr>
 			</thead>
-
-			<tbody id="allContacts"
+<!--<tbody id="allContacts"
 			       via="@editableList:#contactRowEditable,#contactRowInEdit
 			       @class:simpleList,.,#contactRowEditable">
+			</tbody>-->
+			<tbody id="allContacts"
+			       via="@class:simpleList,.,#contactRowRead">
 			</tbody>
 
 			<tfoot>

@@ -7,9 +7,9 @@
  * http://www.opensource.org/licenses/mit-license
  * http://www.opensource.org/licenses/gpl-2.0
  *
- * Date: Wed Dec 21 22:32:20 2011 -0500
+ * Date: Thu Dec 22 22:28:26 2011 -0500
  */
- window.jQuery && window.via || (function( $, window, undefined ) {
+ window.jQuery && window.via || (function ( $, window, undefined ) {
 
 	/**
 	 * a wrapper over a Proxy constructor
@@ -58,7 +58,7 @@
 	via.debug.enableLog = true;
 	via.debug.enableDebugger = false;
 
-	window.log = window.log || function() {
+	window.log = window.log || function () {
 		if ( via.debug.enableLog && this.console ) {
 			console.log( Array.prototype.slice.call( arguments ) );
 		}
@@ -152,35 +152,35 @@
 
 	extend( proxyPrototype, {
 
-		version: "0.2pre",
+		version:"0.2pre",
 
-		constructor: Proxy,
+		constructor:Proxy,
 
-		pushProxy: function ( newProxy ) {
+		pushProxy:function ( newProxy ) {
 			newProxy.oldProxy = this;
 			return newProxy;
 		},
 
-		childProxy: function( childPath ) {
+		childProxy:function ( childPath ) {
 			return this.pushProxy( new Proxy( joinPath( this.context, childPath ) ) );
 		},
 
-		parentProxy: function () {
+		parentProxy:function () {
 			return this.pushProxy( new via( via.contextOfPath( this.context ) ) );
 		},
 
-		popProxy: function() {
+		popProxy:function () {
 			if ( this.oldProxy ) {
 				return this.oldProxy;
 			}
 			throw "invalid operation, proxy.popProxy() failed because oldProxy is empty";
 		},
 
-		shadowProxy: function () {
+		shadowProxy:function () {
 			return this.childProxy( "*" );
 		},
 
-		mainProxy: function () {
+		mainProxy:function () {
 			var mainProxyContext;
 			if ( this.context === shadowNamespace ) {
 				mainProxyContext = "";
@@ -195,7 +195,7 @@
 			return this.pushProxy( via( mainProxyContext ) );
 		},
 
-		triggerChange: function ( subPath ) {
+		triggerChange:function ( subPath ) {
 			var physicalPath = this.physicalPath( subPath );
 
 			raiseEvent( physicalPath, physicalPath, "afterUpdate" );
@@ -203,22 +203,25 @@
 		},
 
 		//to get the logicalPath of current proxy, leave subPath empty
-		logicalPath: function ( subPath ) {
+		logicalPath:function ( subPath ) {
 			return toLogicalPath( joinPath( this.context, subPath ) );
 		},
 
 		//to get the physicalPath of current proxy, leave subPath empty
-		physicalPath: function ( subPath ) {
+		physicalPath:function ( subPath ) {
 			return toPhysicalPath( joinPath( this.context, subPath ) );
 		},
 
-		get: function( keepOriginal, subPath ) {
+		get:function ( keepOriginal, subPath ) {
 			if ( isString( keepOriginal ) || isNumber( keepOriginal ) ) {
 				subPath = "" + keepOriginal;
 				keepOriginal = false;
 			}
 
-			var accessor = getAccessor( this.context, subPath );
+			var accessor = getAccessor( this.context, subPath, true );
+			if ( !accessor ) {
+				return;
+			}
 			var rtn = !accessor.index ?
 				accessor.hostObj :
 				accessor.hostObj[accessor.index];
@@ -231,7 +234,7 @@
 				rtn;
 		},
 
-		call: function ( subPath ) {
+		call:function ( subPath ) {
 
 			var accessor = getAccessor( this.context, subPath );
 			var fn = accessor.hostObj[accessor.index];
@@ -242,7 +245,7 @@
 			return fn.apply( accessor.hostObj, slice.call( arguments, 1 ) );
 		},
 
-		create: function( subPath, value, accessor /* accessor is used internally */ ) {
+		create:function ( subPath, value, accessor /* accessor is used internally */ ) {
 			var rtn;
 			if ( isPlainObject( subPath ) ) {
 				for ( var key in subPath ) {
@@ -278,7 +281,7 @@
 		},
 
 		/* accessor is used internally */
-		update: function( subPath, value, accessor ) {
+		update:function ( subPath, value, accessor ) {
 			if ( this.context !== "" && arguments.length === 1 ) {
 				//allow you update like via("a").update(a);
 				return rootProxy.update( this.context, subPath );
@@ -310,7 +313,7 @@
 			return this;
 		},
 
-		del: function ( subPath, force ) {
+		del:function ( subPath, force ) {
 			if ( subPath === undefined ) {
 				return rootProxy.del( this.context );
 			}
@@ -352,7 +355,7 @@
 			return this;
 		},
 
-		createOrUpdate: function ( subPath, valueToSet ) {
+		createOrUpdate:function ( subPath, valueToSet ) {
 
 			var accessor = getAccessor( this.context, subPath );
 			return ( accessor.index in accessor.hostObj ) ?
@@ -360,14 +363,14 @@
 				this.create( subPath, valueToSet, accessor );
 		},
 
-		createIfUndefined: function ( subPath, valueToSet ) {
+		createIfUndefined:function ( subPath, valueToSet ) {
 			var accessor = getAccessor( this.context, subPath );
 			return ( accessor.index in accessor.hostObj ) ?
 				this :
 				this.create( subPath, valueToSet, accessor );
 		},
 
-		updateAll: function ( pairs ) {
+		updateAll:function ( pairs ) {
 			var rtn;
 			for ( var key in pairs ) {
 				if ( hasOwn.call( pairs, key ) ) {
@@ -380,7 +383,7 @@
 			return this;
 		},
 
-		isModelEmpty : function ( keepOriginal, subPath ) {
+		isModelEmpty:function ( keepOriginal, subPath ) {
 			var value = this.get( keepOriginal, subPath );
 			return !value ? true :
 				!isArray( value ) ? false :
@@ -388,15 +391,15 @@
 		},
 
 		//the following are array methods
-		indexOf: function ( item ) {
+		indexOf:function ( item ) {
 			return this.get().indexOf( item );
 		},
 
-		contains: function ( item ) {
+		contains:function ( item ) {
 			return (this.indexOf( item ) !== -1);
 		},
 
-		first: function () {
+		first:function () {
 			return this.get( "0" );
 		},
 
@@ -405,46 +408,46 @@
 			return value[value.length - 1];
 		},
 
-		push: function ( item ) {
+		push:function ( item ) {
 			return this.create( this.get().length, item );
 		},
 
-		pushRange: function ( items ) {
+		pushRange:function ( items ) {
 			for ( var i = 0; i < items.length; i++ ) {
 				this.push( items[i] );
 			}
 			return this;
 		},
 
-		pushUnique: function ( item ) {
+		pushUnique:function ( item ) {
 			return !this.contains( item ) ?
 				this.push( item ) :
 				this;
 		},
 
-		pop: function () {
+		pop:function () {
 			return this.removeAt( this.get().length - 1 );
 		},
 
-		insertAt: function ( index, item ) {
+		insertAt:function ( index, item ) {
 			this.get().splice( index, 0, item );
 			raiseEvent( this.context, this.context + "." + index, "afterCreate" );
 			return this;
 		},
 
-		updateAt: function ( index, item ) {
+		updateAt:function ( index, item ) {
 			return this.update( index, item );
 		},
 
-		removeAt: function ( index ) {
+		removeAt:function ( index ) {
 			return this.del( index );
 		},
 
-		prepend: function ( item ) {
+		prepend:function ( item ) {
 			return this.insertAt( 0, item );
 		},
 
-		swap: function ( oldItem, newItem ) {
+		swap:function ( oldItem, newItem ) {
 			if ( oldItem == newItem ) {
 				return this;
 			}
@@ -457,28 +460,28 @@
 			throw "oldItem not found";
 		},
 
-		removeItem: function( item ) {
+		removeItem:function ( item ) {
 			var index = this.indexOf( item );
 			return index !== -1 ? this.removeAt( index ) : this;
 		},
 
-		clear: function () {
+		clear:function () {
 			var items = this.get();
 			items.splice( 0, items.length );
 			raiseEvent( this.context, this.context, "init" );
 			return this;
 		},
 
-		count: function () {
+		count:function () {
 			return this.get().length;
 		},
 
-		sort: function ( by, asc ) {
+		sort:function ( by, asc ) {
 			return via.raiseEvent( this.context, this.context, "init", this.get().sortObject( by, asc ) );
 		}
 	} );
 
-	function getAccessor( context, subPath ) {
+	function getAccessor( context, subPath, readOnly ) {
 
 		if ( subPath === 0 ) {
 			subPath = "0";
@@ -510,14 +513,19 @@
 		}
 
 		if ( isPrimitive( hostObj ) ) {
-			throw "invalid access proxy using path:" + logicalPath;
+			if ( readOnly ) {
+				return;
+			}
+			else {
+				throw "invalid access proxy using path:" + logicalPath;
+			}
 		}
 
 		return {
-			physicalPath: physicalPath,
-			logicalPath: logicalPath,
-			hostObj: hostObj,
-			index: index
+			physicalPath:physicalPath,
+			logicalPath:logicalPath,
+			hostObj:hostObj,
+			index:index
 		};
 	}
 
@@ -526,8 +534,8 @@
 	}
 
 	Shadow.prototype = {
-		constructor: Shadow,
-		mainModel: function () {
+		constructor:Shadow,
+		mainModel:function () {
 			return rootProxy.get( this.mainPath );
 		}
 	};
@@ -652,15 +660,15 @@
 	//helpers
 	extend( via, {
 
-		fn: proxyPrototype,
+		fn:proxyPrototype,
 
-		accessor: getAccessor,
+		accessor:getAccessor,
 
-		toPhysicalPath : toPhysicalPath,
+		toPhysicalPath:toPhysicalPath,
 
-		toLogicalPath : toLogicalPath,
+		toLogicalPath:toLogicalPath,
 
-		clearObj : function clearObj( obj ) {
+		clearObj:function clearObj( obj ) {
 			if ( isPrimitive( obj ) ) {
 				return null;
 			}
@@ -672,24 +680,24 @@
 			return obj;
 		},
 
-		isUndefined: isUndefined,
+		isUndefined:isUndefined,
 
-		isPrimitive : isPrimitive,
+		isPrimitive:isPrimitive,
 
-		isString: isString,
+		isString:isString,
 
-		isObject: isObject,
+		isObject:isObject,
 
-		shadowNamespace: function () {
+		shadowNamespace:function () {
 			return shadowNamespace;
 		},
 
-		Shadow: Shadow,
+		Shadow:Shadow,
 
 		//the is an array of cleanup functions to clean all resource
 		//such as dependencies data, shadow object
 		//when a path is deleted from repository
-		modelCleanups: [function ( path ) {
+		modelCleanups:[function ( path ) {
 
 			//remove reference that path is in referencing role
 			for ( var referencedPath in modelReferences ) {
@@ -716,7 +724,7 @@
 		}],
 
 		//this is useful for adding dependency manually
-		addRef: function ( referencingPath, referencedPath ) {
+		addRef:function ( referencingPath, referencedPath ) {
 			referencingPath = toPhysicalPath( referencingPath );
 			referencedPath = toPhysicalPath( referencedPath );
 			modelReferences[referencedPath] = modelReferences[referencedPath] || [];
@@ -725,7 +733,7 @@
 		},
 
 		//this is useful for removing dependency manually
-		removeRef: function ( referencingPath, referencedPath ) {
+		removeRef:function ( referencingPath, referencedPath ) {
 			referencingPath = toPhysicalPath( referencingPath );
 			referencedPath = toPhysicalPath( referencedPath );
 			modelReferences[referencedPath].remove( referencingPath );
@@ -735,10 +743,10 @@
 			return this;
 		},
 
-		modelReferences: modelReferences,
+		modelReferences:modelReferences,
 
 		//use this for configure options
-		options: function( name, value ) {
+		options:function ( name, value ) {
 			if ( name === undefined ) {
 				return defaultOptions;
 			}
@@ -763,7 +771,7 @@
 		},
 
 		//get the model except the shadow
-		pureModel: function ( path, stringified ) {
+		pureModel:function ( path, stringified ) {
 			var rtn = extend( {}, rootProxy.get( true, path ) );
 			delete rtn[shadowNamespace];
 			rtn = JSON.stringify( rtn );
@@ -771,7 +779,7 @@
 		},
 
 		//empty everything in the repository
-		empty: function () {
+		empty:function () {
 			for ( var key in root ) {
 				if ( key !== shadowNamespace ) {
 					rootProxy.del( key, true );
@@ -985,7 +993,7 @@
 
 		subscribedEvents = subscribedEvents.split( rEventSeparator );
 
-		for ( var i = 0; i < subscribedEvents.length; i ++ ) {
+		for ( var i = 0; i < subscribedEvents.length; i++ ) {
 
 			var subscribeEvent = subscribedEvents[i];
 
@@ -993,44 +1001,50 @@
 				return true;
 			}
 
-			//  /(\w+)?\*(\.(\w+))?/
+			//  /(\w+)?(\*?)(\.?)([^\s]*)/
 			var match = rStarSuffix.exec( subscribeEvent );
 
-			if ( match ) {
-				if ( match[4] ) {
-					if ( match[1] ) {
-						//before*.parent
-						if ( RegExp( "^" + match[1] + "\\w*\\." + match[4] ).test( event ) ) {
-							return true;
-						}
-					} else {
-						//*.parent
-						if ( RegExp( "^\\w+\\." + match[4] ).test( event ) ) {
-							return true;
-						}
-					}
-				} else {
+			//if it is xx*
+			if ( match && match[2] ) {
 
-					if ( match[3] ) {
-						//before*.
-						// it only match beforeUpdate but not beforeUpdate.parent
+				if ( match[2] ) {
+
+					if ( match[4] ) {
 						if ( match[1] ) {
-							//before*. match beforeUpdate but not beforeUpdate.child
-							regex = RegExp( "^" + match[1] + "(?!\\w*\\.\\w+)" );
+							//before*.parent
+							if ( RegExp( "^" + match[1] + "\\w*\\." + match[4] ).test( event ) ) {
+								return true;
+							}
 						} else {
-							//*.  match beforeUpdate but not beforeUpdate.child
-							regex = rNoExtension;
-						}
-						if ( regex.test( event ) ) {
-							return true;
+							//*.parent
+							if ( RegExp( "^\\w+\\." + match[4] ).test( event ) ) {
+								return true;
+							}
 						}
 					} else {
-						//before*
-						if ( event.beginsWith( match[1] ) ) {
-							return true;
+
+						if ( match[3] ) {
+							//before*.
+							// it only match beforeUpdate but not beforeUpdate.parent
+							if ( match[1] ) {
+								//before*. match beforeUpdate but not beforeUpdate.child
+								regex = RegExp( "^" + match[1] + "(?!\\w*\\.\\w+)" );
+							} else {
+								//*.  match beforeUpdate but not beforeUpdate.child
+								regex = rNoExtension;
+							}
+							if ( regex.test( event ) ) {
+								return true;
+							}
+						} else {
+							//before*
+							if ( event.beginsWith( match[1] ) ) {
+								return true;
+							}
 						}
 					}
 				}
+
 			}
 		}
 
@@ -1064,47 +1078,47 @@
 
 	ModelEvent.prototype = {
 
-		constructor: ModelEvent,
+		constructor:ModelEvent,
 
-		targetProxy: function () {
+		targetProxy:function () {
 			return via( this.target );
 		},
 
 		//target is always where the actual update happens
-		targetValue: function ( keepOriginal ) {
+		targetValue:function ( keepOriginal ) {
 			return via().get( keepOriginal, this.target );
 		},
 
-		targetContext: function () {
+		targetContext:function () {
 			return via.contextOfPath( this.target );
 		},
 
-		targetIndex: function () {
+		targetIndex:function () {
 			return via.indexOfPath( this.target );
 		},
 
 		//determine whether the event will be bubbled up to parent
-		bubbleUp: true,
+		bubbleUp:true,
 
 		//determine whether the event will be propagated to other
 		//area of the model system, it include parent, and horizontal reference
-		continueEventing: true,
+		continueEventing:true,
 
 		//this is useful for validation
-		hasError: false,
+		hasError:false,
 
 		//value is the value of current path,
 		// in most of the case you should use this,
 		//because you path can be dependent of change of other path
-		currentValue: function ( keepOriginal ) {
+		currentValue:function ( keepOriginal ) {
 			return via().get( keepOriginal, this.path );
 		},
 
-		currentProxy: function () {
+		currentProxy:function () {
 			return via( this.path );
 		},
 
-		isModelEmpty: function () {
+		isModelEmpty:function () {
 
 			var options = this.options;
 
@@ -1120,7 +1134,7 @@
 		}
 	};
 
-	function buildModelHandlerOptions(view, modelHandler, options ) {
+	function buildModelHandlerOptions( view, modelHandler, options ) {
 
 		if ( isString( modelHandler ) && modelHandler.beginsWith( "*" ) ) {
 
@@ -1130,7 +1144,7 @@
 
 		if ( isFunction( modelHandler.buildOptions ) ) {
 
-			options = modelHandler.buildOptions.call(view, options );
+			options = modelHandler.buildOptions.call( view, options );
 		}
 		return options;
 	}
@@ -1155,7 +1169,7 @@
 		//addModelHandler(path, modelEvents, views, modelHandler, options)
 		//if modelEvent == "once" is equivalent to via.renderViews,
 		//it is good for declarative purpose
-		addModelHandler: function ( path, modelEvents, views, modelHandler, options ) {
+		addModelHandler:function ( path, modelEvents, views, modelHandler, options ) {
 
 			if ( modelEvents === "once" ) {
 				return this.renderViews( path, views, modelHandler, options );
@@ -1184,23 +1198,23 @@
 
 			views.each( function () {
 
-				options = buildModelHandlerOptions(this, modelHandler, options );
+				options = buildModelHandlerOptions( this, modelHandler, options );
 
 				markAsView( this );
 				modelHandlerData[path].push( {
-					view: this,
-					modelHandler: modelHandler,
-					modelEvents: modelEvents,
-					options: options
+					view:this,
+					modelHandler:modelHandler,
+					modelEvents:modelEvents,
+					options:options
 				} );
 
 				if ( shouldInvokeModelHandler( modelEvents, "init" ) ) {
 					//"this" refers to a view
 					invokeModelHandler( this, modelHandler, new ModelEvent( {
-						path: path,
-						target: path,
-						eventType: "init",
-						options: options
+						path:path,
+						target:path,
+						eventType:"init",
+						options:options
 					} ) );
 				}
 			} );
@@ -1209,7 +1223,7 @@
 
 		//it support removeModelHandler(path), removeModelHandler(views)
 		//normally you don't need to call it explicitly, it is called in removing view and removing model
-		removeModelHandler: function( pathOrViews ) {
+		removeModelHandler:function ( pathOrViews ) {
 
 			if ( isString( pathOrViews ) ) {
 				//it is a path
@@ -1253,7 +1267,7 @@
 		// getModelHandlerData(),
 		// getModelHandlerData(path),
 		// getModelHandlerData(view)
-		getModelHandlerData: function( pathOrView ) {
+		getModelHandlerData:function ( pathOrView ) {
 
 			if ( isString( pathOrView ) ) {
 				//it is a path
@@ -1283,43 +1297,43 @@
 				}
 				return rtn;
 
-			} else if ( ! pathOrView ) {
+			} else if ( !pathOrView ) {
 
 				return modelHandlerData;
 			}
 		},
 
-		renderViews: function( path, views, modelHandler, options ) {
+		renderViews:function ( path, views, modelHandler, options ) {
 			path = toPhysicalPath( path, true );
 
 			$( views ).each( function () {
 
-				options = buildModelHandlerOptions(this, modelHandler, options );
+				options = buildModelHandlerOptions( this, modelHandler, options );
 
 				//"this" refers to a view
 				invokeModelHandler( this, modelHandler, new ModelEvent( {
-					path: path,
-					target: path,
-					eventType: "init",
-					options: options
+					path:path,
+					target:path,
+					eventType:"init",
+					options:options
 				} ) );
 			} );
 			return via;
 		},
 
-		ModelEvent : ModelEvent,
+		ModelEvent:ModelEvent,
 
 		//shared commonModelHandlers
-		commonModelHandlers : commonModelHandlers,
+		commonModelHandlers:commonModelHandlers,
 
-		raiseEvent : raiseEvent,
+		raiseEvent:raiseEvent,
 
-		indexOfPath : function ( path ) {
+		indexOfPath:function ( path ) {
 			var match = rIndex.exec( path );
 			return match[1] || match[0];
 		},
 
-		contextOfPath : function ( path ) {
+		contextOfPath:function ( path ) {
 			var match = rParentKey.exec( path );
 			return match && match[1] || "";
 		}
@@ -2246,6 +2260,7 @@
 	// //this refers to the view
 	//}
 	function _renderTemplate( view, templateId, dataSource, options, engineName ) {
+		templateId = $.trim( templateId );
 		engineName = engineName || options && options.engine || defaultOptions.engine;
 
 		if ( !engineName ) {
@@ -2387,16 +2402,16 @@
 		if ( isString( options ) ) {
 			options = options.split( "," );
 			return {
-				templateId: $.trim( options[0] ),
-				engineName: options[1]
+				templateId:$.trim( options[0] ),
+				engineName:options[1]
 			};
 		}
 		return options;
 	};
 
 	extend( commonModelHandlers, {
-		template: template,
-		templateOne: templateOne
+		template:template,
+		templateOne:templateOne
 	} );
 
 	var templateEngines = via.templateEngines = {};
@@ -2635,7 +2650,7 @@
 		}
 	} );
 
-	viaBindingSet.simpleList = "@mh:.,init|afterUpdate,*template;" +
+	viaBindingSet.simpleList = "@mh:.,init|afterCreate|afterUpdate,*template;" +
 	                           ".,afterCreate.child,*pushViewItem;" +
 	                           ".,afterUpdate.child,*updateViewItem;" +
 	                           ".,afterDel.child,*removeViewItem,_";

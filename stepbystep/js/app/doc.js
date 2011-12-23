@@ -5,20 +5,20 @@
 	var _singleton;
 
 	function loadData() {
-		return $.getJSON("js/doc-json.js");
+		return $.getJSON( "js/doc-json.js" );
 	}
 
 	via.addApp( appName,
 		{
-			load: function ( view ) {
+			load:function ( view ) {
 				_singleton = view;
-				loadData().done(function (data) {
-					via().create(data);
-					$( view ).renderTemplate( "html", "doc.pageLayout" );
-				});
+				loadData().done( function ( data ) {
+					via().create( "doc", {} );
+					via( "doc" ).create( data );
+				} );
 			},
 
-			unload: function () {
+			unload:function () {
 				if ( !_singleton ) {
 					return;
 				}

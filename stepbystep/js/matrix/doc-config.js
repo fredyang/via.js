@@ -16,6 +16,8 @@ matrix.depend( "doc.js", "viaProxy.all.js" );
 
 matrix.debug.enabled = true;
 matrix( "viaProxy.all.js" ).done( function () {
+	//via().create("doc", {});
 	via.view();
 } );
+
 

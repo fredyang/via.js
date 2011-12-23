@@ -32,6 +32,7 @@
 	// //this refers to the view
 	//}
 	function _renderTemplate( view, templateId, dataSource, options, engineName ) {
+		templateId = $.trim( templateId );
 		engineName = engineName || options && options.engine || defaultOptions.engine;
 
 		if ( !engineName ) {
@@ -173,16 +174,16 @@
 		if ( isString( options ) ) {
 			options = options.split( "," );
 			return {
-				templateId: $.trim( options[0] ),
-				engineName: options[1]
+				templateId:$.trim( options[0] ),
+				engineName:options[1]
 			};
 		}
 		return options;
 	};
 
 	extend( commonModelHandlers, {
-		template: template,
-		templateOne: templateOne
+		template:template,
+		templateOne:templateOne
 	} );
 
 	var templateEngines = via.templateEngines = {};

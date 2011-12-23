@@ -6,9 +6,14 @@ var modelHandlerData = via.getModelHandlerData();
 test( "when a model event handler should be called", function () {
 
 	var shouldInvokeModelHandler = debug.shouldInvokeModelHandler;
-	//function shouldInvokeModelHandler( event, subscribedEvents ) {
+	//function shouldInvokeModelHandler( subscribedEvents, event ) {
 	ok( shouldInvokeModelHandler( "*", "whatever" ), "* match all what ever event" );
 	ok( shouldInvokeModelHandler( "*", "whatever.whatever" ), "* match all what ever event" );
+
+	ok( shouldInvokeModelHandler( "whatever", "whatever" ), "support exact match" );
+	ok( shouldInvokeModelHandler( "whatever.whatever", "whatever.whatever" ), "support exact match" );
+
+	ok( !shouldInvokeModelHandler( "whatever", "whatever.whatever" ), "if there is not wildcar *, use exact match" );
 
 	ok( shouldInvokeModelHandler( "*.", "whatever" ), "*. match all current node" );
 	ok( !shouldInvokeModelHandler( "*.", "whatever.whatever" ), "*. does not match event with extension" );

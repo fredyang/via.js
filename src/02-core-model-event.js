@@ -220,7 +220,7 @@
 
 		subscribedEvents = subscribedEvents.split( rEventSeparator );
 
-		for ( var i = 0; i < subscribedEvents.length; i ++ ) {
+		for ( var i = 0; i < subscribedEvents.length; i++ ) {
 
 			var subscribeEvent = subscribedEvents[i];
 
@@ -228,44 +228,50 @@
 				return true;
 			}
 
-			//  /(\w+)?\*(\.(\w+))?/
+			//  /(\w+)?(\*?)(\.?)([^\s]*)/
 			var match = rStarSuffix.exec( subscribeEvent );
 
-			if ( match ) {
-				if ( match[4] ) {
-					if ( match[1] ) {
-						//before*.parent
-						if ( RegExp( "^" + match[1] + "\\w*\\." + match[4] ).test( event ) ) {
-							return true;
-						}
-					} else {
-						//*.parent
-						if ( RegExp( "^\\w+\\." + match[4] ).test( event ) ) {
-							return true;
-						}
-					}
-				} else {
+			//if it is xx*
+			if ( match && match[2] ) {
 
-					if ( match[3] ) {
-						//before*.
-						// it only match beforeUpdate but not beforeUpdate.parent
+				if ( match[2] ) {
+
+					if ( match[4] ) {
 						if ( match[1] ) {
-							//before*. match beforeUpdate but not beforeUpdate.child
-							regex = RegExp( "^" + match[1] + "(?!\\w*\\.\\w+)" );
+							//before*.parent
+							if ( RegExp( "^" + match[1] + "\\w*\\." + match[4] ).test( event ) ) {
+								return true;
+							}
 						} else {
-							//*.  match beforeUpdate but not beforeUpdate.child
-							regex = rNoExtension;
-						}
-						if ( regex.test( event ) ) {
-							return true;
+							//*.parent
+							if ( RegExp( "^\\w+\\." + match[4] ).test( event ) ) {
+								return true;
+							}
 						}
 					} else {
-						//before*
-						if ( event.beginsWith( match[1] ) ) {
-							return true;
+
+						if ( match[3] ) {
+							//before*.
+							// it only match beforeUpdate but not beforeUpdate.parent
+							if ( match[1] ) {
+								//before*. match beforeUpdate but not beforeUpdate.child
+								regex = RegExp( "^" + match[1] + "(?!\\w*\\.\\w+)" );
+							} else {
+								//*.  match beforeUpdate but not beforeUpdate.child
+								regex = rNoExtension;
+							}
+							if ( regex.test( event ) ) {
+								return true;
+							}
+						} else {
+							//before*
+							if ( event.beginsWith( match[1] ) ) {
+								return true;
+							}
 						}
 					}
 				}
+
 			}
 		}
 
@@ -299,47 +305,47 @@
 
 	ModelEvent.prototype = {
 
-		constructor: ModelEvent,
+		constructor:ModelEvent,
 
-		targetProxy: function () {
+		targetProxy:function () {
 			return via( this.target );
 		},
 
 		//target is always where the actual update happens
-		targetValue: function ( keepOriginal ) {
+		targetValue:function ( keepOriginal ) {
 			return via().get( keepOriginal, this.target );
 		},
 
-		targetContext: function () {
+		targetContext:function () {
 			return via.contextOfPath( this.target );
 		},
 
-		targetIndex: function () {
+		targetIndex:function () {
 			return via.indexOfPath( this.target );
 		},
 
 		//determine whether the event will be bubbled up to parent
-		bubbleUp: true,
+		bubbleUp:true,
 
 		//determine whether the event will be propagated to other
 		//area of the model system, it include parent, and horizontal reference
-		continueEventing: true,
+		continueEventing:true,
 
 		//this is useful for validation
-		hasError: false,
+		hasError:false,
 
 		//value is the value of current path,
 		// in most of the case you should use this,
 		//because you path can be dependent of change of other path
-		currentValue: function ( keepOriginal ) {
+		currentValue:function ( keepOriginal ) {
 			return via().get( keepOriginal, this.path );
 		},
 
-		currentProxy: function () {
+		currentProxy:function () {
 			return via( this.path );
 		},
 
-		isModelEmpty: function () {
+		isModelEmpty:function () {
 
 			var options = this.options;
 
@@ -355,7 +361,7 @@
 		}
 	};
 
-	function buildModelHandlerOptions(view, modelHandler, options ) {
+	function buildModelHandlerOptions( view, modelHandler, options ) {
 
 		if ( isString( modelHandler ) && modelHandler.beginsWith( "*" ) ) {
 
@@ -365,7 +371,7 @@
 
 		if ( isFunction( modelHandler.buildOptions ) ) {
 
-			options = modelHandler.buildOptions.call(view, options );
+			options = modelHandler.buildOptions.call( view, options );
 		}
 		return options;
 	}
@@ -390,7 +396,7 @@
 		//addModelHandler(path, modelEvents, views, modelHandler, options)
 		//if modelEvent == "once" is equivalent to via.renderViews,
 		//it is good for declarative purpose
-		addModelHandler: function ( path, modelEvents, views, modelHandler, options ) {
+		addModelHandler:function ( path, modelEvents, views, modelHandler, options ) {
 
 			if ( modelEvents === "once" ) {
 				return this.renderViews( path, views, modelHandler, options );
@@ -419,23 +425,23 @@
 
 			views.each( function () {
 
-				options = buildModelHandlerOptions(this, modelHandler, options );
+				options = buildModelHandlerOptions( this, modelHandler, options );
 
 				markAsView( this );
 				modelHandlerData[path].push( {
-					view: this,
-					modelHandler: modelHandler,
-					modelEvents: modelEvents,
-					options: options
+					view:this,
+					modelHandler:modelHandler,
+					modelEvents:modelEvents,
+					options:options
 				} );
 
 				if ( shouldInvokeModelHandler( modelEvents, "init" ) ) {
 					//"this" refers to a view
 					invokeModelHandler( this, modelHandler, new ModelEvent( {
-						path: path,
-						target: path,
-						eventType: "init",
-						options: options
+						path:path,
+						target:path,
+						eventType:"init",
+						options:options
 					} ) );
 				}
 			} );
@@ -444,7 +450,7 @@
 
 		//it support removeModelHandler(path), removeModelHandler(views)
 		//normally you don't need to call it explicitly, it is called in removing view and removing model
-		removeModelHandler: function( pathOrViews ) {
+		removeModelHandler:function ( pathOrViews ) {
 
 			if ( isString( pathOrViews ) ) {
 				//it is a path
@@ -488,7 +494,7 @@
 		// getModelHandlerData(),
 		// getModelHandlerData(path),
 		// getModelHandlerData(view)
-		getModelHandlerData: function( pathOrView ) {
+		getModelHandlerData:function ( pathOrView ) {
 
 			if ( isString( pathOrView ) ) {
 				//it is a path
@@ -518,43 +524,43 @@
 				}
 				return rtn;
 
-			} else if ( ! pathOrView ) {
+			} else if ( !pathOrView ) {
 
 				return modelHandlerData;
 			}
 		},
 
-		renderViews: function( path, views, modelHandler, options ) {
+		renderViews:function ( path, views, modelHandler, options ) {
 			path = toPhysicalPath( path, true );
 
 			$( views ).each( function () {
 
-				options = buildModelHandlerOptions(this, modelHandler, options );
+				options = buildModelHandlerOptions( this, modelHandler, options );
 
 				//"this" refers to a view
 				invokeModelHandler( this, modelHandler, new ModelEvent( {
-					path: path,
-					target: path,
-					eventType: "init",
-					options: options
+					path:path,
+					target:path,
+					eventType:"init",
+					options:options
 				} ) );
 			} );
 			return via;
 		},
 
-		ModelEvent : ModelEvent,
+		ModelEvent:ModelEvent,
 
 		//shared commonModelHandlers
-		commonModelHandlers : commonModelHandlers,
+		commonModelHandlers:commonModelHandlers,
 
-		raiseEvent : raiseEvent,
+		raiseEvent:raiseEvent,
 
-		indexOfPath : function ( path ) {
+		indexOfPath:function ( path ) {
 			var match = rIndex.exec( path );
 			return match[1] || match[0];
 		},
 
-		contextOfPath : function ( path ) {
+		contextOfPath:function ( path ) {
 			var match = rParentKey.exec( path );
 			return match && match[1] || "";
 		}

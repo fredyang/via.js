@@ -16,11 +16,9 @@
 				</tr>
 				</thead>
 
-				<tbody id="allContacts"
-				       via="@editableList:  listEdit.contactRowEditable,  listEdit.contactRowInEdit
-				       @class:simpleList,.,listEdit.contactRowEditable">
-				</tbody>
-
+						<tbody id="allContacts"
+								       via="@class:simpleList,.,listEdit.contactRowRead">
+								</tbody>
 				<tfoot>
 				<tr via="@mh:*edit.mode,init|afterUpdate,*showIfFalsy">
 					<td colspan="3">

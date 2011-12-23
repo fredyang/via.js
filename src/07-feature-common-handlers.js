@@ -190,7 +190,7 @@
 		}
 	} );
 
-	viaBindingSet.simpleList = "@mh:.,init|afterUpdate,*template;" +
+	viaBindingSet.simpleList = "@mh:.,init|afterCreate|afterUpdate,*template;" +
 	                           ".,afterCreate.child,*pushViewItem;" +
 	                           ".,afterUpdate.child,*updateViewItem;" +
 	                           ".,afterDel.child,*removeViewItem,_";

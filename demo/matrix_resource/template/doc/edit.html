@@ -1,0 +1,300 @@
+<script type="jsrender" id="doc.edit">
+	<div data-tab="edit" data-sub="@ns:doc.entries">
+
+		<div data-sub="`hide:*edit.mode">
+			<div>
+				<input type="button" data-sub="$click:.|*newRow" value="New Entry"/>
+			</div>
+			<div class="data simpleTable">
+				<table>
+					<tr>
+						<th>Category</th>
+						<th>Name</th>
+						<th>Description</th>
+						<th>Action</th>
+					</tr>
+					<tbody data-sub="`queryableListView:.|doc.edit.entryRow
+								 `editableDeletableRow
+								 $review:.|#/doc.review">
+
+					</tbody>
+				</table>
+
+			</div>
+		</div>
+
+
+		<div data-sub="@ns:doc.entries*edit.item
+						   `foreach:.|doc.edit.entryForm
+						   `show:..mode">
+
+		</div>
+	</div>
+</script>
+
+<script type="jsrender" id="doc.edit.entryRow">
+	<tr>
+		<td>{{:namespace}}</td>
+		<td>{{:name}}</td>
+		<td>{{:shortDesc}}</td>
+		<td>
+			<input type="button" value="edit" data-sub="`editButton">
+			<input type="button" value="remove" data-sub="`deleteButton">
+			<input type="button" value="review" data-sub="@aliasEvent:click,review">
+		</td>
+	</tr>
+</script>
+
+<script type="jsrender" id="doc.edit.entryForm">
+	<p>
+		<label>Name:</label><input type="text" data-sub="`val:.name"/>
+	</p>
+
+	<p>
+		<label>Category:</label><input type="text" data-sub="`val:.namespace"/>
+	</p>
+
+	<p>
+		<label>Return Type:</label><input type="text" data-sub="`val:.returns"/>
+	</p>
+
+	<p>
+		<label>Version:</label><input type="text" data-sub="`val:.version"/>
+	</p>
+
+	<p>
+
+		<label>Signatures:</label>
+
+	<div data-sub="`foreach:.|doc.edit.signatures"></div>
+	</p>
+
+	<p>
+		<label>Short Description:</label><input type="text" data-sub="`val:.shortDesc"/>
+	</p>
+
+	<p>
+		<label>Description:</label><input type="text" data-sub="`val:.desc"/>
+	</p>
+
+
+	<p>
+		<label>Detailed Description:</label><input type="text" data-sub="`val:.longDesc"/>
+	</p>
+
+	<p>
+
+		<label>Examples</label>
+
+	<div data-sub="`foreach:.|doc.edit.examples"></div>
+
+	<p>
+		<input type="button" value="Save Entry" data-sub="$click:.|*saveEditItem">
+		<input type="button" value="Save Entry and Review"
+		       data-sub="$click:.|*saveEditItem
+		                 $click:/doc.topModule|*hardCode|browse">
+		<input type="button" value="Cancel" data-sub="$click:.|*cancelEditItem">
+	</p>
+	</p>
+</script>
+
+<script type="jsrender" id="doc.edit.signatures">
+
+	<div class="data simpleTable" data-sub="@ns:.signatures">
+		<table>
+			<tr>
+				<th>Title</th>
+				<th>Version Added</th>
+				<th>Parameters</th>
+				<th>Actions</th>
+			</tr>
+			<!--context path is signatures-->
+			<tbody data-sub="`listView:.|doc.edit.signatureReadRow
+						     `editableListView:.|doc.edit.signatureEditRow"/>
+
+			<tfoot>
+			<tr>
+				<td colspan="4">
+					<input type="button" value="New Signature" data-sub="`newItemButton"/>
+				</td>
+			</tr>
+			<tr data-sub="@ns:*edit.item
+						  `newItemView:.|doc.edit.signatureEditRow">
+			</tr>
+			</tfoot>
+		</table>
+	</div>
+
+</script>
+
+<script type="jsrender" id="doc.edit.signatureReadRow">
+	<tr>
+		<td>{{:title}}</td>
+		<td>{{:versionAdded}}</td>
+		<td>missing parameters</td>
+		<td>
+			<input type="button" value="edit" data-sub="`editButton"/>
+			<input type="button" value="remove" data-sub="`deleteButton"/>
+		</td>
+	</tr>
+</script>
+
+<script type="jsrender" id="doc.edit.signatureEditRow">
+	<td colspan="4" data-sub="@ns:{{:~modelPath}}.item">
+
+		<p>
+			<label>Title:</label> <input type="text" data-sub="`val:.title"/>
+		</p>
+
+		<p>
+			<label>Added Version:</label><input type="text" data-sub="`val:.versionAdded"/>
+		</p>
+
+
+		<p>
+
+		<p>Parameters:</p>
+
+		<div data-sub="`foreach:.|doc.edit.parameters"></div>
+		</p>
+
+		<p>
+			<input type="button" value="Save Signature" data-sub="$click:.|*saveEditItem">
+			<input type="button" value="Cancel" data-sub="$click:.|*cancelEditItem">
+		</p>
+	</td>
+</script>
+
+<script type="jsrender" id="doc.edit.parameters">
+	<div class="data simpleTable" data-sub="@ns:.parameters">
+		<table>
+			<tr>
+				<th>Name</th>
+				<th>Type</th>
+				<th>Description</th>
+				<th>Actions</th>
+			</tr>
+
+			<tbody data-sub="`listView:.|doc.edit.parameterReadRow
+							 `editableListView:.|doc.edit.parameterEditRow"/>
+
+
+			<tfoot>
+			<tr>
+				<td colspan="4">
+					<input type="button" value="New Parameter" data-sub="`newItemButton"/>
+				</td>
+			</tr>
+			<tr data-sub="@ns:*edit.item
+						  `newItemView:.|doc.edit.parameterEditRow">
+			</tr>
+			</tfoot>
+
+		</table>
+	</div>
+</script>
+
+<script type="jsrender" id="doc.edit.parameterReadRow">
+	<tr>
+		<td>{{:name}}</td>
+		<td>{{:type}}</td>
+		<td>{{:desc}}</td>
+		<td>
+			<input type="button" value="edit" data-sub="`editButton"/>
+			<input type="button" value="remove" data-sub="`deleteButton"/>
+		</td>
+	</tr>
+</script>
+
+<script type="jsrender" id="doc.edit.parameterEditRow">
+	<td colspan="4" data-sub="@ns:{{:~modelPath}}.item">
+		<p>
+			<label>Parameter Name:</label><input type="text" data-sub="`val:.name"/>
+		</p>
+
+		<p>
+			<label>Type:</label> <input type="text" data-sub="`val:.type"/>
+		</p>
+
+		<p>
+			<label>Description:</label> <input type="text" data-sub="`val:.desc"/>
+		</p>
+
+		<p>
+			<input type="button" value="Save Parameter" data-sub="$click:.|*saveEditItem">
+			<input type="button" value="Cancel" data-sub="$click:.|*cancelEditItem">
+		</p>
+	</td>
+</script>
+
+<script type="jsrender" id="doc.edit.examples">
+
+	<div class="data simpleTable" data-sub="@ns:.examples">
+		<table>
+			<tr>
+				<th>desc</th>
+				<th>code</th>
+				<th>html</th>
+				<th>css</th>
+				<th>Actions</th>
+			</tr>
+
+			<tbody data-sub="`listView:.|doc.edit.exampleReadRow
+						     `editableListView:.|doc.edit.exampleEditRow"/>
+
+			<tfoot>
+			<tr>
+				<td colspan="5">
+					<input type="button" value="New Example" data-sub="`newItemButton"/>
+				</td>
+			</tr>
+			<tr data-sub="@ns:*edit.item
+			              `newItemView:.|doc.edit.exampleEditRow"/>
+			</tfoot>
+		</table>
+	</div>
+
+</script>
+
+<script type="jsrender" id="doc.edit.exampleReadRow">
+	<tr>
+		<td>{{>desc}}</td>
+		<td>{{>code}}</td>
+		<td>{{>html}}</td>
+		<td>{{>css}}</td>
+		<td>
+			<input type="button" value="edit" data-sub="`editButton"/>
+			<input type="button" value="remove" data-sub="`deleteButton"/>
+		</td>
+	</tr>
+</script>
+
+<script type="jsrender" id="doc.edit.exampleEditRow">
+	<td colspan="5" data-sub="@ns:{{:~modelPath}}.item">
+
+		<p>
+			<label>Description:</label> <input type="text" data-sub="@ns:.desc"/>
+		</p>
+
+		<p>
+			<label>code:</label>
+			<input type="text" data-sub="`val:.code"/>
+		</p>
+
+		<p>
+			<label>html:</label>
+			<input type="text" data-sub="`val:.html"/>
+		</p>
+
+		<p>
+			<label>css:</label>
+			<input type="text" data-sub="`val:.css"/>
+		</p>
+
+		<p>
+			<input type="button" value="Save Example" data-sub="$click:.|*saveEditItem">
+			<input type="button" value="Cancel" data-sub="$click:.|*cancelEditItem">
+
+		</p>
+	</td>
+</script>

@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+
+<p>
+	An optional number n1: <input type="text" id="txtn1"/>
+</p>
+
+<p>n1 saved value: <span id="n1Saved"/></p>
+
+
+<p>
+	An required number n2: <input type="text" id="txtn2"/>
+</p>
+
+<p>n2 saved value: <span id="n2Saved"/></p>
+
+<p>
+	An optional number n3: <input type="text" id="txtn3"/>
+</p>
+
+<p>n3 saved value: <span id="n3Saved"/></p>
+
+
+<p>
+	global error: <span id="globalError"></span>
+</p>
+
+<input id="btnSubmit" type="button" value="Submit"/>
+
+<span id="xyz"></span>
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/model.js"></script>
+<script src="../../src/event.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../src/nice-to-have-extensions/validation.js"></script>
+
+
+<style type="text/css">
+	.error {
+		border: solid 1px red;
+		background-color: #ffcccc;
+	}
+</style>
+
+<script>
+	via().set( "n1", null );
+	via().set( "n2", null );
+	via().set( "n3", null );
+
+	via.check( "n3", "number" )
+		.check( "n3", function( value ) {
+			return $.isNumeric( value ) && (value >= 10);
+		},
+		"it must be over 9" );
+
+</script>
+
+
+<script>
+	$( function() {
+		$( "#txtn1" )
+			.subscribe( "n1", "init", "val" )
+			.subscribedBy( "n1", "keyup", "val" )
+			.subscribe( "n1", "beforeUpdate validate", "*number" )
+			.subscribe( "n1*errors", "after*", "*showError" );
+
+		$( "#n1Saved" ).subscribe( "n1", "afterUpdate", "text" );
+
+		$( "#txtn2" )
+			.subscribe( "n2", "init", "val" )
+			.subscribedBy( "n2", "keyup", "val" )
+			.subscribe( "n2", "beforeUpdate validate", "*required" )
+			.subscribe( "n2", "beforeUpdate validate", "*number" )
+			.subscribe( "n2*errors", "after*", "*showError" );
+
+		$( "#n2Saved" ).subscribe( "n2", "afterUpdate", "text" );
+
+		$( "#txtn3" )
+			.subscribe( "n3", "init", "val" )
+			.subscribedBy( "n3", "keyup", "val" )
+			.subscribe( "n3*errors", "after*", "*showError" );
+
+		$( "#n3Saved" ).subscribe( "n3", "afterUpdate", "text" );
+
+		$( "#globalError" ).subscribe( "*pathsOfInvalidModels", "after*", "text" );
+
+		$( "#btnSubmit" ).click(
+			function() {
+				if (via().isValid()) {
+					alert( "sending data..." );
+				} else {
+					alert( "please correct highlighted error" );
+				}
+			} ).subscribe( "*isValid", "after*", "*enable" );
+
+	} );
+</script>
+</html>

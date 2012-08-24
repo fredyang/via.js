@@ -1,0 +1,2742 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Hello world, via.js</title>
+	<link href="../demo/css/all.css" rel='stylesheet'/>
+	<link rel="stylesheet" type="text/css" href="introduction.css" media="all">
+	<link href='../demo/SyntaxHighlighter/styles/shCore.css' rel='stylesheet'/>
+	<link href='../demo/SyntaxHighlighter/styles/shThemeDefault.css' rel='stylesheet'/>
+	<script src='../demo/SyntaxHighlighter/scripts/XRegExp.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shCore.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushJScript.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushXml.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushCss.js'></script>
+	<script language="javascript" type="text/javascript">
+		SyntaxHighlighter.defaults.gutter = false;
+		SyntaxHighlighter.defaults.toolbar = false;
+		SyntaxHighlighter.config.bloggerMode = true;
+		SyntaxHighlighter.all();
+	</script>
+</head>
+<body>
+<div class="page oldSchool">
+<h1>Hello world, via.js</h1>
+
+<p>This article introduce via.js using the classic "Hello world" example.
+</p>
+
+<h2>What is via.js?</h2>
+
+<p>via.js is a jQuery based library which can be used to build complex client-side driven web
+	application
+	with well-structured JavaScript. It uses well known publish-subscribe pattern to synchronize
+	the states and behaviors of objects regardless whether they are views or models.
+</p>
+
+<p>jQuery is the most popular client side library nowadays, however it does not suggest how to write
+	complex UI at client side. This is why today we have so many UI frameworks such as MVC, MVVM
+	and MV-Whatever. One of the common goals of these library is to put model in the center and
+	let it drive the whole application. via.js shares the simliar goals, with the following features
+</p>
+<ol class="simpleList">
+
+	<li>Deep integration with jQuery and heavily reuse its API</li>
+	<li>Lightweight proxy object instead of Observerable function</li>
+	<li>Unified event publishing and subscription for all objects(view and model)</li>
+	<li>Reusable and composable subscription handlers</li>
+	<li>Support multiple template engines and simultaneously</li>
+	<li>Support different styles of using the library, declarative, programmatic or mixed.</li>
+	<li>Small in both source size and runtime memory.</li>
+	<li>Unit testable</li>
+</ol>
+
+<h2>Hello World</h2>
+
+<p>Let's jump into the hello world samples bundled with the library. Basically, it allows user input
+	a name in the text box, and when it changes, a greeting message will be displayed in a label.
+	These samples
+	starts with tradtional implementation, and evolve by using different features offered by the
+	library.
+	Through the evolutions, computer thinking and <a
+		href="http://www.amazon.com/Object-Thinking-DV-Microsoft-Professional-David/dp/0735619654">
+		object thinking</a> are also compared. First let take a look at the implementation using
+	computer thinking</p>
+
+<h3>Solution in computer thinking (event binding)</h3>
+
+	<pre class="brush:html">
+		&lt;label&gt;Please input your name: &lt;input type="text" id="txtName"/&gt;&lt;/label&gt;
+		&lt;div id="divMessage"/&gt;
+	</pre>
+	<pre class='brush:javascript'>
+		$( "#txtName" ).change( function() {
+			var name = $( this ).val();
+			$( "#divMessage" ).html( name ? "Hello," + name : "" );
+		} );
+	</pre>
+<p>
+	When I write the code, I think like a computer, everything
+	can be manipulated by me. Firstly, I bind a handler to text box's change event so that when
+	change event happens, I get the value of text box, I construct a string based on the value, and
+	set the content of a div object with the new string. Following computer thinking, when
+	requirements evlove, we have
+	more things to keep track in the handler. The code in handler can easily become monolithic, and
+	hard to maintain.
+	It will not solve the problem by spliting the code into smaller modules using object-oriented
+	langauage, because
+	inside of each module I still think a computer. The root of problem is the desire to control
+	things and the mindset
+	that things are passive.
+</p>
+
+<h3>Solution in object thinking (programatic event subscriptions)</h3>
+<pre class="brush:html">
+		&lt;label&gt;Please input your name: &lt;input type="text" id="txtName"/&gt;&lt;/label&gt;
+		&lt;div id="divMessage"/&gt;
+	</pre>
+
+<pre class="brush:javascript">
+	$( "#divMessage" ).subscribe( "$#txtName", "change",
+		function( e ) {
+			var name = e.publisher.val();
+			e.subscriber.html( name ? "Hello," + name : "" );
+		}
+	);
+</pre>
+<p>
+	This implementation has a subtle yet crtically important difference from the previous one.
+	Here I think from the perspective of object "#divMessage". Firstly, I subscribe the "change"
+	event of text box object. When the event happens, I will be notified, so I change my content.
+	The mindset is changed from "I controll things" to "I behave myself". The benefit of the change
+	maybe not obvious
+	now, but it is what the whole library want to achive.
+</p>
+
+<p>
+	When I think like object instead of a computer, the code that I put in the handler
+	will be more focused on the object itself rather than the control of the external world.
+</p>
+
+<h3>Solution in object thinking (programatic event subscription with model)</h3>
+	<pre class="brush:html">
+		&lt;label&gt;Please input your name: &lt;input type="text" id="txtName"/&gt;&lt;/label&gt;
+		&lt;div id="divMessage"/&gt;
+	</pre>
+	<pre class="brush:javascript">
+		//define a model
+		via.set( "test", {
+			name: "",
+			message: function() {
+				var name = this.get("name");
+				return name ? "hello, " + name : "";
+			}
+		} );
+		//model "test.name" subscribe an event
+		via( "test.name" ).subscribe( "$#txtName", "change", function( e ) {
+			e.subscriber.set( e.publisher.val() );
+		} );
+		//view #divMessage subscribe an event
+		$( "#divMessage" ).subscribe( "test.message", "afterUpdate", function( e ) {
+			e.subscriber.html( e.publisher.get() );
+		} );
+	</pre>
+<p>
+	In this example, we take one step futhur to extract a model.
+	First the model "test.name" subscribe the change of view "#txtName" to
+	update itself, and view "#divMessage" subscribe the change "test.message" to update itself.
+	<strong>The internal event cascading from "test.name" to "test.message" is automatic,
+		no coding is required.</strong>
+</p>
+
+<p>
+	A model gives us greater flexibility in choosing different widgets (views) to compose our app.
+	Normally, views are
+	the moving parts of the application, as business people can ask to change the UI dramatically,
+	for example we
+	want a mobile view, a desktop view, suddenly, we want Metro view. However, model
+	are relatively stable, becaue model reflect the semantics of the application, which rarely
+	change dramatically,
+	otherwise it is a whole new application. With a model, a widget will not depend on other widgets
+	any more, instead
+	all
+	widgets depends on model. For example, we can use a dropdown list to replace textbox, and use
+	dialog box to replace
+	the label, then we rebuild subscriptions between model and the new widgets. Now widgets are
+	decoupled from each
+	other,
+	while they are connected by the model.
+</p>
+
+<p>via.js support both programatic event subscription, and declarative event subscription which is
+	described as
+	followed.</p>
+
+<h3>Solution in object thinking (declarative event subscription with model)</h3>
+		<pre class="brush:html">
+			&lt;!--subscriptions is declaratively embedded in the markup, no id is required for view--&gt;
+			&lt;label&gt;Please input your name: &lt;input type="text" data-sub="`val:test.name"/&gt;
+			&lt;/label&gt;
+			&lt;div data-sub="`html:test.message"/&gt;
+		</pre>
+		<pre class="brush:javascript">
+			//define a model
+			via.set( "test", {
+				name: "",
+				message: function() {
+					return this.name ? "hello, " + this.name : "";
+				}
+			} );
+		</pre>
+
+<p>Please keep in mind that declarative subscription is just another form of subscriptions, it
+	produces the same code of programatic subscription. Declarative subscription is very useful when
+	used
+	with template, expecially in recursive template rendering. We will talk about that later.</p>
+
+<p>
+	In this simple scenario, both kinds of thinking work well. In fact the solution in computer
+	thinking seems to be more efficient than object thinking. However, object thinking will scale
+	better when the scenario gets more complicated, and the responsibilities are balancedly
+	distributed across different objects, the complexities of the code remain manageable.
+</p>
+
+<p>
+	In summary, the library advocate to use the following thinkings when building client side UI
+	using the library. They are inline of the object thinking documented in the book <a
+	href="http://www.amazon.com/Object-Thinking-DV-Microsoft-Professional-David/dp/0735619654">Object
+	thinking</a>. (The following should be read in the context of an object)
+</p>
+<strong>
+	<ul class="simpleList">
+		<li>I behave myself based on events of other objects, no other objects can command me.
+		</li>
+		<li>I cannot command other objects either, all I can do is to raise my events, others decide
+			what they need to do.
+		</li>
+	</ul>
+</strong>
+
+<h2>
+	Model
+</h2>
+
+<p>
+	In the hello world demo, we introduce a plain old JavaScript object as the model, and use proxy
+	to import it into internal repository, and then we use the proxy again to subscribe event and
+	read and set the model in repostiory. If we direct access variable, and we can not intercept the
+	access to create interesting side effects, like raising event.
+</p>
+
+<!---->
+<h3>Observerable proxy</h3>
+
+<p>
+	One implementation of model proxy is called Observerable. The name "Obsererable" does not
+	mean that objects can not be observed if they are not an "Observerable" object. I guess the
+	original intention of calling it "Observerable" is to express the semantics that the
+	Observerable object can notify others when it is changed. If you are confused, think of it as
+	"Notifiable" or "Subscribable". The following shows a simplified implementation of observerable
+	and how it can be used. Let's say we want to change a variable "count" from 1 to 10, and we want
+	to set the variable "color" to "red" when "count" is over 9. The code wrap the "count" variable
+	into an Observerble proxy and access it indirectly.</p>
+
+	<pre class="brush:javascript">
+		//the Observerable factory
+		function Observerable(value) {
+			//some private state which will be closured
+			var _value = value,
+				callbacks = [];
+
+		  var observerable = function (v) {
+			 if (v === undefined) {
+				 return _value;
+			  }
+			  _value = v;
+			  for (var i = 0; i < callbacks.length; i++ ) {
+				  callbacks[i](v);
+			   }
+		  };
+		  observerable.change = function (callback) {
+			callbacks.push(callback);
+		  };
+		   return observerable;
+		}
+
+		//create a Observerable proxy
+		var observerableCount = Observerable(1);
+
+		//subcribe event via Observerable proxy
+		var color = "green";
+		observerableCount.change(function (value) {
+		   if (value > 5) {
+			 color = "red";
+		   }
+		});
+
+		//update model via Observerable proxy
+		observerableCount(10);
+
+		//print color
+		console.log(color);
+	</pre>
+
+<p>The Observerable works, but there are three problems. </p>
+
+<ol class="simpleList">
+	<li>Every Observerable is a new function with a new closure, it used more memory than desired.
+	</li>
+	<li>We have to create an Observerable to subscribe the events of all values. A naive user can
+		make everything Observerable, which will consume lots of memory.
+	</li>
+	<li>The Observerable only support get and set operations over an value.</li>
+</ol>
+
+<h3>Via Proxy</h3>
+
+<p>In order not to introduce new concept, we call the proxy in via.js "via proxy", or "model proxy"
+	or just "proxy". In the following, we use them interchangeably. Via proxy solves the three
+	problems mentioned above.</p>
+
+<!--is different from Observerable in that creating a proxy does not create
+	a new function, because all models and every parts of a model are observerable(subscribable)
+	, and we don't need to create a function make model observerable(subscribable). Creating an
+	proxy is extremely cheap, and it can gargabe collected easily. s-->
+<ol class="simpleList">
+	<li>It does not create a private closure. It is extreamely cheap to create it, and it can be
+		garbage collected after used.
+	</li>
+	<li>A repository is used internally to hold all models, all modles are
+		subscribable("Observerable").
+	</li>
+	<li>A proxy can support extensible access methods. The built-in method include get, set, remove,
+		push, pop and etc. But you can create your own access method.
+	</li>
+</ol>
+
+<p>
+	Here is implementation using via.js to solve the above example.
+</p>
+
+<pre class="brush:javascript">
+	//build a model
+	var rootProxy = via();
+	rootProxy.set("color", "green");
+	rootProxy.set("count", 1);
+
+	//subscribe events for model
+	var colorProxy = via("color");
+	colorProxy.subscribe("count", "afterUpdate", function (e) {
+	   if (e.publisher.get() > 5) {
+		  e.subscriber.set("red");
+	   }
+	});
+
+	//change model
+	var countProxy = via("count");
+	countProxy.set(10);
+
+	//print color
+	console.log(colorProxy.get());
+</pre>
+
+<h3>Accessing model properties via Proxy method</h3>
+
+<p>via is the factory to build proxy. After a proxy is created, we can use proxy method to access
+	the model. Please note, <strong>proxy method is extensible</strong>, we will conver that later.
+	Below is some code on how to create proxy and invoke built-in proxy method.</p>
+
+<pre class="brush:javascript">
+	var rootPath = "";
+	//or
+	//var rootProxy = via();
+	var rootProxy = via(rootPath);
+	//create an node "customer" under root model
+	rootProxy.set("customer", {
+		firstName: "John",
+		lastName: "Doe"
+	});
+
+	//traverse to node "customer", and change "firstName" of customer
+	var customerProxy = rootProxy.cd("customer");
+	customerProxy.set("firstName", "Tom");
+
+	//access descendent using multi-segment path
+	rootProxy.set("customer.lastName", "Roe");
+	//
+	//traverse to node using mulit-segment path
+	var lastNameProxy = rootProxy.cd("customer.lastName");
+	//
+	//traverse back to parent node
+	var anotherCustomerProxy = lastNameProxy.cd("..");
+	//
+	//traverse to sibling
+	var anotherFirstNameProxy = lastNameProxy.cd("..firstName");
+	//
+	//traverse to node of two level up
+	var anotherRootProxy = lastNameProxy.cd("...");
+	//
+	//traverse to root
+	var anotherRootProxy2 = lastNameProxy.cd("/");
+
+	//delete firstName of customerProxy
+	customerProxy.del("firstName");
+
+	//array access method
+	rootModel.set( "contacts", [
+		{
+			firstName: "John",
+			lastName: "Smith"
+		},
+		{
+			firstName: "Joe",
+			lastName: "Davis"
+		},
+		{
+			firstName: "Mary",
+			lastName: "Curtis"
+		}
+	]);
+
+	contactsProxy = via("contacts");
+	//
+	//get the first item in model array
+	var firstContact = contactsProxy.first();
+	//
+	//get the last item in model array
+	var lastContact = contactsProxy.last();
+	//
+	//get item by index in a model array
+	var secondContact = contactsProxy.get(1);
+
+	//add a new item
+	contactsProxy.push({
+		firstName: "x",
+		lastName: "y"
+	});
+</pre>
+
+<h3>Accessing model functions using proxy.get() and proxy.set()</h3>
+
+<p>In side the model, we can also have functions. When these functions are assessed using proxy.get
+	and proxy.set, they are callled <strong>model methods</strong>, because the "this" variable
+	always refer to parent proxy of model path. Here's a sample of using model methods.
+</p>
+
+<pre class="brush:javascript">
+	via.set("test", {
+
+		//model property
+		firstName: "John",
+
+			//model property
+		lastName: "Doe",
+
+		//model method
+		fullName: function () {
+			//"this" refer the parent proxy via("test")
+			return this.get("firstName") + "," + this.get("lastName");
+		},
+
+		//model method
+		getGreeting: function (msg) {
+			//"this" refer the parent proxy via("getGreeting")
+			return msg + "," + this.get("fullName");
+		},
+
+		//model method
+		changeName: function (fullName) {
+			var parts = fullName.split(",");
+			//"this" refer the parent proxy via("getGreeting")
+			this.set("firstName", parts[0]);
+			this.set("lastName", parts[1]);
+		};
+	});
+
+	//read model using model method
+	var fullName = via.get("test.fullName");
+	var greeting = via.get("test.getGreeting", "hello");
+
+	//set model using model method
+	via.set("test.changeName", "Tom,Roe");
+</pre>
+
+<h3>Accessing model functions using model proxy.helper()</h3>
+
+<p>If you want to use "this" variable in a model function, which is not the contextual proxy, you
+	should not use proxy.get() or proxy.set(), instead you should use proxy.helper(). When a model
+	function is accessed using proxy.helper, it is called <strong>model helper</strong>.
+
+</p>
+
+<pre class="brush:javascript">
+	via.helper("test.sayHi", function (name) {
+		alert("hi, " + name);
+	});
+
+	var sayHi = via.helper("test.sayHi");
+
+	sayHi("John");
+</pre>
+
+
+<p><strong>There is no technical difference between model method and model helper. They are
+	classified as
+	such depending one the way they are invoked not the way they are.</strong></p>
+
+<h2>View</h2>
+
+<p>In via.js, anything which is not accessed using via proxy is considered as view, but normally,
+	a view is a jQuery object. <strong>In the following, we use view and jQuery object
+		interchangeably.</strong>
+</p>
+
+
+<h2>Event</h2>
+
+
+<p>
+	On the view side, DOM event model is already implemented by all browser, and jQuery normalizes
+	DOM event behavior cross-browser. On the model side, via.js implements similar event
+	behavior of view, in fact, the major goal of using model proxy is to create model event.
+</p>
+
+<h3>View event</h3>
+
+<p>via.js use existing DOM event and jQuery event binding facilties to implement view event with a
+	a very thin wrapper.
+</p>
+
+<h3>Model event</h3>
+
+<p>Model event works very similar to DOM event and jQuery events, it supports the following
+	features.</p>
+
+<ol class="simpleList">
+	<li>Event bubbling
+		<p>Model person's firstName's event can bubble up person. For example, if person firstName
+			raise an event
+			"afterChange", then person will raise "afterChange.1" after that.</p></li>
+	<li>Event cascading
+		<p>Model person's firstName's event can cascade to person's fullName, because of the
+			internal
+			dependencies between fullName and firstName. This is automatic, no code is required from
+			developers.</p></li>
+	<li>Customs event types.
+		<p>The built-in events include "beforeCreate", "beforeUpdate", "beforeRemove",
+			"afterCreate", "afterUpdate", "afterRemove" event. But we can raise and subscribe
+			customs model events just like the built-in events are raised and subscribed.
+		</p>
+	</li>
+</ol>
+
+<p>
+	Below is a person model. Changing the person's property will raise event, and we subscribe the
+	events with null subscirber and print the events argument so that we can see how model event is
+	raised, bubbled up, and broadcasted.
+</p>
+
+<pre class="brush:javascript">
+	via().set( "p", {
+		firstName: "John",
+		lastName: "Doe",
+		fullName: function() {
+			return this.firstName + "," + this.lastName;
+		},
+		addresses: [
+			{
+				street: "Yonge Street 1",
+				city: "Toronto"
+			},
+			{
+				street: "5th Ave 1",
+				city: "New York"
+			}
+		]
+	} );
+
+	function printEvent ( e ) {
+		console.log(
+			"publisher path/value: " + e.publisher.path + "/" + e.publisher.get() +
+			", originalPublisher path/value: " + e.originalPublisher.path + "/" + e.originalPublisher.get() +
+			", subscribedEvent: " + e.subscribedEvent +
+		             ", type: " + e.type +
+		             ", level: " + e.level +
+		             ", proposed: " + e.proposed +
+		             ", removed: " + e.removed );
+	}
+</pre>
+
+<pre class="brush:javascript">
+	via("_").subscribe("person.firstName", "*", printEvent);
+	via.set("test.firstName", "Tom")
+	//this subcriptions will generate the following
+</pre>
+<div class="simpleTable data">
+	<table>
+		<col style="width: auto;">
+		<col style="width: auto;">
+		<col style="width: 80px">
+		<col style="width: 115px;">
+		<col style="width: 50px;">
+		<col style="width: 90px;">
+		<col style="width: 85px;">
+		<tr>
+			<td>publisher path<br/>/value</td>
+			<td>originalPublisher.path<br/>/value</td>
+			<td>subscribedEvent</td>
+			<td>type</td>
+			<td>level</td>
+			<td>proposed</td>
+			<td>removed</td>
+		</tr>
+		<tr>
+			<td>p.firstName/John</td>
+			<td>p.firstName/John</td>
+			<td>*</td>
+			<td>beforeUpdate</td>
+			<td>0</td>
+			<td>Tom</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p.firstName/Tom</td>
+			<td>p.firstName/Tom</td>
+			<td>*</td>
+			<td>afterUpdate</td>
+			<td>0</td>
+			<td>Tom</td>
+			<td>John</td>
+		</tr>
+	</table>
+</div>
+
+<pre class="brush:javascript">
+	via("_").subscribe("p.fullName", "*", printEvent);
+	via.set("p.firstName", "Tom")
+	//this subcriptions will generate the following
+</pre>
+
+<div class="simpleTable data">
+	<table>
+		<col style="width: auto;">
+		<col style="width: auto;">
+		<col style="width: 80px">
+		<col style="width: 115px;">
+		<col style="width: 50px;">
+		<col style="width: 90px;">
+		<col style="width: 85px;">
+		<tr>
+			<td>publisher path<br/>/value</td>
+			<td>originalPublisher.path<br/>/value</td>
+			<td>subscribedEvent</td>
+			<td>type</td>
+			<td>level</td>
+			<td>proposed</td>
+			<td>removed</td>
+		</tr>
+		<tr>
+			<td>p.fullName/John,Doe</td>
+			<td>p.firstName/John</td>
+			<td>*</td>
+			<td>beforeUpdate</td>
+			<td>0</td>
+			<td>undefined</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p.fullName/Tom,Doe</td>
+			<td>p.firstName/Tom</td>
+			<td>*</td>
+			<td>afterUpdate</td>
+			<td>0</td>
+			<td>undefined</td>
+			<td>undefined</td>
+		</tr>
+	</table>
+</div>
+
+<p>We can see that the "set" method first trigger beforeUpdate event, then trigger afterUpdate
+	event.</p>
+
+<pre class="brush:javascript">
+	via("_").subscribe("p", "*", printEvent);
+	via.set("p.firstName", "Tom")
+	//this subcriptions will generate the following
+</pre>
+
+<div class="simpleTable data">
+	<table>
+		<col style="width: auto;">
+		<col style="width: auto;">
+		<col style="width: 80px">
+		<col style="width: 120px;">
+		<col style="width: 50px;">
+		<col style="width: 90px;">
+		<col style="width: 85px;">
+		<tr>
+			<td>publisher path<br/>/value</td>
+			<td>originalPublisher.path<br/>/value</td>
+			<td>subscribedEvent</td>
+			<td>type</td>
+			<td>level</td>
+			<td>proposed</td>
+			<td>removed</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.fullName/John,Doe</td>
+			<td>*</td>
+			<td>beforeUpdate.1</td>
+			<td>1</td>
+			<td>undefined</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.firstName/John</td>
+			<td>*</td>
+			<td>beforeUpdate.1</td>
+			<td>1</td>
+			<td>Tom</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.fullName/Tom,Doe</td>
+			<td>*</td>
+			<td>afterUpdate.1</td>
+			<td>1</td>
+			<td>undefined</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.firstName/Tom</td>
+			<td>*</td>
+			<td>afterUpdate.1</td>
+			<td>1</td>
+			<td>Tom</td>
+			<td>John</td>
+		</tr>
+	</table>
+</div>
+
+<p>We can see that event trigged by "firstName" cascade to "fullName", moreover, events happend to
+	children model can also bubbled upt the parent model.
+</p>
+
+<pre class="brush:javascript">
+	via( "_" ).subscribe( "p", "*", printEvent );
+	via("p.addresses").push({
+			street: "Ave road",
+			city: "YVR"
+	});
+	//this subcriptions will generate the following
+</pre>
+
+<div class="simpleTable data">
+	<table>
+		<col style="width: auto;">
+		<col style="width: auto;">
+		<col style="width: 80px">
+		<col style="width: 120px;">
+		<col style="width: 50px;">
+		<col style="width: 90px;">
+		<col style="width: 85px;">
+		<tr>
+			<td>publisher path<br/>/value</td>
+			<td>originalPublisher.path<br/>/value</td>
+			<td>subscribedEvent</td>
+			<td>type</td>
+			<td>level</td>
+			<td>proposed</td>
+			<td>removed</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.addresses.2/undefined</td>
+			<td>*</td>
+			<td>beforeCreate.2</td>
+			<td>2</td>
+			<td>[object Object]</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.addresses.2/[object Object]</td>
+			<td>*</td>
+			<td>afterCreate.2</td>
+			<td>2</td>
+			<td>undefined</td>
+			<td>undefined</td>
+		</tr>
+	</table>
+</div>
+<p>We can see that other model manipulation method such as "push" can also generate events.
+	And the events contains lots details such level which is the depth from the model triggering the
+	event to the model subscribing the events. Event type also appended with the extension ".level"
+	such as ".2"
+</p>
+<pre class="brush:javascript">
+	via( "_" ).subscribe( "p", "*", printEvent );
+	via("p.addresses").removeAt(0);
+	//this subcriptions will generate the following
+</pre>
+
+<div class="simpleTable data">
+	<table>
+		<col style="width: auto;">
+		<col style="width: auto;">
+		<col style="width: 80px">
+		<col style="width: 120px;">
+		<col style="width: 50px;">
+		<col style="width: 90px;">
+		<col style="width: 85px;">
+		<tr>
+			<td>publisher path<br/>/value</td>
+			<td>originalPublisher.path<br/>/value</td>
+			<td>subscribedEvent</td>
+			<td>type</td>
+			<td>level</td>
+			<td>proposed</td>
+			<td>removed</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.addresses.0/[object Object]</td>
+			<td>*</td>
+			<td>beforeDel.2</td>
+			<td>2</td>
+			<td>undefined</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.addresses.0</td>
+			<td>*</td>
+			<td>afterDel.2</td>
+			<td>2</td>
+			<td>undefined</td>
+			<td>[object Object]</td>
+		</tr>
+	</table>
+</div>
+
+<p>In the above case, removing a a item in model array generate a "beforeDel.2" and "afterDel.2"
+	events. The idea is that all the model build-in proxy maninpulation method can trigger events,
+	and we can write our custom manipuation method which generate custom events as well.
+</p>
+
+<h3>Debugging event</h3>
+
+<h2>Subscription</h2>
+
+<h3>Event subscription but not event binding</h3>
+
+<p>In jQuery, we use event binding a lot. In first solution of the "Hello world" example, we also
+	use the event binding. So what is the difference between them. Technically, there is no
+	difference. The difference
+	is more of difference in thinking, which has been discussed before.
+	Here we compare them side by side again.</p>
+
+<pre class="brush:javascript">
+	//computer thinking
+	$( "#txtName" ).change( function() {
+	    var name = $( this ).val();
+	    $( "#divMessage" ).html( name ? "Hello," + name : "" );
+	} );
+
+	//object thinking
+	$( "#divMessage" ).subscribe( "$#txtName", "change",
+		function( e ) {
+			var name = e.publisher.val();
+			e.subscriber.html( name ? "Hello," + name : "" );
+		}
+	);
+</pre>
+
+<p>
+	So what is the big deal of this change? We can see that in all event subscription
+	handlers , there is no reference to external variable inside the handlers, these make the
+	handlers more reusable. And we will discuss how to reuse handler later. Secondly, all handler
+	update the subscriber or subscriber's belongings (like the "test.changeName" method, it update
+	model "test.firstName" and "test.lastName"). This make the handler easy to change, easy to debug
+	or unit test.</p>
+
+<h3>Unified event subscription</h3>
+
+<p>
+	via.js use a the following unified event subscription for all objects regardless whether they
+	are view and mode.
+</p>
+
+<pre class="brush:javascript">
+	subscriber.subscribe ( publisher, events, handler, [options], [delegate] );
+</pre>
+
+<p>
+	There is no restriction that what can subscribe what. A subscriber can be model or view,
+	a publisher can be model or view. There is some example.
+</p>
+
+<div class="data simpleTable">
+	<table>
+		<col style="width:90px">
+		<col style="width:90px">
+		<col>
+		<tr>
+			<td>Subscriber</td>
+			<td>Publisher</td>
+			<td>Subscription Code</td>
+		</tr>
+		<tr>
+			<td>model<br/>(via proxy)</td>
+			<td>view<br/>(jQuery object)</td>
+			<td>
+			<pre class="brush:javascript">
+				//model "test.name" subscribe event of view "#txtName"
+				via( "test.name" ).subscribe( "$#txtName", "change",
+					function( e ) {
+						e.subscriber.set( e.publisher.val() );
+					}
+				);
+			</pre>
+			</td>
+		</tr>
+		<tr>
+			<td>model<br/>(via proxy)</td>
+			<td>model<br/>(via proxy)</td>
+			<td>
+				<pre class="brush:javascript">
+					via("color").subscribe("count", "afterUpdate",
+						function (e) {
+					        if (e.publisher.get() > 5) {
+					            e.subscriber.set("red");
+					        }
+						}
+					);
+				</pre>
+			</td>
+		</tr>
+		<tr>
+			<td>view<br/>(jQuery object)</td>
+			<td>model<br/>(via proxy)</td>
+			<td>
+				<pre class="brush:javascript">
+					//view #divMessage subscribe an event of "model"
+					$( "#divMessage" ).subscribe( "test.message", "afterUpdate",
+						function( e ) {
+								e.subscriber.html( e.publisher.get() );
+						}
+					);
+				</pre>
+			</td>
+		</tr>
+		<tr>
+			<td>view<br/>(jQuery object)</td>
+			<td>view<br/>(jQuery object)</td>
+			<td>
+				<pre class="brush:javascript">
+					$( "#divMessage" ).subscribe( "$#txtName", "change",
+						function( e ) {
+							var name = e.publisher.val();
+							e.subscriber.html( name ? "Hello," + name : "" );
+						}
+					);
+				</pre>
+			</td>
+		</tr>
+	</table>
+
+</div>
+<p>We can see that both model and view can subscribe events of model and view. If the publisher is
+	a jQuery object(view), we use <strong>"$selector"</strong> to differentiate model path.
+</p>
+
+<p>A subscription always has one and only publisher, and any number of subcriber (from zero to
+	many). Normally, it doesn't make sense if a subscription does not have a subscriber, in this
+	case, it becomes event binding. But this is still useful in some case, when we really don't care
+	about subscriber. Below is how it can be done. But just make sure use it sparingly.
+</p>
+
+<div class="simpleTable data">
+	<table>
+		<col style="width:90px">
+		<col style="width:90px">
+		<col>
+		<tr>
+			<td>Subscriber</td>
+			<td>Publisher</td>
+			<td>Subscription Code</td>
+		</tr>
+		<tr>
+			<td>null</td>
+			<td>model<br/>(via proxy)</td>
+			<td>
+					<pre class="brush:javascript">
+						via.subscribe(null, "test.message", "afterUpdate",
+							function (e) {
+								alert(e.publisher.get());
+							}
+						);
+					</pre>
+			</td>
+		</tr>
+		<tr>
+			<td>null</td>
+			<td>view<br/>(jQuery object)</td>
+			<td>
+					<pre class="brush:javascript">
+						via.subscribe(null, "$#txtName", "change",
+							function (e) {
+								alert(e.publisher.val());
+							}
+						);
+					</pre>
+			</td>
+		</tr>
+	</table>
+</div>
+
+<p>The delegate parameter is useful only when publisher is DOM element. It is the same concept of
+	jQuery delegate. In the following example, there is only one subscriptions is created.
+</p>
+
+
+<pre class="brush:html">
+
+	&lt;div class="color"&gt;
+		&lt;input type="button" value="blue" /&gt;
+		&lt;input type="button" value="red" /&gt;
+		&lt;input type="button" value="yellow" /&gt;
+	&lt;/div&gt;
+</pre>
+<pre class="brush:javascript">
+	via( "test.color" ).subscribe( "$.color", "click", "val set", null, "input[type='button']" );
+</pre>
+<h3>Wildcarded events</h3>
+
+<p>
+	When you subscribe an model event, you can use wildcard "*" to subscribe events matched the
+	patterns and you can also subscribe more than one types of event by concatinate them with " "
+	(space). Below is some examples.
+</p>
+
+<pre class="brush:javascript">
+	$("#debug").subscribe("customers", "afterUpdate* afterCreate*", function () {});
+</pre>
+
+<div class="data simpleTable">
+	<table>
+		<tr>
+			<td>Value of events parameter</td>
+			<td>Event matched</td>
+			<td>Event not matched</td>
+		</tr>
+		<tr>
+			<td>*</td>
+			<td>all events(events happend to the node, and child nodes)</td>
+			<td>none</td>
+		</tr>
+		<tr>
+			<td>afterUpdate</td>
+			<td>afterUpdate</td>
+			<td>every event other than "afterUpdate"</td>
+		</tr>
+		<tr>
+			<td>afterUpdate*</td>
+			<td>afterUpdate , afterUpdate.1, afterUpdate.2</td>
+			<td>beforeUpdate</td>
+		</tr>
+		<tr>
+			<td>afterUpdate.*</td>
+			<td>afterUpdate.1, afterUpdate.2</td>
+			<td>afterUpdate , beforeUpdate</td>
+		</tr>
+		<tr>
+			<td>afterUpdate* afterCreate*</td>
+			<td>afterUpdate, afterUpdate.1, afterCreate, afterCreate.1</td>
+			<td>afterDel</td>
+		</tr>
+		<tr>
+			<td>after*</td>
+			<td>afterUpdate, afterUpdate.1, afterCreate, afterCreate.1</td>
+			<td>beforeDel</td>
+		</tr>
+		<tr>
+			<td>after*.</td>
+			<td>afterUpdate, afterCreate, afterDel</td>
+			<td>afterUpdate.1, beforeUpdate</td>
+		</tr>
+	</table>
+</div>
+
+<h3>init event</h3>
+
+<p>"init" event is special event, it is triggered right after a subscription is created. And the
+	subscription handler will be invoked immediately. In the following example, "init" event is used
+	to populate the fullName value to the label.</p>
+
+<pre class="brush:javascript">
+	$("#divMessage").subscribe("test.fullName", "init afterUpdate", "get html");
+</pre>
+
+<p>In fact, you can specify a number after as time (in minisecond) to trigger the event right after
+	the subscription is created. In the following example the "init" event is triggered 100
+	minisecond after the subscription is created.
+</p>
+
+<pre class="brush:javascript">
+	$("#divMessage").subscribe("test.fullName", "init100 afterUpdate", "get html");
+</pre>
+
+<p>If you use "init" event only like the following, there is no subscription actually created,
+	instead the subscription handler will be call once. This is similar to the "one" event binding
+	in jQuery.
+</p>
+
+<pre class="brush:javascript">
+	$("#divMessage").subscribe("test.fullName", "init", "get html");
+</pre>
+
+<h3>Debuging subscriptions</h3>
+
+<h2>Handler and filter</h2>
+
+<p> Handler is where the work is done. The impact of changing from event binding to event
+	subscription is more than just simple renaming. It affects profoundly how the handler is created
+	and used. <strong>The goal is that we can quickly create handlers and reuse them, and we can
+		also create them programatically or declaratively.</strong>
+</p>
+
+<h3>Non-reusable handlers for event binding</h3>
+
+<p>
+	Using jQuery event binding, we normally write code like the following.
+</p>
+
+<pre class="brush:javascript">
+	$( "#txtName" ).change( function(e) {
+	    via("test.name").set(this.value);
+	} );
+</pre>
+
+<p>Besides the problem of thinking like computer, the above handler had a hard reference to on
+	"test.name" model, which makes the handler not reusable. If we want to use another text box to
+	capture input value for another model, we have to rewrite a new handler like below.
+</p>
+<pre class="brush:javascript">
+	$("#txtAge").change(function (e) {
+		via("test.age").set(this.value);
+	});
+</pre>
+
+<h3>Reusable and composable handlers of event subscription</h3>
+
+<p>Let's rewrite the above event binding using event subscription.</p>
+
+<pre class="brush:javascript">
+	//create a common handlers
+	function getViewValueAndSetModel (e) {
+		e.subscriber.set(e.publisher.val());
+	}
+
+	//referrence the common handler by key
+	via("test.name").subscribe("$#txtName", getViewValueAndSetModel );
+	via("test.age").subscribe("$#txtAge", getViewValueAndSetModel" );
+</pre>
+
+<p>
+	In the above code, what the handler does is strictly between the subscriber and the publisher,
+	and there is no hard reference to external state, which make it reusable. If another
+	subscription use the same the types of subcriber and publisher, it can reuse the same handler.
+</p>
+
+<p>
+	Not only we want our handler reusable, we also want to make our handler composable. via.js uses
+	<a href="http://www.eaipatterns.com/PipesAndFilters.html">"Pipes and Filters"</a> pattern to
+	achieve this goal.
+</p>
+
+<!--
+<pre class="brush:javascript">
+	via.handlers("getViewValueAndSetModel", {
+		get: "val",
+		set: "set"
+	});
+
+	// or we can write
+	via.handlers("getViewValueAndSetModel", "val set");
+</pre>
+-->
+
+<h3>Filter in event subscription</h3>
+
+<p>Filters are tasks in a handler. via.js breaks down a handler into 6 filters. There are four
+	filters(<strong>getter, setter, converter, finalizer</strong> ) which are used when an event is
+	triggered. The only required filter is <strong>getter</strong>. Another two filters
+	(<strong>initializer and disposer</strong>) are used during event subscription is created or
+	disposed. Each filter can be used in one of four forms (<strong>function, common filter,
+		publisher/subscriber method, model helper</strong>). The following describes different forms
+	of filter of different types.
+</p>
+
+
+<!--
+	via( "age" ).subscribe( $text, "ageChange", "*testGet *testSet testConvert testInit testDispose" );
+-->
+<h4>Function filter</h4>
+
+<p>Function is the native form of filter, all forms of filter will be converted to filter
+	function.</p>
+
+<ol class="simpleList">
+	<li>getter (required, get the value of publisher or do all the work of a handler)
+		<pre class="brush:javascript">
+			function get(e) {
+				//you can do all your work in the filter
+				//and return undefined
+				//or
+				//get the value from e.publisher
+				//return a value so that the next filter can contine the processing
+			}
+		</pre>
+	</li>
+	<li>converter (optional, convert the value returned from getter)
+	<pre class="brush:javascript">
+		function convert(value, e) {
+			//return a new value by converting the value paramter
+			// or return a promise which will resolve a converted value.
+		}
+	</pre>
+		<p>
+			Please note that the convert filter does not necessary return a converted value
+			immediately, it can return a jQuery promise (such as <a
+			href="http://api.jquery.com/jQuery.ajax/">jqXHR</a>), which promise a converted
+			value in the future. The async converter is very powerful feature. We will talk about
+			it in template and AJAX.
+		</p>
+
+	</li>
+	<li>setter (optional, update subscriber with the value returned from converter)
+	<pre class="brush:javascript">
+		function set(value, e) {
+			//set e.subscriber
+		}
+	</pre>
+		<p>In via.js, one creative usage of setter is to append the rendered markup into DOM
+			element.</p>
+	</li>
+	<li>
+		finalizer (optional, action will perform on the side effect that setter has
+		created).
+		<pre class="brush:javascript">
+			function finalize(value, e) {
+				//value is value which is passed into set filter
+			}
+		</pre>
+		<p>
+			In via.js, one of the usage of finalizer is used to parse the
+			markup appended into DOM to build declarative subscriptions.
+		</p>
+	</li>
+</ol>
+
+<p>
+	The other two filters are only used during subscription is made or subscription is removed. Both
+	of them are optional. The are normally used for common handlers.
+</p>
+
+<ol class="simpleList">
+	<li>initializer(optional, it is called during subscription is created)
+	<pre class="brush:javascript">
+		function initialize ( publisher, subscriber, handlerObject, options ) {
+			//publisher, subscribe are either jQuery object or via proxy
+			//handlerObject is the handlerObject being build
+			//options is the options that passed into 
+			//subscriber.subscribe(publisher, events, handler, options)
+		}
+	</pre>
+		<p>
+			It is useful when create a customized copy of reusable handlers, and wrapping
+			and third party widget.
+		</p>
+	</li>
+	<li>
+		disposer (optional, it is called during unsubscribing)
+		<pre class="brush:javascript">
+			function dispose(publisher, subscriber) {
+				//cleanup publisher and subscriber
+			}
+		</pre>
+		<p>It is useful to cleanup some state for third party widget.</p>
+	</li>
+</ol>
+
+<h4>Common filter</h4>
+
+<p>Common filters are the filters which can be reused in a handler. To create common filter we
+	can use the following code.</p>
+
+<pre class="brush:javascript">
+	via.filters.converters.toNumber = function( value ) {
+		return +value;
+	};
+
+	//add other filters use the following objects
+	//via.filters.getters
+	//via.filters.setters
+	//via.filters.initializers
+	//via.filters.disposers
+	//via.filters.finalizers
+
+	//use "*filterName" to reference the filter.
+</pre>
+
+<p>
+	A common filter expression is a string. For the above common converter, we can use string
+	"*toNumber" to represent the filter.
+</p>
+
+<h4>Publisher/subscriber method as filter</h4>
+
+<p><strong>This kind of filter is only applicable to getter and setter only.</strong> The expression
+	is a string
+	which represent the method of publisher/subscriber. For example, we can use "val" to as the
+	$jQueryObject.val method, and "set" to represent proxy.set method. If a method require a propety
+	name, you need to use "methodName*propertyName". For example, if we want to use
+	$jQueryObject.css("color", value) method, we need to use expression "css*color". Please
+	know that if publisher/subscriber is a via proxy, "get" or "set" method can also apply to
+	to the model method.
+</p>
+
+<pre class="brush:javascript">
+	$view.subscribe( "color", "init afterUpdate", "css*color" );
+</pre>
+
+<h4>Model helper as filter</h4>
+
+<p>Previously, we have discussed model helper, which should be referenced with proxy.helper(). To
+	refer to model helper, use "#pathOfModelHelper".
+</p>
+
+
+<h3>Handler in event subscription</h3>
+
+<p>Event subscription handler is composed with different filters. A handler can be expressed
+	in four forms.
+</p>
+
+<h4>Handler in function form</h4>
+
+<p>This is the most simple form of handler, this is very similar to traditonal handler used
+	in event binding.</p>
+
+<pre class="brush:javascript">
+	subscriber.subscribe(publisher, events, function (e) {}, options);
+</pre>
+
+<p>
+	Internally, the handler the function will be transformed into the get filter of hanler object.
+	So the above quote is essentially the same as below.
+</p>
+
+<pre class="brush:javascript">
+	subscriber.subscribe(publisher, events, {
+		get: function (e) {}
+	},
+	options);
+</pre>
+
+<h4>Handler in the form of literal object</h4>
+
+<p>Internally, all forms of handler will be convert to an handler object. But you can use a handler
+	object directly. The filters can in one of the filter forms discussed ealier.</p>
+
+<pre class="brush:javascript">
+	//the filter should be in one form of these (function, common filter,
+	//publisher/subscriber method, embedded function)
+	subscriber.subscribe(publisher, events, {
+		get: getter,
+		set: setter,
+		convert:converter,
+		finalize: finalizer,
+		initialize: initializer,
+		dispose: disposer
+	},
+	options);
+</pre>
+
+
+<h4>Handler in form of string of filter keys</h4>
+
+<p>This is special form of literal object. If all filters of a literal handler object
+	are filter keys, we can use a string concatinating all filter keys. The keys should be
+	concatinate in the order of "getter setter converter finalizer initializer disposer".
+</p>
+
+<pre class="brush:javascript">
+	subscriber.subscribe(publisher, events, "getter setter converter finalizer initializer disposer", options);
+	//if you have missing member you can use null in place of the misss filter. for example
+	subscriber.subscribe(publisher, events, "getter setter null finalizer null disposer", options);
+	//if you have don't have remaining filter, you can just leave them empty like below
+	subscirber.subscriber(publisher, events, "getter setter");
+</pre>
+
+<p>Normally, you need to have at least one get filter and one set filter. But sometimes, you can
+	have
+	only one filter, and via.js can infer another filter from the type of publisher and subscriber.
+</p>
+
+<pre class="brush:javascript">
+	via("test.name").subscribe("$#txtBox", "change", "val");
+	//via.js can infer "val" as "val set", because publisher is a view, and subscriber is model
+	//this is equivalent to the following
+	via("test.name").subscribe("$#txtBox", "change", "val set");
+	//
+	$("divMessage").subscribe("test.message", "afterUpdate", "html");
+	//via.js can infer "html" as "get html", because publisher is a model, and subscriber is a view.
+	//this is equivalent to the following
+	$("divMessage").subscribe("test.message", "afterUpdate", "get html");
+</pre>
+
+<h4>Common handler</h4>
+
+<p>Before you can use common handler, you need to build a common handlers. The syntax is,</p>
+
+<pre class="brush:javascript">
+	via.handlers(commonHandlerName, handler);
+</pre>
+
+<p>The handler can be in one of the handler forms discussed above, such as handler function, handler
+	oject (object form and string form). After you build a common, handler you can reference it
+	in event subscriptions like the following.</p>
+
+<pre class="brush:javascript">
+	subscriber.subscribe(publisher, events, "*commonHandlerName", options);
+</pre>
+
+<h4>Model helper as handler</h4>
+
+<p>As dicussed before model helper are just model function. You can put your handler function into
+	the model first, then reference it as a handler using string "#pathOfEmbeddedFunction".
+</p>
+
+<pre class="brush:javascript">
+	via.set( "test", {
+		updateViewColor: function (e) {
+			var value = e.publisher.val();
+			e.subscriber.css("color", value);
+
+		},
+		color: "red"
+	} );
+	//reference the embedded function using "#pathOfEmbeddedFunction"
+	$("#divSamples").subscribe("test.color", "init afterUpdate", "#test.updateViewColor");
+</pre>
+
+<p>A special form of using model helper as handler is as follow. In this case, the handler
+	is the subscriber itself, so that you can leave the handler empty.</p>
+
+<pre class="brush:javascript">
+	via.extend({
+		name: "",
+		handleViewChange: function (e) {
+			//this function is not invoked using proxy.set(),
+			//this function is get filter and handler
+			//"this" refer to handler object
+			e.subscriber.set("..name", e.publisher.val());
+		}
+	});
+
+	via("handleViewChange").subscribe("$#txtName", "change", "#handleViewChange");
+
+	//Because the handler is same as subscriber, we can leave the handler empty, like this
+	via("handleViewChange").subscribe("$#txtName", "change");
+
+</pre>
+
+
+<!--	<strong>Although via.js encourage you write your handler from the perspective for subscriber and
+		change subscriber
+		only, it does not enforce what you can do in the handler.</strong>
+-->
+
+<h3>Event arguements of model event and view event</h3>
+
+<p>
+	Although the subscriptions of of model event and view event are unified, but the underlining
+	implementations are still different. via.js try to normalize the behavior of these two event
+	implementation. In the following chart, the highlighted part are the shared members. The other
+	properties are specific to model event arugment only or model event argument only.
+</p>
+
+<div class="data simpleTable">
+	<table>
+		<col style="width:220px">
+		<col style="width:auto;">
+		<col style="width:220px">
+		<tr>
+			<td>Event argument members<br/>
+			</td>
+			<td>model event argument</td>
+			<td>view event argument</td>
+		</tr>
+		<tr>
+			<td>instanceof</td>
+			<td>via.Event</td>
+			<td>jQuery.Event</td>
+		</tr>
+		<tr class="commonFeature">
+			<td>publisher</td>
+			<td>
+				via proxy pointing to publisher in parameter of the subscribe method
+			</td>
+			<td>$(e.currentTarget)</td>
+		</tr>
+		<tr class="commonFeature">
+			<td>originalPublisher</td>
+			<td>
+				via proxy pointing to publisher which originally trigger the event.
+			</td>
+			<td>$(e.target)</td>
+		</tr>
+		<tr class="commonFeature">
+			<td>subscriber</td>
+			<td colspan="2">
+				via proxy(if subscriber is model)<br/>
+				jQuery object(if subscriber is view)
+			</td>
+		</tr>
+		<tr class="commonFeature">
+			<td>type</td>
+			<td colspan="2">
+				the name of triggering event
+			</td>
+		</tr>
+
+		<tr class="commonFeature">
+			<td>stopPropagation()</td>
+			<td>
+				support
+			</td>
+			<td>inherit from jQuery.Event</td>
+		</tr>
+		<tr class="commonFeature">
+			<td>stopImmediatePropagation()</td>
+			<td>
+				support
+			</td>
+			<td>inherit from jQuery.Event</td>
+		</tr>
+		<tr>
+			<td>proposed</td>
+			<td>
+				availabe in beforCreate, beforeUpdate event
+			</td>
+			<td>n/a</td>
+		</tr>
+		<tr>
+			<td>removed</td>
+			<td>
+				availabe in afterDel, afterUpdate event
+			</td>
+			<td>n/a</td>
+		</tr>
+		<tr>
+			<td>level</td>
+			<td>
+				support, a number show the level from current model to the original model
+			</td>
+			<td>n/a</td>
+		</tr>
+		<tr>
+			<td>stopCascade()</td>
+			<td>
+				support, when called the event will not be broadCast to dependent property
+			</td>
+			<td>n/a</td>
+		</tr>
+		<tr>
+			<td>error()</td>
+			<td>
+				support, when called in beforeUpdate, beforeCreate event handler, will abort
+				update, create operations
+			</td>
+			<td>n/a</td>
+		</tr>
+		<tr>
+			<td>isDependent()</td>
+			<td>
+				support, true if publisher model is not the ascendent of original publisher
+			</td>
+			<td>n/a</td>
+		</tr>
+		<tr>
+			<td>Other jQuery Event propeteries such as target, related target, pageX, pageY, ...
+			</td>
+			<td>n/a</td>
+			<td>inherit from jQuery.Event</td>
+		</tr>
+	</table>
+
+</div>
+
+<h3>Debugging Handler and filter</h3>
+
+<h2>Application</h2>
+
+<p>We have discussed model, view, event, subscription, filter and handler. In via.js, these are all
+	the components of a web application. Building a application using via.js consist of following
+	tasks.
+</p>
+<ol class="simpleList">
+	<li>Provision view objects using markup</li>
+	<li>Provision model objects using via proxy</li>
+	<li>Let view objects subscribe events of other objects</li>
+	<li>Let model objects subscribe events of other objects</li>
+</ol>
+
+<p>via.js provide a API to organize your application.</p>
+<pre class="brush:javascript">
+	via.application( {
+		models: [
+			{
+				path: "modelPath",
+				value: modelValue,
+
+				//optional by default it is
+				contextView: "body",
+				subs: [
+					//can be any type of subscriptions, but typically is like
+					[modelSubPath, jQuerySelectUnderContextView, viewEvents, handler, options/*optional*/, delegate/*optional*/]
+				]
+			}
+		],
+
+		views: [
+			{
+				view: $( "#divMessage" ),
+				//optional by default is root model ""
+				contextModel: "test",
+				subs: [
+					//can be any type of subscriptions, but typically is like
+					[childJQueryObjectUnderView, subModelUnderContextModel, modelEvents, options/*optional*/, delegate/*optional*/]
+				]
+			}
+		]
+
+	} );
+</pre>
+<p>We can use the application method to rewrite the "hello world" application like the
+	following.</p>
+<pre class="brush:javascript">
+	via.application( {
+		models: [
+			{
+				path: "test",
+				value: {
+					name: "",
+					message: function() {
+						var name = this.get( "name" );
+						return name ? "hello, " + name : "";
+					}
+				},
+				subs: [
+					["name", "$#txtName", "change", "val set"]
+				]
+			}
+		],
+
+		views: [
+			{
+				view: $( "#divMessage" ),
+				contextModel: "test",
+				subs: [
+					//$ means the current view
+					["$", "message", "afterUpdate", "get html"]
+				]
+			}
+		]
+	} );
+</pre>
+<p>We can see that an application consists of a set of models and views. A model has properties and
+	functions they are either methods or helpers. A model also has a set of subscriptions. These
+	subscriptions is basically a set of rules which tells the model how to behave itself to respond
+	external events, especially view events. Similarly, a view is an element in the page, and it has
+	also a set of subscriptions, which tells the view how to behave itself to respond to external
+	events, especially model events. From a point of view, model and view are almost the same.
+	via.js
+	has an other method, which treat them the same way, at least from the aspect of developer use,
+	it
+	is called stage.
+</p>
+
+<pre class="brush:javascript">
+	via.stage(actors);
+	//or
+	via.stage(actor1, actor2, ...);
+	//e.g
+	var modelActor = {
+		actor: modelPath,
+		model: modelValue,
+		//optional
+		context: "body"
+		subs: [
+			//can be any type of subscriptions, but typically is like
+			[modelSubPath, jQuerySelectUnderContext, viewEvents, handler, options/*optional*/, delegate/*optional*/]
+		]
+	};
+	var viewActor = {
+		actor: jQueryObject,
+		context: modelPath,
+		subs: [
+			//can be any type of subscriptions, but typically is like
+			[childJQueryObjectUnderView, subModelUnderContextModel, modelEvents, options/*optional*/, delegate/*optional*/]
+		]
+	};
+</pre>
+
+<p>The idea is that an application is like a stage, views and models are just like actors
+	on the stage. They behave by themself based on a set of rules (subscriptions). As a developer,
+	you are like a director, put the actors on the stage, let the actors play they own role. Once
+	the show starts, there is no director, manager, controller anymore. Actors are on their own.
+	Below is how to use stage method to rewrite the hello world application.
+</p>
+<pre class="brush:javascript">
+	via.stage(
+		{
+			actor: "test", //model path
+
+			//model value
+			model: {
+				name: "",
+				message: function() {
+					var name = this.get( "name" );
+					return name ? "hello, " + name : "";
+				}
+			},
+
+			//optional
+			//context "body",
+			subs: [
+				//children, publisher, events, events, options, delegate
+				["name", "$#txtName", "change", "val set"]
+			]
+		},
+
+		{
+			actor: "#divMessage",
+			context: "test", //model path
+			subs: [
+				["$", "message", "afterUpdate", "get html"]
+			]
+		}
+	);
+</pre>
+
+<p> Please note that the stage method and application method does the same thing, and there is no
+	technical difference. You can use either of them to suit your taste. Besides the application and
+	stage method, via.js also provide a declarative way to build application.
+</p>
+
+<h2>Declarative Subscription</h2>
+
+<p>Subscription can be also built declaratively. There is no techincal difference
+	between declarative subscription and programatic subscription. Whatever you can achieve in
+	declarative subscription , you can do it in programatic subscription, and vice versa. However
+	declariave subscription offer the following unique benefits.</p>
+
+<ol class="simpleList">
+	<li>There is no need to select a view using a selector (such as id).</li>
+	<li>Better support template, especially recursive template</li>
+	<li>Minimize coding by using custom property and class property</li>
+</ol>
+
+
+<p>Here is quick sample</p>
+
+<pre class="brush:html">
+	&lt;div data-sub="@ns:test"&gt;
+		&lt;label&gt;Please input your name:
+		&lt;input type="text" id="txtName" data-sub="@pub:change|name|val"/&gt;
+		&lt;/label&gt;
+		&lt;div id="divMessage" data-sub="@sub:message|afterUpdate|html"/&gt;
+	&lt;/div&gt;
+</pre>
+
+
+<p>
+	When designing syntax of declarative subscriptions, We have the following goals to make
+	it easier to use.
+</p>
+<ol class="simpleList">
+	<li>We can embed all programatic subscriptions into the markup</li>
+	<li>The data embedded into the markup must be as compact as possible, while still semantic
+		enough to understand.
+	</li>
+	<li>The syntax used in the delcarative subscriptions must be extensible.</li>
+</ol>
+
+<p>
+	These goals are important, otherwise it doesn't make sense to to use declarative subscription
+	all.
+</p>
+
+<h3>Subscription rule</h3>
+
+<p>The subscription rule is saved in a "data-sub" attribute of DOM element.
+	Like css rule, subscription rule consist of multiple declarations. Each
+	declaration has a propety and a vlaue. There are 5 reserved properties, <strong>@ns,@sub,
+		@pub, @options, @class</strong>. User can create customs properties.
+</p>
+
+<p>Generally whitespaces (such as tab, line-feed) between declarations are ignored, so feel free to
+	use them to make your code more readable like below. However, the space within a declaration
+	value can be
+	significant, depending the type of the property in the delaration.</p>
+
+<pre class="brush:javascript">
+	&lt;a data-sub="@ns:x
+	             @sub:x|init afterUpdate|handler|options one, two
+	             @pub:click|y|handler|option 1,2 3"
+
+	/&gt;
+</pre>
+
+
+<h3>Reserved properties</h3>
+
+<h4>@ns</h4>
+
+<p>@ns defines the model namespace that the parser will use to build subscriptions. It is an
+	optional property. If @ns is missing, then it inherites from the first ascendant with the value
+	set. If all ascendent does not have @ns property set, then @ns is set to empty string, which
+	means root model. With namespace, the path value in other subscription rule is relative the
+	to the namespace.
+</p>
+<pre class="brush:javascript">
+	data-sub="@ns:myNamespace"
+</pre>
+<h4>@sub or !event</h4>
+
+<p>The "@sub" property means the current element subscribe to the events of another object
+	(view or model). Here is the syntax and some example</p>
+
+<pre class="brush:javascript">
+	//handler, options, delegate are all optional, you can have multiple @sub declaration
+	data-sub="@sub:selector1|events1|handler1|options1|delegate1
+	@sub:selector2|events2|handler2|options2|delegate2"
+
+	//or combine mulitple @sub declarations into one using seperator ";"
+	data-sub="@sub:selector1|events1|handler1|options1|delegate1;
+		 selector2|events2|handler2|options2|delegate2"
+
+
+	//current element subscribe model: "message", event: afterUpdate, handler:get html
+	data-sub="@sub:message|afterUpdate|html"
+
+	//current element subscribe view "#txtName", event:change, handler:val html
+	data-sub="@sub:$#txtName|change|val html"
+</pre>
+
+<p>The selector is either a jQuery selector like the "#txtName" or model path that relative to the
+	namespace such as "message" (If @ns is "myapp", then the full path is "maapp.message")
+</p>
+
+<p>Besides the "@sub" notation, we can also use "!" notation to do the same thing, but it is
+	shorter, which is recommended, but the "!" notation will be converted to "@sub" eventually.</p>
+
+<pre class="brush:javascript">
+	data-sub="!eventName:path|handler|option|delegate"
+	//E.g
+	data-sub="!afterUpdate:message|html"
+</pre>
+<h4>@pub or $event</h4>
+
+<p>The "@pub" property means current element publishing jQuery events to another object (view or
+	model). Here is the syntax and some example.
+</p>
+
+<pre class="brush:javascript">
+	//handler, options, delegate are all optional, you can have multiple @pub declaration
+	data-sub="@pub:viewEvents1,modelPath1,handler1,options1|delegate1
+	@pub:viewEvents2,modelPath2,handler2,options2|delegate2"
+
+	//or combine multiple @pub declarations into one using seperator ";"
+	data-sub="@pub:viewEvents1|modelPath1|handler1|options1|delegate1;
+	     viewEvents2|modelPath2|handler2|options2|delegate2"
+
+	//current view publishes "change" event to model "name", with handler "val"
+	data-sub="@pub:change|name|val"
+</pre>
+
+<p>We can aslo use "$event" to express the semantics of "@pub" properties.</p>
+
+<pre class="brush:javascript">
+	data-sub="$event:selector|handler|option|delegate"
+	//
+	data-sub="$change:name|val"
+</pre>
+
+
+<h4>@class</h4>
+
+<p>These property is a special property for extentions, we will talk about this later.</p>
+
+<h4>@options</h4>
+
+<p>This property is not used at the moment.</p>
+
+
+<h3>Custom properties</h3>
+
+<p>Propertes other than reserved properties <strong>@ns,@sub, @pub, @options,
+	@class</strong> are custom properties. You use the same token "@" to reference these properties
+	like <strong>@prop1, @prop2</strong>. Custom properties can be used to build subscriptions
+	dynamically which can be not achieved by using reserved properties. It can be also used to
+	inject some logic such as initialization during subscriptions is built. In the following, we
+	define a custom property @val.
+</p>
+
+<pre class="brush:javascript">
+//@val:keyup,updateModel
+//the part "updateModel,keyup" will be passed in as options
+via.customSubsProps.val = function( elem, parseContext, subscriptions, options ) {
+	//..
+	subscriptions.push( {
+		publisher: path,
+	    eventTypes: "after*",
+	    subscriber: elem,
+	    handler: "*updateViewValue"
+    } );
+	//..
+};
+</pre>
+<p>After the @val property is defined, we can reference it in a declaration like the following.</p>
+
+<pre class="brush:javascript">
+	@val:path
+</pre>
+
+<p>The <strong>@val</strong> property can be used for all input control such textbox, checkbox,
+	radio button, select (dropdown list or list box), textArea and more. In the following, it define
+	a subscription declaration, that message subscribe the keyup event of textbox, when keyup
+	happens, update the message itself with the value in text box.
+</p>
+<pre class="brush:html">
+	&lt;input type="text" data-sub="@ns:message @val:."/&gt;
+</pre>
+
+<h3>Simplify subscription rule with @class property</h3>
+
+<p>Declarative subscption is criticized because too much code is
+	jamed into markup, that makes the markup like untestable, unmaintainable spaghetti code.
+	To solve this problem, we can borrow the CSS practise. One way to apply CSS is to
+	to use inline style which put lots style properties into the style attribute. A better
+	practise is to apply a class to the element, and create a class rule with a set of css
+	declarations in an external css style sheet. By doing this, our markup is clean and semantic.
+</p>
+
+<p>Here, we try to do simliar thing with with <strong>@class</strong> property. We can create a
+	class property by aggregating a set of subscription delarations (including nested class
+	declarations) into a string, and give it a class name. After that we can apply the class to an
+	element by using class declaration. The following shows how to create a class, and how to use it
+	in class declaration.
+</p>
+
+<pre class="brush:javascript">
+	via.classes.myClass = "@ns:x @pub:change|firstName|val" +
+						        "@sub:firstName|init|val";
+	// "@class" declaration
+	data-sub="@class:myClass|modelPath|options|delegate"
+
+	//you can have multiple @class for an element
+	data-sub="@class:class1|modelPath1|options1|delegate1 @class:class2|modelPath2|options2|delegate2"
+
+	//or you can group multiple @class rule into one using seperator ";"
+	data-sub="@class:class1|modelPath1|options1|delegate1;
+	class2|modelPath2|options2|delegate2"
+</pre>
+
+<p>Another way to reference to a class is to use <strong>`className:...</strong>, instead of
+	<strong>@class:className|...</strong>, like the following, this will make the subscription
+	rule event more compact</p>
+
+<pre class="brush:javascript">
+	data-sub="`myClass:modelPath|options"
+
+	data-sub="`class1:modelPath1|options1|delegate1
+			  `class2:modelPath2|options2|delegate2"
+</pre>
+
+<p>As we can see, there are two forms of class declarations, the "@" form and the "`"
+	form. "@class" form is more verbose, and "`classsName" is shorter and easier to read. Below is
+	an sample bundled in
+	the source.
+</p>
+
+<pre class="brush:javascript">
+	via.classes.datepicker = "@sub:.|init afterUpdate|*modelToDatepicker" +
+							 "@pub:onDateChanged|.|*datepickerToModel";
+
+	via.classes.dateVal = "@sub:.|init afterUpdate|get val *dateToString" +
+						  "@pub:change|.|val set *stringToDate";
+
+	via.set( "meetingDate", new Date( "2012-1-1" ) );
+</pre>
+
+<pre class="brush:html">
+	&lt;p&gt;&lt;span data-sub="`datepicker:meetingDate"/&gt;&lt;/p&gt;
+	&lt;input type="text" data-sub="`dateVal:meetingDate"/&gt;
+</pre>
+
+<p>Combining custom rules and class rules, we can make our subscription data short, readable while
+	we build subscriptions dynamically.
+</p>
+
+<h3>Debuging declarative subscriptions</h3>
+
+<p>via.js provide a couple of ways to debug.</p>
+
+
+<h2>Building large scale client side application.</h2>
+
+<p>A client side application is build from smaller modules, which are also applications
+	by themself. We can use the <strong><a
+		href="http://en.wikipedia.org/wiki/Composite_pattern">
+		composite pattern </a></strong> to build arbitrary complex application by composing smaller
+	applications. To do that we need to solve two problems here.
+</p>
+
+<ol class="simpleList">
+	<li>How to package unit application</li>
+	<li>How to composing unit application into larger one</li>
+</ol>
+<p>
+	Let's focus on the first problem. The hello world application is smaller enough to be called
+	unit application. From the perspective of via.js, an application consist of only view and model.
+	We have discussed how to build model, in the following we will talk about using template to
+	built
+	a view.
+</p>
+
+<h2>Template</h2>
+
+<h3>Register template engines</h3>
+
+<p>There are plenty client side JavaScript template engines out there.
+	Instead of reinventing a new template engine, via.js let user plugin their favorite template
+	engines. However, different template engines have their own philosophy, and work
+	some more or less differently. Via.js tries to provide a common interface so that it does not
+	depends on the implementation of different engines. In order to use a template engine,
+	we need to plug it in by implementing the interface like below.
+</p>
+
+<pre class="brush:javascript">
+via.template.engines( "myEngine", {
+	//must implement, return jQuery dom objects or just markup in string
+	render: function( templateId, data, context ) { },
+
+	//optional, required only if you need to dynamically to load template externally
+	compile: function( templateId, source ) { },
+
+	//optional, required only if you need to dynamically to load template externally
+	isTemplateLoaded: function( templateId ) { //return true or false }
+});
+</pre>
+
+<p>
+	The render method is the only required method. The other two methods are optional, we'll talk
+	about them later. By default, if you register a new
+	engine like above, the engine became the default engine. But don't want to the registered engine
+	to be the defualt engine you can specify the last last parameter as true,
+</p>
+
+<pre class="brush:javascript">
+	via.template.engines("myEngine", engine,  true /* notDefaultEngine */);
+</pre>
+
+<p>If you want to change default engine to another engine you can use the following</p>
+
+<pre class="brush:javascript">
+	via.template.defaultEngine = "anotherEngine";
+</pre>
+
+<p>The context passed into the engine.render is like the following.</p>
+<pre class="brush:javascript">
+	context = {
+		modelPath: e.publisher.path,
+		e: e,
+		get: function( /*subPath*/ ) {
+			return e.publisher.get.apply( e.publisher, slice.call( arguments ) );
+		}
+	};
+</pre>
+<p>This object allow you to access the model in your template in case you need it.</p>
+
+<h3>Building template handler</h3>
+
+<!--If a view subscribe an event of model, when model
+	event happens, view update itself by using a handler.
+	-->
+<p>Now template engine is ready, and data (model) is also ready, we want to generate view. This can
+	be done by using template handler. Template handler is same as other handler which is composed
+	by a
+	series of filters, such as getter, converter, and setter, and finalizer. What is special is
+	that,
+	we use a template converter which convert the data from getter into markup, and markup will be
+	passed along to setter. There are two built-in template handler in via.js, below is the
+	definitions.
+</p>
+
+<pre class="brush:javascript">
+	var renderInside = {
+		initialize: "*buildTemplateOptions",
+		get: "get", //extensible
+		convert: "*template",
+		set: "html", //extensible
+		finalize: "*importSubs"
+	};
+
+	var render = {
+		initialize: "*buildTemplateOptions",
+		get: "get", //extensible
+		convert: "*template",
+		set: "replaceWith", //extensible
+		finalize: "*importSubs"
+	};
+</pre>
+
+<p>The initializer "*buildTemplateOptions" is used to build template id and so on. The finalizer
+	"*importSubs" is used to import the declarative subscriptions embedded in the output markup. If
+	the built-in template handler does not works out for you, you can easily compose a new template
+	handler
+	like using the above code. Or you can use via.buildTemplateHandler, which is even easier.
+	The buildTemplateHandler method return a constomized copy of "renderInside" handler.
+</p>
+
+<pre class="brush:javascript">
+	var myNewTemplateHandler = via.template.buildTemplateHandler(myGetter, mySetter);
+	//or
+	var myNewTemplateHandler = via.template.buildTemplateHandler({
+		get: myGetter, //optional
+		set: mySetter, //optional
+		finalize: myFinalizer //optional
+	});
+</pre>
+
+<h3>Use template handler programatically</h3>
+
+<p>Let's use template handler to refactor the hello world app.Firstly,
+	We will do this programatically, and later declaratively. In the following we will use <a
+		href="https://github.com/BorisMoore/jsrender/">jsrender</a> as template engine, you can
+	find the registration code of the template in the source.</p>
+
+<pre class="brush:html">
+	&lt;div id="appContainer"&gt; &lt;/div&gt;
+
+	&lt;script type="jsrender" id="hello"&gt;
+		&lt;div&gt;
+			&lt;label&gt;{{:prompt}}: &lt;input type="text" class="name"/&gt;&lt;/label&gt;
+			&lt;div class="divMessage"/&gt;
+		&lt;/div&gt;
+	&lt;/script&gt;
+
+</pre>
+
+<pre class="brush:javascript">
+//build model
+via.set( "helloApp", {
+	prompt: "Please input your name:",
+	name: "",
+	message: function() {
+		var name = this.get( "name" );
+		return name ? "hello, " + name : "";
+	}
+} );
+</pre>
+
+<pre class="brush:javascript">
+	var templateId = "hello";
+	//build subscriptions
+	$( "#appContainer" ).subscribe( "helloApp", "init", via.template.buildTemplateHandler( {
+
+		//after the markup is merged with page, finalizer programatically
+		//build the subscriptions
+		finalize: function( value, e ) {
+
+			//"name" model subscribe the change of textbox view
+			e.publisher.cd( "name" ).subscribe(
+				value.findAll( ".name" ),
+				"change",
+				"val"
+			);
+
+			//label view subscribe the change of "message" model
+			value.findAll( ".divMessage" ).subscribe(
+				e.publisher.cd( "message" ).path,
+				"afterUpdate",
+				"html"
+			);
+		}
+	} ), templateId);
+</pre>
+
+<p>First we define a model, we let the body subscribe a special event "init" of model with a
+	customized "*renderInside" template handler. The handler's finalizer programatically build
+	the subscriptions for the generated markup. In via.js, there is a shortcut method to do the same
+	job.
+</p>
+
+<pre class="brush:javascript">
+	$( "#appContainer" ).renderInside(
+
+		"hello", //template id
+
+		"helloAppModel",	//model path
+
+		//finalizer
+		function( value, e ) {
+			//"name" model subscribe the change of textbox view
+			e.publisher.cd( "name" ).subscribe(
+				value.findAll( ".name" ),
+				"change",
+				"val"
+			);
+
+			//label view subscribe the change of "message" model
+			value.findAll( ".divMessage" ).subscribe(
+				e.publisher.cd( "message" ).path,
+				"afterUpdate",
+				"html"
+			);
+		}
+	);
+</pre>
+
+<h3>Use template handler declaratively</h3>
+
+<p>Now let's use declarative subscriptions and template to build the hello app again.
+	And we attach data-sub attribute to container and the elements inside the template, we remove
+	the
+	all the subscription code. This looks cleaner.
+</p>
+
+<pre class="brush:html">
+	&lt;div data-sub="`renderInside:helloApp|hello"&gt;
+	&lt;/div&gt;
+
+	&lt;script type="tmpl" id="hello"&gt;
+		&lt;div data-sub="@ns:helloApp"&gt;
+			&lt;label&gt;{{:prompt}}: &lt;input type="text" data-sub="`val:name"/&gt;&lt;/label&gt;
+			&lt;div data-sub="`html:message"/&gt;
+		&lt;/div&gt;
+	&lt;/script&gt;
+</pre>
+
+<p>We can see that declarative subscriptions inside the template will aslo work this is because of
+	finalizer "*importSubs". We can have nested template "infinitive" deep without writing any code
+	to build subscriptions in side of nested template. This is a very cool feature. The benefit of
+	declarative subscriptions in template is more obvious.
+</p>
+
+<p>In this example, the template is placed in a script tag, if the template is only used by the
+	container
+	we can place the template inside the container, we call this inline template.</p>
+
+<pre class="brush:javascript">
+	&lt;div data-sub="`renderInside:helloApp"&gt;
+		&lt;div data-sub="@ns:helloApp"&gt;
+			&lt;label&gt;{{:prompt}}: &lt;input type="text" data-sub="`val:name"/&gt;&lt;/label&gt;
+			&lt;div data-sub="`html:message"/&gt;
+		&lt;/div&gt;
+	&lt;/div&gt;
+</pre>
+
+<p>However, inline template has some limitations. First the template can not be reused, second nest
+	inline template inside inline template.
+</p>
+
+
+<h3>More about template options</h3>
+
+<p>So far, we have been specify template id as options like one of the following</p>
+
+<pre class="brush:javascript">
+	$view.subscribe(modelPath, "init", templateHandler, templateOptions);
+	//
+	$view.renderInside(modelPath, templateOption, finalizer);
+	//
+	data-sub="`renderInside:modelPath|tempateOptions"
+</pre>
+
+<p>But there are two additional switch (useDataSourceAsArrayItem,egnineName) you can specify in
+	the template option, but they are optional.
+</p>
+
+<pre class="brush:javascript">
+	//the full templateOptions
+	templateOptions = "templateId,useDataSourceAsArrayItem,engineName"
+	//e.g
+	templateOptions = "templateId"; //useDataSourceAsArrayItem=false, engineName="default"
+	templateOptions = "templateId,true"; //useDataSourceAsArrayItem=true, engineName="default"
+	templateOptions = "templateId,,myEngine"; //useDataSourceAsArrayItem=false
+	templateOptions = "templateId,true,myEngine";
+</pre>
+
+<p>By default "useDataSourceAsArrayItem" is false, via.js passed to data from getter to the
+	engine.render method as-is. If you want to pass [data] to engine.render method, you can specify
+	"useDataSourceAsArrayItem" as "true". This options is useful for some scenario.
+</p>
+
+<p>
+	"engineName" by default is the value of via.template.defaultEngine. In case you want to use two
+	or more engines at the same time (although it is rare), you want need to specify the engine name
+	for non-default engine. The following code how to use jsrender and mustache engine at the same
+	time.
+</p>
+
+<pre class="brush:html">
+	&lt;div data-sub="`renderInside:greeting|greetingTemplate,,mustache"&gt;&lt;/div&gt;
+
+	&lt;!-- jsrender is default engine here, no need to specify the template name --&gt;
+	&lt;div data-sub="`renderInside:person|personTemplate"&gt;&lt;/div&gt;
+
+	&lt;script id="greetingTemplate" type="mustache"&gt;
+		&lt;h2&gt;{{message}}&lt;/h2&gt;
+	&lt;/script&gt;
+
+	&lt;script id="personTemplate" type="jsrender"&gt;
+		&lt;h2&gt;{{:name}}&lt;/h2&gt;
+	&lt;/script&gt;
+</pre>
+
+<pre class="brush:javascript">
+	via.extend( {
+		greeting: {
+			message: "hello"
+		},
+		person: {
+			name: "John"
+		}
+	} );
+</pre>
+
+<h3>Dynamic template loading</h3>
+
+<p>Traditionally, the template source is embedded in the page markup. However, if we don't know
+	what view need to generated in advance, we might preload too many templates into the page.
+	To solve the probem, we can seperate templates into different groups, and put each group of
+	templates into an external file. When template converter tries render a template, if the
+	template is not loaded, it will load the template first, after it is loaded, then continue the
+	process. In this case the template converter return a <strong>promise</strong>.
+	Below is the modified implementation of template converter.
+</p>
+
+<pre class="brush:javascript">
+	//this is called by converters.renderTemplate
+	function renderTemplate ( templateId, dataSource, renderContext, engineName ) {
+
+		var engine = getTemplateEngine( engineName );
+		templateId = $.trim( templateId );
+
+		//The implementation of engine.isTemplateLoaded is optional
+		if (!engine.isTemplateLoaded || engine.isTemplateLoaded( templateId )) {
+
+			return engine.render( templateId, dataSource, renderContext );
+
+		} else {
+
+			var defer = $.Deferred();
+			//dynamically load the template by id using ajax, web socket or other means
+			via.template.load( templateId ).done( function() {
+				var content = engine.render( templateId, dataSource, renderContext );
+				var rtn = $( content );
+				defer.resolve( rtn.selector || !rtn.length ? content : rtn );
+			} );
+			return defer.promise();
+		}
+	}
+
+	via.filters.converters.template = function( dataSource, e ) {
+		//..
+		return renderTemplate(...);
+	}
+</pre>
+
+<p>From the code we can understand why we need to implement <strong>engine.isTemplateLoaded</strong>
+	if we want to support dynamic template loading. And we need to implement the
+	<strong>via.template.load</strong> method as well. via.js provides one default implementation as
+	follow. But it depends on an external library <strong>matrix.js</strong>.
+</p>
+<pre class="brush:javascript">
+	via.template.load = function( templateId ) {
+		if (typeof matrix == "undefined") {
+			throw "The method via.template.load require matrix.js," +
+			      "or you need override the method";
+		}
+		return matrix( templateId + ".template" );
+	};
+</pre>
+<!--	so that <strong>engine.isTemplateLoaded</strong>
+	returns true after template is loaded. <strong>via.template.compile</strong> delegate the work
+	to <strong>engine.compile</strong> like the following, this is why you need to implement
+	<strong>engine.compile</strong>.
+-->
+<p>
+	If you don't want to reference other library, you can implement the method as long as it return
+	a jQuery promise. The default implementation of via.template.load call
+	<strong>via.template.compile</strong> method which delegates the work to
+	to <strong>engine.compile</strong> like the following. That is why you also need to implement
+	this for your favorite template engine.
+</p>
+<pre class="brush:javascript">
+	via.template.compile = function( templateId, source, engineName ) {
+		var engine = getTemplateEngine( engineName );
+		return engine.compile( templateId, source );
+	};
+</pre>
+
+<p>One more thing you need make sure is that , after "engine.compile(templateId, source)" is called
+	"engine.isTemplateLoaded( templateId )" should return true.
+</p>
+
+<p>
+	Implementing a <strong>via.template.load</strong> is quite tricky, it is suggested to use the
+	default implementation which depends on matrix.js.
+</p>
+
+<p>
+	To put a template to an external, We need to do the following. Suppose your template id is
+	"hello"
+</p>
+
+<ol class="simpleList">
+	<li>Create a file in the matrix_resource_folder\template\hello\main.html, and put your template
+		source into the file
+	</li>
+	<li>Remove the template inside the page</li>
+</ol>
+
+<pre class="brush:html">
+	&lt;!-- markup in page --&gt;
+	&lt;body data-sub="`renderInside:helloApp|hello"&gt;
+	&lt;/body&gt;
+</pre>
+
+<pre class="brush:html">
+	&lt;!-- markup in page in matrix_resource_folder\template\hello\main.html--&gt;
+	&lt;script type="tmpl" id="hello"&gt;
+		&lt;div data-sub="@ns:helloAppModel"&gt;
+			&lt;label&gt;{{:prompt}}: &lt;input type="text" data-sub="`val:name"/&gt;&lt;/label&gt;
+			&lt;div data-sub="`html:message"/&gt;
+		&lt;/div&gt;
+	&lt;/script&gt;
+</pre>
+
+
+<p>If a template is not loaded, matrix.js will map the template id in to a template file name,
+	using the following mapping, then load the file and import the the template inside.</p>
+
+<div class="data simpleTable">
+	<table>
+		<tr>
+			<td>
+				Template Id
+			</td>
+			<td>
+				Template file Name
+			</td>
+
+		</tr>
+		<tr>
+			<td>
+				a
+			</td>
+			<td>
+				matrix_resource/template/a/main.html
+			</td>
+		</tr>
+		<tr>
+			<td>
+				a.b, a.b.c, a.b.c.d, .., a.*
+			</td>
+			<td>
+				matrix_resource/template/a/b.html
+			</td>
+		</tr>
+		<tr>
+			<td>
+				_a, _a.b, .., _a.*
+			</td>
+			<td>
+				matrix_resource/tempalte/_/a.html
+			</td>
+		</tr>
+
+	</table>
+</div>
+
+<p>You don't necessarily put a template into a file according to this mapping, because we
+	can group multiple templates into the a single template file. When matrix.js load a
+	template file, it will import all the templates defined in the file. If we decide to put a
+	template x into a template file y, but the template x does not map to file name y according to
+	the mapping, instead template z map to file name y, we need to make sure template z is
+	referenced in our application before template x is referenced. For example, we want to put
+	template "a.b" into matrix_resource/a/main.html, we need to make sure template "a" is referenced
+	first before "a.b".
+</p>
+
+<h3>Dynamic model loading</h3>
+
+<p>
+	We are able to put our template in external file now. But we still have our model embeded in the
+	page. In order truely build a self-contained application, we need to be able to load our model
+	dynamicallly. Here is what needs to be done in additional to the work mentioned in dynamic
+	template loading.
+</p>
+
+<ol class="simpleList">
+	<li>Use data-sub="@loadapp:helloApp" for the app container
+		<pre class="brush:html">
+			&lt;body data-sub="@loadapp:helloApp"&gt;&lt;/body&gt;
+		</pre>
+
+	</li>
+	<li>Create matrix_resource_folder\appLoader\helloApp.js, use the following code in the file.
+		<pre class="brush:javascript">
+			(function() {
+
+				return {
+
+					load: function( appContainer, options ) {
+
+						//build the model first
+						via.set( "helloAppModel", {
+							prompt: "Please input your name:",
+							name: "",
+							message: function() {
+								var name = this.get( "name" );
+								return name ? "hello, " + name : "";
+							}
+						} );
+
+						//render the template inside of the
+						//application container
+						$( appContainer ).renderInside(
+							"helloAppModel"/*modelPath*/,
+							"hello" /*templateId*/
+						);
+					},
+
+					unload: function() { }
+				};
+			})();
+		</pre>
+	</li>
+</ol>
+
+<h2>Ajax</h2>
+
+<p>The handler pipleine in via.js can support asynchrounous getters and converters which return a
+	promise. When a promise is returned, pipeline will "wait" for the promise to deliver a real
+	value. When the real value is delivered, the pipleline will resume and continue to process next
+	filter with the delivered value. In fact, handler pipeline support both getter and converter to
+	be asynchrounous at the same itme. Since jQuery 1.5, $.ajax has been rewrittern to return a
+	jqXHR which is a promise object. So we can just just return the jqXHR in our getter and
+	converter.
+</p>
+
+<p>
+	In the "hello world" example, if the message need to be fetched from a ajax service. This can be
+	easily done by using a converter in the handler like the following.
+</p>
+
+<pre class="brush:html">
+	&lt;!-- the div subscribe the change of model "name" using a handler with a async converter--&gt;
+	&lt;div data-sub="!init after*:name|get html #..getMessage"/&gt;
+</pre>
+<pre class="brush:javascript">
+	via.set( "test", {
+      name: "",
+      getMessage: function( value, e ) {
+          return $.ajax( {
+              url: "getMessage",
+              dataType: 'json',
+              data: JSON.stringify( value )
+          } );
+      }
+  } );
+</pre>
+
+<p>A even more simple solution is to use asynchronous model function. The label
+	can subscribe the change of the asynchronous model function like normal model function.
+</p>
+<pre class="brush:html">
+	&lt;div data-sub="`html:message"/&gt;
+</pre>
+<pre class="brush:javascript">
+	via.set( "test", {
+	    name: "",
+	    message: function() {
+	        var name = this.get( "name" );
+	        return $.ajax( {
+	            url: "getMessage",
+	            dataType: 'json',
+	            data: JSON.stringify( name )
+	        } );
+	    }
+	} );
+</pre>
+
+<h2>Summary</h2>
+
+<p>
+	So far, we have covered a lot about via.js. If you use jQuery a lot, you may find that
+	via.js is just a library which mimic the programming experience of jQuery. Lots of designs of
+	via.js are directly
+	borrowed from jQuery. So what does does via.js offer?
+</p>
+
+<ol class="simpleList">
+	<li>A model which can raise event</li>
+	<li>A unified event subscriptions instead of event binding</li>
+	<li>A handler pipleine</li>
+	<li>A declarative way to use event subscriptions and other feature</li>
+</ol>
+
+<!--<div class="data simpleTable">
+	<table>
+		<col style="width:110px;">
+		<col>
+		<col>
+		<tr>
+			<td>Comparison</td>
+			<td>jQuery</td>
+			<td>via</td>
+		</tr>
+		<tr>
+			<td>Internal Data</td>
+			<td>DOM holds all nodes. It is tree of nodes</td>
+			<td>A internal plain old javascript object holds all model. It is a tree of
+				values
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Proxy Creation
+			</td>
+			<td>
+		   <pre class="brush:javascript">
+			   $(selector);
+			   $("#txtFirstName");
+		   </pre>
+			</td>
+			<td>
+		   <pre class="brush:javascript">
+			   via(path);
+			   via("test.firstName");
+		   </pre>
+			</td>
+		</tr>
+		<tr>
+			<td>Proxy Access</td>
+			<td>
+		   <pre class="brush:javascript">
+			   //get
+			   $div.html();
+			   //set
+			   $div.html("hello");
+			   //remove
+			   $div.remove();
+		   </pre>
+			</td>
+			<td>
+		   <pre class="brush:javascript">
+			   //get
+			   firstNameProxy.get();
+			   //set
+			   firstNameProxy.set("John");
+			   //remove
+			   firstNameProxy.del();
+			   //other access method
+			   contactsProxy.push({ name: "John" });
+		   </pre>
+			</td>
+		</tr>
+		<tr>
+			<td>Proxy Extension</td>
+			<td>
+		   <pre class="brush:javascript tableCode">
+			   $.fn.foo = function () {
+				   //implementation
+			   };
+			   $div.foo();
+		   </pre>
+			</td>
+			<td>
+		   <pre class="brush:javascript tableCode">
+			   via.fn.foo = function(path,value)
+			   {
+				   //implementation
+			   };
+			   via("firstName").foo(path, value);
+		   </pre>
+			</td>
+		</tr>
+		<tr>
+			<td>Event Subscriptions</td>
+			<td>
+		   <pre class="brush:javascript">
+			   //$.fn.subscribe is added
+			   //by via.js
+			   $div.subscribe("test.firstName",
+				   "afterUpdate",
+				   function (e) {
+			   e.subscriber.html(
+				   e.publisher.get()
+				   );
+			   });
+		   </pre>
+			</td>
+			<td>
+		   <pre class="brush:javascript">
+			   firstNameProxy.subscribe(
+			   "$#txtBox",
+			   "change",
+			   function (e) {
+				   e.subscriber.set(
+					   e.publisher.val()
+				   );
+			   });
+		   </pre>
+			</td>
+		</tr>
+		<tr>
+			<td>Custom Event</td>
+			<td>Support</td>
+			<td>Support</td>
+		</tr>
+		<tr>
+			<td>Event bubbling</td>
+			<td>Support</td>
+			<td>Support</td>
+		</tr>
+		<tr>
+			<td>Stop event propogation</td>
+			<td>Support</td>
+			<td>Support</td>
+		</tr>
+	</table>
+</div>-->
+
+<h2>Beyond hello world</h2>
+
+<p>The hello world example may be too simple, does it works in real world scenario. There are
+	lots code example in the source. Please check out for yourself.</p>
+
+</div>
+</body>
+</html>

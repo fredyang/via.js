@@ -1,6 +1,6 @@
 ==================================================
 
-What you need to build your own viaProxy.js
+What you need to build your own via.js
 --------------------------------------
 
 You can follow the instruction on https://github.com/jquery/jquery to install the software for build.
@@ -11,10 +11,10 @@ For windows xp/7 64-bit user, please do not install them into "C:\Program Files 
 their GNU make file has problem in understanding the "(x86)" in path.
 
 
-How to build your own viaProxy.js
+How to build your own via.js
 ----------------------------
 
-First, clone a copy of the main viaProxy git repo by running `git clone git@github.com:fredyang/viaProxy.js.git`.
+First, clone a copy of the main viaProxy git repo by running `git clone git@github.com:fredyang/via.js.git`.
 Then, type 'make', it will generate output in dist/ folder,
 To remove all build files, type 'make clean'
 The default make create three package. The core package, full package, and all package.
@@ -40,12 +40,12 @@ If you don't need that, using core is just fine. The "all" package is includes f
 
 Learn
 ---------------------------------------
-<a href="http://code.semanticsworks.com/viaProxy.js/">Step by step</a>
+<a href="http://code.semanticsworks.com/via.js/">Step by step</a>
 
-<a href="http://code.semanticsworks.com/viaProxy.js/todos/todos.html">Using viaProxy.js to implement backbone's Todos</a>
+<a href="http://code.semanticsworks.com/via.js/todos/todos.html">Using via.js to implement backbone's Todos</a>
 
-<a href="http://code.semanticsworks.com/viaProxy.js/test/index.html">Unit test</a>
+<a href="http://code.semanticsworks.com/via.js/test/index.html">Unit test</a>
 
 Questions?
 ----------
-Please log your issue at https://github.com/fredyang/viaProxy.js/issues
+Please log your issue at https://github.com/fredyang/via.js/issues

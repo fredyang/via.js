@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+
+<br data-sub="`render:.|originalContacts"/>
+
+<script src="../../ref/jquery.js"></script>
+<script src="../../ref/jquery.tmpl.js"></script>
+<script src="../../src/model.js"></script>
+<script src="../../src/event.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script type="text/javascript"
+        src="../../src/template-extensions/template-engine-jqueryTmpl.js"></script>
+<script src="data.js"></script>
+
+<script type="jsrender" id="originalContacts">
+	<table>
+		<tr>
+			<td>First Name</td>
+			<td>Last Name</td>
+		</tr>
+		<tbody data-sub="`listView:contacts|contactRow">
+		</tbody>
+	</table>
+</script>
+<script type="jsrender" id="contactRow">
+	<tr>
+		<td>
+			${firstName}
+		</td>
+		<td>
+			${lastName}
+		</td>
+	</tr>
+</script>
+</body>
+</html>

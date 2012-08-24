@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<script src="../../ref/jquery.js"></script>
+	<script src="../../ref/jquery.tmpl.js"></script>
+	<script src="../../src/model.js"></script>
+	<script src="../../src/event.js"></script>
+	<script src="../../src/declarative.js"></script>
+	<script src="../../src/template.js"></script>
+	<script src="../../src/must-have-extensions.js"></script>
+	<script src="../../src/nice-to-have-extensions/queryableListView.js"></script>
+	<script src="../../src/nice-to-have-extensions/editableListView.js"></script>
+	<script type="text/javascript"
+	        src="../../src/template-extensions/template-engine-jqueryTmpl.js"></script>
+	<script src="data.js"></script>
+	<script type="text/javascript">
+		via( "contacts" ).queryable();
+	</script>
+</head>
+<body data-sub="@ns:contacts">
+<h3>original contacts</h3>
+
+<table>
+	<thead>
+	<tr>
+		<th>First Name</th>
+		<th>Last Name</th>
+		<th>action</th>
+	</tr>
+	</thead>
+	<tbody data-sub="`listView:.|contactRow
+					`editableListView:.|contactRowInEditMode">
+	</tbody>
+</table>
+
+<h3>queryable contacts</h3>
+
+<select data-sub="`val:*query.filter.by">
+	<option value="">search by</option>
+	<option value="firstName">First Name</option>
+	<option value="lastName">Last Name</option>
+</select>
+
+<select data-sub="`val:*query.filter.ops">
+	<option value="">operator</option>
+	<option value="equals">equals</option>
+	<option value="contains">contains</option>
+</select>
+
+<input type="text" data-sub="`val:*query.filter.value|keyup"/>
+
+<input type="button" value="Search" data-sub="`applyFilter"/>
+
+<input value="Reset Search" type="button" data-sub="`resetFilter"/>
+
+<table data-sub="`hasQueryResult">
+	<thead>
+	<tr>
+		<th style="cursor: pointer" data-sub="`sort:.|firstName">First Name
+		</th>
+		<th style="cursor: pointer" data-sub="`sort:.|lastName">Last Name</th>
+		<th><input value="reset sort" type="button" data-sub="`resetSort"/></th>
+	</tr>
+	</thead>
+
+	<tbody data-sub="`queryableListView:.|contactRow
+					 `editableListView:*queryResult|contactRowInEditMode">
+	</tbody>
+
+	<tfoot data-sub="`pager:.|pagerTemplate">
+
+	</tfoot>
+</table>
+
+<p data-sub="`noQueryResult">No result found</p>
+
+<p>
+	<input value="reset query" type="button" data-sub="`resetQuery"/>
+</p>
+</body>
+
+<script type="text/tmpl" id="contactRow">
+	<tr>
+		<td>${firstName}</td>
+		<td>${lastName}</td>
+		<td>
+			<input type="button" value="edit" data-sub="`editButton"/>
+			<input type="button" value="remove" data-sub="`deleteButton"/>
+			${ts}
+		</td>
+	</tr>
+</script>
+
+<script type="text/template" id="contactRowInEditMode">
+	<tr data-sub="@ns:${$item.modelPath}.item">
+		<td>
+			<input type="text" class="firstName" data-sub="`val:.firstName"/>
+		</td>
+
+		<td>
+			<input type="text" class="lastName" data-sub="`val:.lastName"/>
+		</td>
+		<td>
+			<input type="button" value="Update" data-sub="`updateButton"/>
+			<input type="button" value="Cancel" data-sub="`cancelButton"/>
+			${ts}
+		</td>
+	</tr>
+</script>
+
+<script type="text/tmpl" id="pagerTemplate">
+	<tr>
+		<td colspan="3">
+			{{if enabled}}
+
+			<a href="" page="disabled" data-sub="`pageButton">Show All</a>
+
+			{{if index !== 0 }}
+			<a href="" page="first" data-sub="`pageButton">First</a>
+			{{else}}
+			<span>First</span>
+			{{/if}}
+
+			{{if index !== 0 }}
+			<a href="" page="previous" data-sub="`pageButton">Previous</a>
+			{{else}}
+			<span>Previous</span>
+			{{/if}}
+
+			{{if index !== count -1 }}
+			<a href="" page="next" data-sub="`pageButton">Next</a>
+			{{else}}
+			<span>Next</span>
+			{{/if}}
+
+			{{if index !== count -1 }}
+			<a href="" page="last" data-sub="`pageButton">Last</a>
+			{{else}}
+			<span>Last</span>
+			{{/if}}
+
+			<span>Page ${ index + 1} of ${count } </span>
+
+			{{else}}
+
+			page size:
+			<select data-sub="`val:*query.page.size">
+				<option value=""></option>
+				<option value="1">1</option>
+				<option value="2">2</option>
+				<option value="3">3</option>
+				<option value="4">4</option>
+				<option value="5">5</option>
+			</select>
+
+			<input value="enable paging" data-sub="`applyPaging" type="button"/>
+
+			{{/if}}
+			${ts}
+		</td>
+
+	</tr>
+</script>
+
+<script type="text/template" id="contactRowInNewMode">
+	<td>
+		<input type="text" class="firstName" data-sub="`val:.firstName"/>
+	</td>
+
+	<td>
+		<input type="text" class="lastName" data-sub="`val:.lastName"/>
+	</td>
+	<td>
+		<input type="button" value="Add" data-sub="$click:.|*saveEditItem"/>
+		<input type="button" value="Cancel" data-sub="$click:.|*cancelEditItem"/>
+		${ts}
+	</td>
+</script>
+
+</html>

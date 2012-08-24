@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<div data-sub="@ns:clickApp">
+
+	<div>You've clicked <span data-sub='`text:clickCount'></span> time<span data-sub="`showPlural:clickCount">s</span></div>
+
+	<button data-sub='$click:clickCount|*++
+					  `disable:overClicked'>Click me</button>
+
+	<div data-sub="`show:overClicked">
+		That's too many clicks! Please stop before you wear out your fingers.
+		<button data-sub="$click:clickCount|*zero">Reset clicks</button>
+	</div>
+</div>
+
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/model.js"></script>
+<script src="../../src/event.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+
+
+<script>
+	via.set( "clickApp", {
+		clickCount: 0,
+		overClicked: function() {
+			return this.get( "clickCount" ) >= 3;
+		}
+	} )
+
+
+</script>
+
+</body>
+</html>

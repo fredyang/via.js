@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>attached validation rule in markup</title>
+</head>
+<body>
+<p>
+	An optional number n1:
+	<input type="text" id="txtn1"
+	       data-sub="@ns:n1
+	            `val
+	            `regex:.|/^\d+$/,you should enter a number!!!
+	            `showError"/>
+
+</p>
+
+<p>n1 saved value: <span id="n1Saved" data-sub="`html:n1"/></p>
+
+
+<p>
+	An required number n2: <input type="text" data-sub="@ns:n2
+												   `val:.|keyup,updateModel
+												   `required
+												   `number
+												   `showError" id="txtn2"/>
+</p>
+
+<p>n2 saved value: <span id="n2Saved" data-sub="`html:n2"/></p>
+
+<p>
+	An optional number n3: <input type="text" id="txtn3" data-sub="@ns:n3
+															  `val
+															  `showError"/>
+</p>
+
+<p>n3 saved value: <span id="n3Saved" data-sub="`html:n3"/></p>
+
+
+<p>
+	global error: <span id="globalError" data-sub="`html:*pathsOfInvalidModels"></span>
+</p>
+
+
+<input value="Submit" id="btnSubmit"
+       data-sub="`alert:_|submitted
+            `enableLater:*isValid
+            `validate"
+       type="button"
+	/>
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/model.js"></script>
+<script src="../../src/event.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../src/nice-to-have-extensions/validation.js"></script>
+
+<style type="text/css">
+	.error {
+		border: solid 1px red;
+		background-color: #ffcccc;
+	}
+</style>
+
+<script>
+	via.set( "n1", null );
+	via.set( "n2", null );
+	via.set( "n3", null );
+
+	via.check( "n3", "number" )
+		.check( "n3",
+		function( value ) {
+			return $.isNumeric( value ) && (value >= 10);
+		},
+		"it must be over 9"
+	);
+
+</script>
+
+
+</html>

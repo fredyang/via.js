@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+
+
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/model.js"></script>
+<script src="../../src/event.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../ref/jsrender.js"></script>
+<script src="../../src/template-extensions/template-engine-jsrender.js"></script>
+
+<script>
+	$( function() {
+
+		$.template( "testTemplate", "<p>{{=$data}}</p>" );
+
+		via.extend( {
+			fruit: ["apple", "banana", "water melon"]
+		} );
+
+		$( "body" ).subscribe( "fruit", "init", "*renderInside", "testTemplate" );
+		$( "body" ).subscribe( "fruit", "afterCreate.child", "*appendTmplItem", "testTemplate" );
+		$( "body" ).subscribe( "fruit", "afterUpdate.child", "*updateTmplItem", "testTemplate" );
+		$( "body" ).subscribe( "fruit", "afterDel.child", "*removeItem" );
+
+	} );
+
+</script>
+</html>

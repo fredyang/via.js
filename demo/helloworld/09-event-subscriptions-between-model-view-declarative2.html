@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		label {
+			display: block;
+		}
+	</style>
+</head>
+<body>
+
+<div data-sub="@ns:helloApp">
+	<label>Please input your name: <input type="text" id="txtName" data-sub="`val:name"/>
+	</label>
+
+	<div id="divMessage" data-sub="`html:message"/>
+</div>
+
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/model.js"></script>
+<script src="../../src/event.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+
+<script>
+	//  let's simplify the declarative subscriptions
+	//  In the handler.js, the following has been defined, so that use
+	//  simplified rules as above
+	//
+	//	via.classes.val = "$change:.|val";
+	//	via.classes.html = "!afterUpdate:.|html";
+	via.set( "helloApp", {
+		name: "",
+		message: function() {
+			var name = this.get( "name" );
+			return name ? "hello, " + name : "";
+		}
+	} );
+</script>
+</html>

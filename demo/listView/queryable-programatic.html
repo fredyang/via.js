@@ -1,0 +1,214 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<script src="../../ref/jquery.js"></script>
+	<script src="../../ref/jquery.tmpl.js"></script>
+	<script src="../../src/model.js"></script>
+	<script src="../../src/event.js"></script>
+	<script src="../../src/declarative.js"></script>
+	<script src="../../src/template.js"></script>
+	<script src="../../src/must-have-extensions.js"></script>
+	<script src="../../src/nice-to-have-extensions/queryableListView.js"></script>
+	<script type="text/javascript"
+	        src="../../src/template-extensions/template-engine-jqueryTmpl.js"></script>
+	<script src="data.js"></script>
+</head>
+<body>
+<h3>original contacts</h3>
+
+<table>
+	<thead>
+	<tr>
+		<th>First Name</th>
+		<th>Last Name</th>
+	</tr>
+	</thead>
+
+	<tbody id="originalContacts">
+	</tbody>
+</table>
+
+<h3>queryable contacts</h3>
+
+<select id="ddlSearchBy">
+	<option value="">search by</option>
+	<option value="firstName">First Name</option>
+	<option value="lastName">Last Name</option>
+</select>
+
+<select id="operators">
+	<option value="">operator</option>
+	<option value="equals">equals</option>
+	<option value="contains">contains</option>
+</select>
+
+<input type="text" id="txtSearch"/>
+
+<input type="button" id="btnSearch" value="Search"/>
+
+<input id="btnResetSearch" value="Reset Search" type="button"/>
+
+<table id="queryTable">
+	<thead>
+	<tr>
+		<th id="sortByFirstName" style="cursor: pointer">First Name</th>
+		<th id="sortByLastName" style="cursor: pointer">Last Name</th>
+		<th><input id="btnResetSort" value="reset sort" type="button"/></th>
+	</tr>
+	</thead>
+
+	<tbody id="queryContacts">
+	</tbody>
+
+	<tfoot id="pager">
+
+	</tfoot>
+</table>
+
+<p id="lblNoResult">No result found</p>
+
+<p>
+	<input id="btnResetAll" value="reset query" type="button"/>
+</p>
+</body>
+
+<script type="text/tmpl" id="contactRow">
+	<tr>
+		<td>${firstName}</td>
+		<td>${lastName} ${ts}</td>
+	</tr>
+</script>
+
+
+<script type="text/tmpl" id="pagerTemplate">
+	<tr>
+		<td colspan="3">
+			{{if enabled}}
+
+			<a href="" page="disabled">Show All</a>
+
+			{{if index !== 0 }}
+			<a href="" page="first">First</a>
+			{{else}}
+			<span>First</span>
+			{{/if}}
+
+			{{if index !== 0 }}
+			<a href="" page="previous">Previous</a>
+			{{else}}
+			<span>Previous</span>
+			{{/if}}
+
+			{{if index !== count -1 }}
+			<a href="" page="next">Next</a>
+			{{else}}
+			<span>Next</span>
+			{{/if}}
+
+			{{if index !== count -1 }}
+			<a href="" page="last">Last</a>
+			{{else}}
+			<span>Last</span>
+			{{/if}}
+
+			<span>Page ${ index + 1} of ${count } </span>
+
+			{{else}}
+
+			page size:
+			<select class="pageSize">
+				<option value=""></option>
+				<option value="1">1</option>
+				<option value="2">2</option>
+				<option value="3">3</option>
+				<option value="4">4</option>
+				<option value="5">5</option>
+			</select>
+
+			<input class="pageEnable" value="enable paging" type="button"/>
+
+			{{/if}}
+			${ts}
+		</td>
+
+	</tr>
+</script>
+
+<script>
+
+	$( function() {
+		via("contacts").queryable();
+		$( "#originalContacts" ).subscribe( "contacts", "init after*", "*renderInside", "contactRow" );
+
+		$( "#queryContacts" ).subscribe( "contacts*queryResult", "init after*", "*renderInside", "contactRow" );
+
+		$( "#ddlSearchBy" ).subscribe( "contacts*query.filter.by", "init afterUpdate", "*updateViewValue" )
+			.subscribedBy( "contacts*query.filter.by", "change", "*updateModelValue" );
+
+		$( "#operators" ).subscribe( "contacts*query.filter.ops", "init afterUpdate", "*updateViewValue" )
+			.subscribedBy( "contacts*query.filter.ops", "change", "*updateModelValue" );
+
+		$( "#txtSearch" )
+			.subscribe( "contacts*query.filter.value", "init afterUpdate", "*updateViewValue" )
+			.subscribedBy( "contacts*query.filter.value", "keyup", "*updateModelValue" );
+
+		$( "#btnSearch" )
+			.subscribe( "contacts*query.filter.enabled", "init after*", "*enable" )
+			.subscribedBy( "contacts*triggerQueryChange", "click" );
+
+		$( "#btnResetSearch" )
+			.subscribe( "contacts*query.filter.enabled", "init afterUpdate", "*show" )
+			.subscribedBy( "contacts*resetFilter", "click" )
+			.subscribedBy( "contacts*triggerQueryChange", "click" );
+
+		$( "#sortByFirstName" )
+			.subscribedBy( "contacts*query.sort.by", "click", "*hardCode", "firstName" )
+			.subscribedBy( "contacts*query.sort.asc", "click", "*toggle" )
+			.subscribedBy( "contacts*triggerQueryChange", "click" );
+
+		$( "#sortByLastName" )
+			.subscribedBy( "contacts*query.sort.by", "click", "*hardCode", "lastName" )
+			.subscribedBy( "contacts*query.sort.asc", "click", "*toggle" )
+			.subscribedBy( "contacts*triggerQueryChange", "click" );
+
+		$( "#btnResetSort" )
+			.subscribe( "contacts*query.sort.by", "init afterUpdate", "*show" )
+			.subscribedBy( "contacts*query.sort.by", "click", "*hardCode", null )
+			.subscribedBy( "contacts*triggerQueryChange", "click" );
+
+		$( "#btnResetAll" )
+			.subscribedBy( "contacts*resetQuery", "click" )
+			.subscribedBy( "contacts*triggerQueryChange", "click" )
+			.subscribe( "contacts*query.enabled", "init afterUpdate", "*show" );
+
+		$( "#lblNoResult" )
+			.subscribe( "contacts*hasResult", "init after", "*hide" );
+
+		$( "#pager" )
+			.subscribe( "contacts*query.page", "init after*", "*renderInside", {
+				templateId: "pagerTemplate",
+				finalize: function( $content ) {
+
+					$content
+						.find( ".pageSize" )
+						.subscribedBy( "contacts*query.page.size", "change", "*updateModelValue" )
+						.subscribe( "contacts*query.page.size", "init", "*updateViewValue" );
+
+					$content.find( ".pageEnable" )
+						.subscribe( "contacts*query.page.size", "init afterUpdate", "*enable" )
+						.subscribedBy( "contacts*query.page.enabled", "click", "*hardCode", true )
+						.subscribedBy( "contacts*triggerQueryChange", "click" );
+
+					$content.find( "[page]" )
+						.subscribedBy( "contacts*changePage", "click" )
+						//.subscribedBy( "contacts*triggerQueryChange", "click" )
+						.subscribedBy( null, "click", "*preventDefault" );
+				}
+			} );
+
+	} );
+
+</script>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+
+
+<body>
+<div data-sub="@ns:twitter">
+	<div>
+		<div>
+			<!--`val shoud come before options-->
+			<select data-sub='`val:nameOfSelectedList `options:nameLists|name'></select>
+			<button data-sub='$click:deleteList `enable:nameOfSelectedList'>Delete</button>
+			<button data-sub='`enable:hasUnsavedChanges $click:saveList'>Save</button>
+		</div>
+
+		<p>Currently viewing <span data-sub='`textCount:selectedUserNames'></span>
+			user<span data-sub='`showPlural:selectedUserNames'>s</span>:</p>
+
+		<ul data-sub='`listView:selectedUserNames
+					  `deletableRow:selectedUserNames
+					  $delete:hasUnsavedChanges|*true'>
+			<li>
+				<span>{{:#data}}</span>
+				<button data-sub="`deleteButton">Remove</button>
+			</li>
+		</ul>
+
+		<div data-bind='submit: addUser'>
+			<label>Add user:</label>
+			<input data-sub='`val:userNameToAdd|keyup'/>
+			<button data-sub='`enable:userNameToAdd
+							  $click:addUser
+							  $click:hasUnsavedChanges|*true'>Add
+			</button>
+		</div>
+	</div>
+	<div>
+		<div class='loadingIndicator'>Loading...</div>
+		<table data-sub="`fullyLoadedListView:tweetsOfSelectedUsers">
+			<tr>
+				<td><img src="{{:profile_image_url}}"/></td>
+				<td>
+					<a href="http://twitter.com/{{:from_user}}">{{:from_user}}</a>
+					<span>{{:text}}</span>
+
+					<div>{{:created_at}}</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+</div>
+
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/model.js"></script>
+<script src="../../src/event.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../ref/jsrender.js"></script>
+<script src="../../src/template-extensions/template-engine-jsrender.js"></script>
+<script src="../../src/nice-to-have-extensions/editableListView.js"></script>
+<script>
+
+	(function() {
+		jQuery.ajaxPrefilter( function( options ) {
+			options.global = true;
+		} );
+
+		$( ".loadingIndicator" ).ajaxStart(
+			function() {
+				$( this ).fadeIn();
+			} ).ajaxComplete( function() {
+				$( this ).fadeOut();
+			} );
+
+		via.set( "twitter",
+			{
+				nameLists: [
+					{ name: "Celebrities", userNames: ['JohnCleese', 'MCHammer', 'StephenFry', 'algore', 'StevenSanderson']},
+					{ name: "Microsoft people", userNames: ['BillGates', 'shanselman', 'ScottGu']},
+					{ name: "Tech pundits", userNames: ['Scobleizer', 'LeoLaporte', 'techcrunch', 'BoingBoing', 'timoreilly', 'codinghorror']}
+				],
+				nameOfSelectedList: "",
+				selectedUserNames: [],
+				userNameToAdd: "",
+				hasUnsavedChanges: false,
+
+				selectedList: function() {
+					var nameOfSelectedList = this.get( "nameOfSelectedList" );
+					return this.cd( "nameLists" ).first( function() {
+						return this.name == nameOfSelectedList;
+					} );
+				},
+				tweetsOfSelectedUsers: function() {
+					var i,
+						userNames = this.get( "selectedUserNames" ),
+						url = "http://search.twitter.com/search.json?callback=?&rpp=100&q=";
+					//"callback=?" is required in the url to make a jsonp request
+
+					if (userNames.length) {
+						for (i = 0; i < userNames.length; i++) {
+							url += "from:" + userNames[i] + (i < userNames.length - 1 ? " OR " : "");
+						}
+
+						return $.getJSON( url ).pipe( function( data ) {
+							return $.grep( data.results || [],
+								function( tweet ) {
+									return !tweet.to_user_id;
+								} );
+						} );
+					}
+				},
+
+				//the following are handler for subscriptions of view event, they are only manipulate model only
+				//does not care about view, the view will be taken care by handler for subscriptions of
+				//model event
+				addUser: function( e ) {
+					var userNames = e.subscriber.cd( "..selectedUserNames" ),
+						userNameToAdd = e.subscriber.cd( "..userNameToAdd" );
+
+					userNames.pushUnique( userNameToAdd.get() );
+					userNameToAdd.set( "" );
+				},
+				saveList: function( e ) {
+					var subscriber = e.subscriber,
+						twitterApp = subscriber.cd( ".." ),
+						listName = prompt( "Save as", twitterApp.get( "nameOfSelectedList" ) );
+
+					if (!listName) {
+						return;
+					}
+					var nameLists = twitterApp.cd( "nameLists" ),
+						oldList = nameLists.first( function() {
+							return this.name === listName;
+						} ),
+						newLists = via.util.clone( twitterApp.get( "selectedUserNames" ) );
+
+					if (oldList) {
+						oldList.userNames = newLists;
+					} else {
+						nameLists.push( {
+							name: listName,
+							userNames: via.util.clone( twitterApp.get( "selectedUserNames" ) )
+						} );
+					}
+
+					twitterApp.set( "hasUnsavedChanges", false )
+						.set( "nameOfSelectedList", listName );
+				},
+				deleteList: function( e ) {
+					var twitterApp = e.subscriber.cd( ".." );
+					twitterApp.cd( "nameLists" ).removeItem( twitterApp.get( "selectedList" ) );
+				}
+			}
+		);
+
+		via( "twitter.selectedUserNames" ).subscribe(
+			"twitter.nameOfSelectedList",
+			"init afterUpdate",
+			function( e ) {
+				var selectedList = e.publisher.get( "..selectedList" );
+				e.subscriber.set( (selectedList && via.util.clone( selectedList.userNames )) || [] );
+			} );
+	})();
+
+
+</script>
+</body>
+</html>

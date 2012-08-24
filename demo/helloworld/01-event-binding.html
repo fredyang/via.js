@@ -1,0 +1,26 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		label {
+			display: block;
+		}
+	</style>
+</head>
+<body>
+
+<label>Please input your name: <input type="text" id="txtName"/></label>
+
+<div id="divMessage"/>
+
+</body>
+<script src="../../ref/jquery.js"></script>
+<script>
+	$( "#txtName" ).change( function() {
+		var name = $( this ).val();
+		$( "#divMessage" ).html( name ? "Hello," + name : "" );
+	} );
+</script>
+</html>

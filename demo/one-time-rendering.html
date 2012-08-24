@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+
+<table>
+	<tbody id="holder">
+	</tbody>
+</table>
+
+</body>
+<script src="../ref/jquery.js"></script>
+<script src="../ref/jquery.tmpl.js"></script>
+<script src="../src/model.js"></script>
+<script src="../src/event.js"></script>
+<script src="../src/declarative.js"></script>
+<script src="../src/template.js"></script>
+<script src="../src/must-have-extensions.js"></script>
+<script src="../src/nice-to-have-extensions/validation.js"></script>
+<script src="../src/nice-to-have-extensions/queryableListView.js"></script>
+<script src="../src/nice-to-have-extensions/editableListView.js"></script>
+<script type="text/javascript"
+        src="../src/template-extensions/template-engine-jqueryTmpl.js"></script>
+<script type="text/tmpl" id="displayContacts">
+	<tr>
+		<td>${firstName}</td>
+		<td>${lastName}</td>
+	</tr>
+</script>
+
+<script>
+	via().set( "contacts", [
+		{
+			firstName: "John",
+			lastName: "Smith"
+		},
+		{
+			firstName: "Joe",
+			lastName: "Davis"
+		}
+
+	] );
+</script>
+<script>
+	$( function() {
+
+		$( "#holder" ).initView( "contacts", "*renderInside", "#displayContacts" );
+
+	} );
+</script>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		label {
+			display: block;
+		}
+	</style>
+</head>
+<body>
+
+<div class="color">
+	<input type="button" value="blue"/>
+	<input type="button" value="red"/>
+	<input type="button" value="yellow"/>
+</div>
+
+<div class="showcolor">show color</div>
+
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/model.js"></script>
+<script src="../../src/event.js"></script>
+<!--<script src="../../src/declarative.js"></script>-->
+<script>
+	via.set( "test", {
+		color: "red"
+	} );
+
+	$( ".showcolor" ).subscribe( "test.color", "init afterUpdate", "get css*color" );
+
+	via( "test.color" ).subscribe( "$.color", "click", "val set", null, "input[type='button']" );
+
+</script>
+</html>

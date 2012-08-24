@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+    <style type="text/css">
+        label {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div data-sub="@ns:helloApp">
+    <label>Please input your name: <input type="text" id="txtName" data-sub="`val:name"/>
+    </label>
+
+    <!--use getMessage as the converter-->
+    <div data-sub="!init after*:name|get html #..getMessage"/>
+    <!--<div data-sub="!init after*:name|get html #/helloApp.getMessage"/>-->
+</div>
+
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/model.js"></script>
+<script src="../../src/event.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../ref/ajaxMock.js"></script>
+<script>
+    //fake ajax setup
+    $.ajaxMock.url( "getMessage", function( name ) {
+        return name ? "hello, " + name : "";
+    } );
+</script>
+
+<script>
+    via.set( "helloApp", {
+        name: "",
+        getMessage: function( value, e ) {
+            return $.ajax( {
+                url: "getMessage",
+                dataType: 'json',
+                data: JSON.stringify( value )
+            } );
+        }
+    } );
+
+</script>
+</html>

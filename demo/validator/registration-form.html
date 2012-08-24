@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		.error {
+			border: solid 1px red;
+			background-color: #ffcccc;
+		}
+	</style>
+</head>
+<body>
+<form id="myform" data-sub="@ns:registration" novalidate="novalidate">
+	<fieldset>
+		<h3>Sample registration form</h3>
+
+		<p> Enter bad values and then press the submit button. </p>
+
+		<p>
+			<label>email *</label>
+			<input type="email" name="email" data-sub="@ns:.email `val `showError"
+			       required="required">
+		</p>
+
+		<p>
+			<label>website *</label>
+			<input type="url" name="url" data-sub="@ns:.url `val `showError" required="required">
+		</p>
+
+		<p>
+			<label>name *</label>
+			<input type="text" name="name" data-sub="@ns:.name `val `showError"
+			       pattern="[a-zA-Z ]{5,}"
+			       maxlength="30">
+		</p>
+
+		<p>
+			<label>age</label>
+			<input type="number" name="age" data-sub="@ns:.age `val `showError" size="4" min="5"
+			       max="50">
+		</p>
+
+		<p id="terms">
+			<label>I accept the terms</label>
+			<input type="checkbox" data-sub="@ns:.accepted `val `showError" required="required">
+		</p>
+		<input type="button" value="submit"
+		       data-sub="$click:/message|*alert
+		                 `enableLater:*isValid
+		                 `validate"/>
+
+		<button type="reset">Reset</button>
+	</fieldset>
+</form>
+
+<div data-sub="`showValue:registration"></div>
+<p>
+	global error: <span id="globalError" data-sub="`html:*pathsOfInvalidModels"></span>
+</p>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/model.js"></script>
+<script src="../../src/event.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../src/nice-to-have-extensions/validation.js"></script>
+<script src="form-data.js"></script>
+<script type="text/javascript">
+	$( "input" ).bind( "change", function() {
+		console.log( "change" );
+	} );
+</script>
+</body>
+</html>

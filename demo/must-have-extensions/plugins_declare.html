@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+
+<div>
+	<!--<input type="text" data-sub="@ns:message @val:keyup,updateModel"/>-->
+	update model only <input type="text" data-sub="`val:message|keyup,updateModel"/>
+	<br/>
+	read model only <input type="text" disabled data-sub="`val:message|,updateView"/>
+	<br/>
+	read and update model<input type="text" data-sub="`val:message|keyup"/>
+	<br/>
+
+	<div data-sub="`showValue:message"></div>
+
+	<select id="listBoxFruit" multiple
+	        data-sub="`options:fruit
+	                  `val:multiChoices"></select>
+
+	<div data-sub="`showValue:multiChoices"></div>
+
+	<select id="ddlFruit" data-sub="`options:fruit `val:singleChoice"></select>
+
+	<div data-sub="`showValue:singleChoice"></div>
+
+	<label><input type="radio" value="love" data-sub="`val:attitude"/> love </label>
+	<label><input type="radio" value="hate" data-sub="`val:attitude"/> hate</label>
+
+	<div data-sub="`showValue:attitude"></div>
+
+
+	<label><input type="checkbox" data-sub="`val:isGood"/> good?</label>
+
+	<div data-sub="`showValue:isGood"></div>
+
+	<span id="divShowIfFalsy"
+	      data-sub="`hide:hideThis">If 'hideThis' is true, you can't see this</span>
+	<input value="toggle 'hideThis'" type="button" data-sub="$click:hideThis|*toggle">
+
+	<div data-sub="`showValue:hideThis"></div>
+
+	<span id="divShowIfTruthy"
+	      data-sub="`show:showThis">If 'showThis' is false, you can't see this</span>
+	<input value="toggle 'showThis'" type="button" data-sub="$click:showThis|*toggle">
+
+	<div data-sub="`showValue:showThis"></div>
+
+
+	<input id="btnEnableIfTruthy" type="button" data-sub="`enable:enableThis"
+	       value="enable this if 'enableThis' is true"/>
+	<input value="toggle 'enableThis'" type="button" data-sub="$click:enableThis|*toggle">
+
+	<div data-sub="`showValue:enableThis"></div>
+
+	<input id="btnEnableIfFalsy" type="button" data-sub="`enable:disableThis"
+	       value="disable this if 'diableThis' is true"/>
+	<input value="toggle 'diableThis'" type="button" data-sub="$click:disableThis|*toggle">
+
+	<div data-sub="`showValue:disableThis"></div>
+
+
+	<input type="button" id="btnHardCode"
+	       data-sub="$click:hardCodeValue|*hardCode|my hard code value"
+	       value="test hard code"/>
+
+	<div data-sub="`showValue:hardCodeValue"></div>
+
+	<input type="button" type="button" value="invoke handler embedded in model repository"
+	       data-sub="$click:addFruit" id="btnSetModel"/>
+
+	<div data-sub="`showValue:fruit"></div>
+
+	<div>
+		You can have model-less rules like @preventDefault, if you want to specify
+		options, you can use "_" to ignore model path, like @alert:_,hello
+	</div>
+	<div>
+		<a href="http://www.google.com" data-sub="`alert:_|hello `preventDefault">google</a>
+	</div>
+</div>
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/model.js"></script>
+<script src="../../src/event.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+
+<script>
+	via.extend( {
+		fruit: ["apple", "banana", "water melon"],
+		multiChoices: ["apple", "banana"],
+		singleChoice: "water melon",
+		showThis: true,
+		hideThis: true,
+		enableThis: true,
+		disableThis: true,
+		attitude: "love",
+		isGood: true,
+		hardCodeValue: "",
+		addFruit: function( e ) {
+			e.subscriber.cd( "..fruit" ).push( "xxx" );
+		},
+		message: ""
+	} );
+</script>
+</html>

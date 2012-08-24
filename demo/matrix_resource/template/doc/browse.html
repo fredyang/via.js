@@ -1,0 +1,243 @@
+<script type="jsrender" id="doc.browse">
+
+	<div data-tab="browse" data-sub="@ns:doc">
+
+		<div class="leftCol">
+			<div class="mod complex excerpt">
+				<b class="top">
+					<b class="tl"></b>
+					<b class="tr"></b>
+				</b>
+
+				<div class="inner">
+					<div class="hd section">
+						<h2>Categories</h2>
+					</div>
+					<div class="bd pam">
+						<!--getSubEntries(entry) entry is optional-->
+						<div class="namespace" data-sub="`foreach:getSubEntries|doc.browse.categoryTree
+																			 $afterExpandCollapseApi:/doc.expandCollapseApi
+																			 `tabSelectorHolder:selectedEntryName">
+						</div>
+
+					</div>
+					<div class="ft"></div>
+				</div>
+				<b class="bottom">
+					<b class="bl"></b>
+					<b class="br"></b>
+				</b>
+			</div>
+		</div>
+
+		<div class="main">
+			<div data-sub="`foreach:selectedEntry|doc.browse.entryDetails">
+			</div>
+		</div>
+	</div>
+
+</script>
+
+<script type="jsrender" id="doc.browse.categoryTree">
+	{{if #data}}
+	<ul>
+		{{for #data}}
+		{{* view.ctx.subEntries = view.ctx.get("/doc.getSubEntries", data); }}
+		<li>
+			{{if #ctx.subEntries.length}}
+			<a href="#" class="ui-icon ui-icon-minus fly_l right10"
+			   data-sub="`preventDefault @aliasEvent:click,afterExpandCollapseApi">&nbsp;</a>
+			{{else}}
+			<span href="#" class="ui-icon ui-icon-blank fly_l right10"></span>
+			{{/if}}
+			<a href="#" data-tab="{{:~getFullName(#data)}}">{{:name}}</a>
+			<!-- ~subEntries is #ctx.subEntries, recursively render subEntries-->
+			{{for ~subEntries tmpl="doc.browse.categoryTree" /}}
+		</li>
+		{{/for}}
+	</ul>
+	{{/if}}
+</script>
+
+<script type="jsrender" id="doc.browse.entryDetails">
+	<!--#data is selected entry-->
+	{{if #data}}
+
+	<div class="mod complex excerpt">
+		<b class="top">
+			<b class="tl"></b>
+			<b class="tr"></b>
+		</b>
+
+		<div class="inner">
+			<div class="hd section">
+				<h2>
+					<a href="#" title="Click to edit this entry"
+					   data-sub="$click:/doc.editEntry|#.|{{:~getFullName(#data)}}
+								             `preventDefault">
+						{{:shortDesc}}
+					</a>
+				</h2>
+			</div>
+			<div class="bd pam">
+				<!--~getParentNamespaces is a helper-->
+				<div class="entry-meta">
+					{{for [~getParentNamespaces(#data)] tmpl="doc.browse.breadcrumb" /}}
+				</div>
+			</div>
+			<div class="ft">
+			</div>
+		</div>
+
+		<b class="bottom">
+			<b class="bl"></b>
+			<b class="br"></b>
+		</b>
+	</div>
+
+
+	{{for [~get("/doc.getSubEntries", #data)] tmpl="doc.browse.members" /}}
+
+	{{for [#data] tmpl="doc.browse.method" /}}
+
+	{{/if}}
+</script>
+
+<script type="jsrender" id="doc.browse.breadcrumb">
+	{{if #data.length}}
+	Categories:
+	{{for #data}}
+	<a href="#" class="namespace"
+	   data-sub="$click:selectedEntryName|*hardCode|{{:fullName}}
+	            `preventDefault">{{:name}}</a>
+	{{/for}}
+	{{/if}}
+</script>
+
+<script type="jsrender" id="doc.browse.members">
+
+	{{if #data.length}}
+	<div class="mod complex excerpt">
+		<b class="top">
+			<b class="tl"></b>
+			<b class="tr"></b>
+		</b>
+
+		<div class="inner">
+			<div class="hd section">
+				<h3>Members</h3>
+			</div>
+			<div class="bd pam">
+				<ul>
+					{{for #data}}
+					<li>
+						<a href="#" data-sub="$click:.selectedEntryName|*hardCode|{{:~getFullName(#data)}}
+											 `preventDefault">
+							{{:name}}
+						</a>
+					</li>
+					{{/for}}
+				</ul>
+			</div>
+			<div class="ft">
+			</div>
+		</div>
+
+		<b class="bottom">
+			<b class="bl"></b>
+			<b class="br"></b>
+		</b>
+	</div>
+	{{/if}}
+</script>
+
+<script type="jsrender" id="doc.browse.method">
+	{{if type=="method"}}
+
+	<div class="mod complex excerpt">
+		<b class="top">
+			<b class="tl"></b>
+			<b class="tr"></b>
+		</b>
+
+		<div class="inner">
+			<div class="hd section">
+				<h2>
+					<span class="name">{{:shortDesc}}</span>
+					<span class="returns fly_r">Returns:{{:returns}}</span>
+				</h2>
+			</div>
+			<div class="bd pam">
+				<p class="desc">
+					<strong>Description:</strong>
+					<span>{{:desc}}</span>
+				</p>
+
+				{{for [signatures] tmpl="doc.browse.signature" /}}
+
+				<p class="longDesc">
+					{{:longDesc}}
+				</p>
+
+				{{for [examples] tmpl="doc.browse.examples" /}}
+			</div>
+			<div class="ft">
+			</div>
+		</div>
+
+		<b class="bottom">
+			<b class="bl"></b>
+			<b class="br"></b>
+		</b>
+	</div>
+	{{/if}}
+</script>
+
+<script type="jsrender" id="doc.browse.signature">
+
+	<div class="mod comment">
+		<div class="inner">
+			<div class="bd">
+				{{for #data}}
+				<div>
+					<h4 class="name">
+						<span>{{:title}}</span>
+						<span class="versionAdded fly_r">version added:{{:versionAdded}}</span>{{:name}}
+					</h4>
+
+					{{for parameters}}
+					<p class="parameter">
+						<strong>{{:name}}:</strong>
+						<span>{{:desc}}</span>
+					</p>
+					{{/for}}
+				</div>
+				{{/for}}
+			</div>
+		</div>
+	</div>
+
+
+</script>
+
+<script type="jsrender" id="doc.browse.examples">
+	{{if #data}}
+	<h3>Examples:</h3>
+	{{for #data}}
+	<div>
+		<h4>Example: <span class="desc">{{:desc}}</span></h4>
+		<pre class="prettyprint">{{:code}}</pre>
+
+		{{if html}}
+		<h4>Demo:</h4>
+
+		<div class="demo" data-sub="@init:doc.renderExample">
+			<div class="html">{{:html}}</div>
+			<div class="css">{{:css}}</div>
+			<iframe></iframe>
+		</div>
+		{{/if}}
+	</div>
+	{{/for}}
+	{{/if}}
+</script>

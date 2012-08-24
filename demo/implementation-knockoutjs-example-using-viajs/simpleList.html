@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<div data-sub="@ns:simpleList">
+	New item:
+	<input data-sub='`val:newFruit|keyup'/>
+	<button type="submit" data-sub="`enable:newFruit $click:addFruit">Add</button>
+	<p>Your items:</p>
+	<select multiple="multiple" width="50" data-sub="`options:fruits"> </select>
+</div>
+
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/model.js"></script>
+<script src="../../src/event.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../ref/jsrender.js"></script>
+<script src="../../src/template-extensions/template-engine-jsrender.js"></script>
+
+<script>
+	via.set( "simpleList", {
+		fruits: ["Apple", "Banana", "Orange"],
+		newFruit: "",
+		addFruit: function( e ) {
+			var fruit = e.subscriber.get( "..newFruit" );
+			e.subscriber.cd( "..newFruit" ).set( "" );
+			e.subscriber.cd( "..fruits" ).push( fruit );
+		}
+	} );
+
+
+</script>
+
+</body>
+</html>

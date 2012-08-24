@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+
+<div>
+	<select id="listBoxFruit" multiple></select>
+
+	<div data-sub="`showValue:selectedFruits"></div>
+
+	<select id="ddlFruit"></select>
+
+	<div data-sub="`showValue:selectedSingleFruit"></div>
+
+	<label><input type="radio" value="love"/> love</label>
+
+	<label><input type="radio" value="hate"/> hate</label>
+
+	<div data-sub="`showValue:attitude"></div>
+
+	<label><input type="checkbox"/> good?</label>
+
+	<div data-sub="`showValue:isGood"></div>
+
+	<span id="divShowIfFalsy">If 'hideThis' is true, you can't see this</span>
+	<input value="toggle 'hideThis'" type="button" data-sub="$click:hideThis,*toggle">
+
+	<div data-sub="`showValue:hideThis"></div>
+
+	<span id="divShowIfTruthy">If 'showThis' is false, you can't see this</span>
+	<input value="toggle 'showThis'" type="button" data-sub="$click:showThis,*toggle">
+
+	<div data-sub="`showValue:showThis"></div>
+
+	<input id="btnEnableIfTruthy" type="button" value="enable this if 'enbleThis' is true"/>
+	<input value="toggle 'enbleThis'" type="button" data-sub="$click:enbleThis,*toggle">
+
+	<div data-sub="`showValue:enbleThis"></div>
+
+	<input id="btnEnableIfFalsy" type="button" value="disable this if 'disableThis' is true"/>
+	<input value="toggle 'diableThis'" type="button" data-sub="$click:disableThis,*toggle">
+
+	<div data-sub="`showValue:disableThis"></div>
+
+	<input type="button" id="btnHardCode" value="test hard code"/>
+
+	<div data-sub="`showValue:hardCodeValue"></div>
+
+	<input type="button" type="button" value="invoke handler embedded in model repository"
+	       id="btnSetModel"/>
+
+	<div data-sub="`showValue:fruit"></div>
+
+</div>
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/model.js"></script>
+<script src="../../src/event.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script>
+	$( function() {
+
+		via.extend( {
+			fruit: ["apple", "banana", "water melon"],
+			selectedFruits: ["apple", "banana"],
+			selectedSingleFruit: "water melon",
+			showThis: true,
+			hideThis: true,
+			enbleThis: true,
+			disableThis: true,
+			attitude: "love",
+			isGood: true,
+			hardCodeValue: "",
+			addFruit: function( e ) {
+				e.subscriber.cd( "..fruit" ).push( "xxx" );
+			}
+		} );
+
+		$( "#listBoxFruit" ).subscribe( "fruit", "init", "*options" )
+			.subscribe( "selectedFruits", "init", "*updateViewValue" )
+			.subscribedBy( "selectedFruits", "change", "*updateModelValue" );
+
+		//
+		$( "#ddlFruit" ).subscribe( "fruit", "init", "*options" )
+			.subscribe( "selectedSingleFruit", "init", "*updateViewValue" )
+			.subscribedBy( "selectedSingleFruit", "change", "*updateModelValue" );
+
+		//
+		$( "#divShowIfTruthy" ).subscribe( "showThis", "init afterUpdate", "*show" );
+		$( "#divShowIfFalsy" ).subscribe( "hideThis", "init afterUpdate", "*hide" );
+		//
+		$( "#btnEnableIfTruthy" ).subscribe( "enbleThis", "init afterUpdate", "*enable" );
+		$( "#btnEnableIfFalsy" ).subscribe( "disableThis", "init afterUpdate", "*disable" );
+
+		$( ":radio" ).subscribe( "attitude", "init", "*updateViewValue" )
+			.subscribedBy( "attitude", "change", "*updateModelValue" );
+
+		$( ":checkbox" ).subscribe( "isGood", "init", "*updateViewValue" )
+			.subscribedBy( "isGood", "change", "*updateModelValue" );
+
+		$( "#btnHardCode" ).subscribedBy( "hardCodeValue", "click", "*hardCode", "my hard code value" );
+
+		$( "#btnSetModel" ).subscribedBy( "addFruit", "click" );
+	} );
+
+</script>
+</html>

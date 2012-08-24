@@ -1,0 +1,13 @@
+<script type="jsrender" id="todo.editItem">
+	<li class="editing" data-sub="@ns:{{:~modelPath}}.item">
+		<div class="todo">
+			<div class="edit">
+				<input class="todo-input" type="text"
+				       data-sub="`val:taskName|enter
+				                 @aliasEvent:enter,update;
+				                 @aliasEvent:blur,cancel
+				                 @focus"/>
+			</div>
+		</div>
+	</li>
+</script>

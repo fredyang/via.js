@@ -1,7 +1,0 @@
-{
-	"folders":["inbox","deleted"],
-	"emails":[
-		{"folder":"inbox","message":"message one"},
-		{"folder":"inbox","message":"message two"}
-	]
-}

@@ -50,7 +50,7 @@
 
 			toString: toString,
 
-			toTypedValue: toTypedValue,
+			toTypedValue: toTypedValue
 
 			/*	toggle: function( value ) {
 			 return !value;

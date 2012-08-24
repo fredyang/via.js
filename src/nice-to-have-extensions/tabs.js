@@ -92,8 +92,8 @@
 	//when user click on a tab selector, update the model with tab attribute value
 	via.customSubsProps.tabSelectorHolder = function( elem, parseContext, subscriptions, options ) {
 
+		options = (options || "").split( "," );
 		var path = parseContext.ns,
-			options = (options || "").split( "," ),
 			tabIdAttribute = options[1] || defaultOptions.tabIdAttribute,
 			childSelector = this.options || "[" + tabIdAttribute + "]";
 
@@ -110,8 +110,8 @@
 	//apply this class to the holder of tab selector such as ul
 	//<ul data-sub="`tabSelectorHolder:focus,li">
 	viaClasses.tabSelectorHolder = "@tabSelectorHolder" +
-	                                  "`tabHolder" +
-	                                  "`preventDefault";
+	                               "`tabHolder" +
+	                               "`preventDefault";
 
 	//#merge
 })

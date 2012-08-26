@@ -73,9 +73,9 @@
 	via.handlers( "updateTabHolder", function( e ) {
 		var selectedTabId = e.publisher.get(),
 			options = (this.options || "").split( "," ),
-			selectedClass = options[0] || defaultOptions.selectedClass,
-			tabIdAttribute = options[1] || defaultOptions.tabIdAttribute,
-			childSelector = this.options || "[" + tabIdAttribute + "]";
+			tabIdAttribute = options[0] || defaultOptions.tabIdAttribute,
+			selectedClass = options[1] || defaultOptions.selectedClass,
+			childSelector = "[" + tabIdAttribute + "]";
 
 		e.subscriber.find( childSelector ).andSelf().each( function( index, elem ) {
 			var $elem = $( elem ),
@@ -91,11 +91,10 @@
 
 	//when user click on a tab selector, update the model with tab attribute value
 	via.customSubsProps.tabSelectorHolder = function( elem, parseContext, subscriptions, options ) {
-
 		options = (options || "").split( "," );
 		var path = parseContext.ns,
-			tabIdAttribute = options[1] || defaultOptions.tabIdAttribute,
-			childSelector = this.options || "[" + tabIdAttribute + "]";
+			tabIdAttribute = options[0] || defaultOptions.tabIdAttribute,
+			childSelector = "[" + tabIdAttribute + "]";
 
 		$( elem ).delegate( childSelector, "click", function() {
 			via.set( path, $( this ).attr( tabIdAttribute ) );
@@ -103,13 +102,15 @@
 	};
 
 	//apply this class the holder of tab
-	//<div data-sub="`tabHolder:focus,div.tab">
+	//data-sub="`tabHolder:doc.topModule|selectedClass,attributeOfSelectedId
+	//data-sub="`tabHolder:doc.topModule|selected,topModule
 	viaClasses.tabHolder = "!init100 afterUpdate:.|*updateTabHolder";
 
 	//tabSelectorHolder is superset of tab holder
 	//apply this class to the holder of tab selector such as ul
-	//<ul data-sub="`tabSelectorHolder:focus,li">
-	viaClasses.tabSelectorHolder = "@tabSelectorHolder" +
+	//data-sub="`tabSelectorHolder:doc.topModule|selectedClass,attributeOfSelectedId">
+	//<ul class="top_nav man" data-sub="`tabSelectorHolder:doc.topModule|selected,topModule">
+	viaClasses.tabSelectorHolder = "@tabSelectorHolder:." +
 	                               "`tabHolder" +
 	                               "`preventDefault";
 

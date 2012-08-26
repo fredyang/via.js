@@ -1,9 +1,9 @@
 /*!
- * Matrix.js JavaScript Library v0.3
+ * matrix.js JavaScript Library v0.3
  * © Fred Yang - http://semanticsworks.com
  * License: MIT (http://www.opensource.org/licenses/mit-license.php)
  *
- * Date: Tue Apr 24 12:21:08 2012 -0400
+ * Date: Thu Aug 23 11:25:57 2012 -0400
  */
 jQuery.Deferred && (function( $, undefined ) {
 
@@ -31,9 +31,9 @@ jQuery.Deferred && (function( $, undefined ) {
 		hashValue = "",
 		hashKey = "v",
 		rHash,
-		globalLoadCallbacks = [],
-		globalFailCallbacks = [],
-		globalUnloadCallbacks = [],
+		loadCallbacks = [],
+		failCallbacks = [],
+		unloadCallbacks = [],
 		arrayPrototype = Array.prototype,
 		loaderFinders,
 		loaderMapper = {},
@@ -70,7 +70,7 @@ jQuery.Deferred && (function( $, undefined ) {
 				} );
 			}
 
-			return rtnPromise.then( invokeGlobalLoadCallbacks, invokeGlobalFailCallbacks );
+			return rtnPromise.then( invokeLoadCallbacks, invokeFailCallbacks );
 		};
 
 	arrayPrototype.indexOf = arrayPrototype.indexOf || function( obj, start ) {
@@ -111,7 +111,7 @@ jQuery.Deferred && (function( $, undefined ) {
 	};
 
 	function invokeCallbacks ( callbacks ) {
-		return     function invokeFailCallbacks () {
+		return function() {
 			var args = slice.call( arguments );
 			for (var i = 0; i < callbacks.length; i++) {
 				callbacks[i].apply( this, args );
@@ -119,9 +119,9 @@ jQuery.Deferred && (function( $, undefined ) {
 		};
 	}
 
-	var invokeGlobalFailCallbacks = invokeCallbacks( globalFailCallbacks ),
-		invokeGlobalUnloadCallbacks = invokeCallbacks( globalUnloadCallbacks ),
-		invokeGlobalLoadCallbacks = invokeCallbacks( globalLoadCallbacks );
+	var invokeFailCallbacks = invokeCallbacks( failCallbacks ),
+		invokeLoadCallbacks = invokeCallbacks( loadCallbacks ),
+		invokeUnloadCallbacks = invokeCallbacks( unloadCallbacks );
 
 	function loadModule ( moduleIds, loadByOrder ) {
 
@@ -497,7 +497,7 @@ jQuery.Deferred && (function( $, undefined ) {
 
 	$.extend( matrix, {
 
-		//unload(globalUnloadCallback) or unload(globalUnloadCallback, remove=true)
+		//unload(loadCallback) or unload(unloadCallback, remove=true)
 		//unload(moduleIdString)
 		//unload(moduleIdArray)
 		unload: function( moduleIds, remove ) {
@@ -508,9 +508,9 @@ jQuery.Deferred && (function( $, undefined ) {
 
 			if ($.isFunction( moduleIds )) {
 				if (remove) {
-					globalUnloadCallbacks.remove( moduleIds );
+					unloadCallbacks.remove( moduleIds );
 				} else {
-					globalUnloadCallbacks.push( moduleIds );
+					unloadCallbacks.push( moduleIds );
 				}
 
 			} else {
@@ -536,7 +536,7 @@ jQuery.Deferred && (function( $, undefined ) {
 					// unloading some module which is not in page
 					if (promise && promise.refCount != "staticLoaded") {
 
-						if (--promise.refCount === 0) {
+						if (--promise.refCount === 0 || remove) {
 							var unload = promise.unload || findLoader( moduleId ).unload;
 
 							if (unload) {
@@ -550,10 +550,10 @@ jQuery.Deferred && (function( $, undefined ) {
 							accessPromise( moduleId, undefined );
 							dependencies = depends( moduleId );
 							if (dependencies) {
-								matrix.unload( dependencies );
+								matrix.unload( dependencies, remove );
 							}
 						}
-						invokeGlobalUnloadCallbacks();
+						invokeUnloadCallbacks();
 					}
 				}
 			}
@@ -895,17 +895,17 @@ jQuery.Deferred && (function( $, undefined ) {
 
 		done: function( fn, remove ) {
 			if (remove) {
-				globalLoadCallbacks.remove( fn );
+				loadCallbacks.remove( fn );
 			} else {
-				globalLoadCallbacks.push( fn );
+				loadCallbacks.push( fn );
 			}
 		},
 
 		fail: function( fn, remove ) {
 			if (remove) {
-				globalFailCallbacks.remove( fn );
+				failCallbacks.remove( fn );
 			} else {
-				globalFailCallbacks.push( fn );
+				failCallbacks.push( fn );
 			}
 		},
 
@@ -915,7 +915,7 @@ jQuery.Deferred && (function( $, undefined ) {
 	function reload ( moduleId, change ) {
 
 		var oldPromiseCache = $.extend( true, {}, promiseStore );
-		matrix.unload( moduleId );
+		matrix.unload( moduleId, true );
 		change && change();
 		return matrix( moduleId ).done( function() {
 			for (var key in oldPromiseCache) {

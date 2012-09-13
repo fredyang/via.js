@@ -1,5 +1,5 @@
 //
-//<@depends>event.js, model.js, declarative.js, template.js</@depends>
+//<@depends>eventSubscription.js, model.js, declarative.js, template.js</@depends>
 //#merge
 (function( $, via ) {
 	//#end_merge
@@ -36,33 +36,37 @@
 
 			//this is gateway to adapter function defined in viewAdapter.get
 			getViewValue: function( e ) {
-				return this.getViewValue( e.publisher );
+				return e.handler.getViewValue( e.publisher );
 			}
 		},
 		setters: {
 
 			//this is gateway to adapter function defined in viewAdapter.set
 			setViewValue: function( value, e ) {
-				return this.setViewValue( e.subscriber, value, e );
+				return e.handler.setViewValue( this, value, e );
 			}
 		},
 		converters: {
 
 			toString: toString,
 
-			toTypedValue: toTypedValue
+			toTypedValue: toTypedValue,
+
+			toNumber: function( value ) {
+				return +value;
+			},
+
+			toDate: function( value ) {
+				return new Date( value );
+			}
 
 			/*	toggle: function( value ) {
 			 return !value;
 			 },
 
-			 toNumber: function( value ) {
-			 return +value;
-			 },
 
-			 toDate: function( value ) {
-			 return new Date( value );
-			 },
+
+
 
 
 			 toJsonString: function( value ) {
@@ -75,6 +79,8 @@
 	} );
 
 	via.handlers( {
+
+		/*-------the following model handlers take care of view-----------*/
 
 		//set view value with model value
 		updateViewValue: {
@@ -119,8 +125,8 @@
 			//in the get function.
 			get: function( e ) {
 
-				var options = this.options,
-					subscriber = e.subscriber,
+				var options = e.handler.options,
+					subscriber = this,
 					value = subscriber.val();
 
 				subscriber.children( "option[listItem]" )
@@ -168,42 +174,51 @@
 		},
 		//a handler is a function , it become the getFilter of real handler
 		hide: function( e ) {
-			var effect = this.effect;
-			if (!effect) {
-				this.effect = this.options;
-			}
-			$( e.subscriber )[ e.publisher.isEmpty() ? "show" : "hide"]( effect );
+
+			this[ isUndefined( e.handler.options ) ?
+				e.publisher.isEmpty() ? "show" : "hide" :
+				e.publisher.compare( e.handler.options ) ? "hide" : "show"]();
+
 		},
 		show: function( e ) {
-			var effect = this.effect;
-			if (!effect) {
-				this.effect = this.options;
-			}
-			$( e.subscriber )[ e.publisher.isEmpty() ? "hide" : "show"]( effect );
+
+			this[ isUndefined( e.handler.options ) ?
+				e.publisher.isEmpty() ? "hide" : "show" :
+				e.publisher.compare( e.handler.options ) ? "show" : "hide"]();
 		},
 		showPlural: function( e ) {
 			var value = e.publisher.get(),
 				count = value.length || value;
-			e.subscriber[ count > 1 ? "show" : "hide"]();
+			this[ count > 1 ? "show" : "hide"]();
 		},
 
 		textCount: function( e ) {
 			var value = e.publisher.get(),
 				count = ( "length" in value) ? value.length : value;
 
-			e.subscriber.text( count );
+			this.text( count );
 		},
 
 		enable: function( e ) {
-			$( e.subscriber ).attr( "disabled", e.publisher.isEmpty() );
+			this.attr(
+				"disabled",
+				isUndefined( e.handler.options ) ? e.publisher.isEmpty() :
+					!e.publisher.compare( e.handler.options )
+			);
 		},
+
 		disable: function( e ) {
-			$( e.subscriber ).attr( "disabled", !e.publisher.isEmpty() );
+			this.attr(
+				"disabled",
+				isUndefined( e.handler.options ) ? !e.publisher.isEmpty() :
+					e.publisher.compare( e.handler.options )
+			);
 		},
+
 		//this is useful for debugging
-		//via.classes.showValue = "!init after*:.|*showValue"";
+		//via.classes.showValue = "^init after*:.|*showValue"";
 		showValue: function( e ) {
-			e.subscriber.html( "<span style='color:red'>" + e.publisher.path + " : " + JSON.stringify( e.publisher.get() ) + "</span>" );
+			this.html( "<span style='color:red'>" + e.publisher.path + " : " + e.publisher.toJSON() + "</span>" );
 		},
 		//the following are array model handlers
 		//
@@ -225,42 +240,43 @@
 			},
 			//setFilter
 			function( value, e ) {
-				e.subscriber.children().eq( +childIndex( e ) ).replaceWith( value );
+				this.children().eq( +childIndex( e ) ).replaceWith( value );
 			} ),
 		//handle when an item is removed from an array,
 		//an event afterDel.1 will be raised
 		removeTmplItem: {
 			get: function( e ) {
-				e.subscriber.children().eq( +childIndex( e ) ).remove();
+				this.children().eq( +childIndex( e ) ).remove();
 			}
 		},
 
 		addClass: function( e ) {
-			if (e.publisher.get()) {
-				e.subscriber.addClass( this.options );
-			} else {
-				e.subscriber.removeClass( this.options );
-			}
+			this[e.publisher.get() ? "addClass" : "removeClass" ]( e.handler.options );
 		},
 
 		removeClass: function( e ) {
+			this[e.publisher.get() ? "removeClass" : "addClass" ]( e.handler.options );
+		},
+
+		focus: function( e ) {
 			if (e.publisher.get()) {
-				e.subscriber.removeClass( this.options );
-			} else {
-				e.subscriber.addClass( this.options );
+				var subscriber = this;
+				setTimeout( function() {
+					subscriber.focus();
+				}, 1 );
 			}
 		},
 
-		//--------------add view handlers------------------------
+		/*-------the following view handlers take care of model-----------*/
 		del: function( e ) {
-			e.subscriber.del();
+			this.del();
 		},
 
 		"++": function( e ) {
-			e.subscriber.set( e.subscriber.get() + 1 );
+			this.set( this.get() + 1 );
 		},
 		"--": function( e ) {
-			e.subscriber.set( e.subscriber.get() - 1 );
+			this.set( this.get() - 1 );
 		},
 
 		hardCode: {
@@ -268,36 +284,36 @@
 				handlerObj.hardCode = toTypedValue( options );
 			},
 			get: function( e ) {
-				e.subscriber.set( this.hardCode );
+				this.set( e.handler.hardCode );
 			}
 		},
 		"null": function( e ) {
-			e.subscriber.set( null );
+			this.set( null );
 		},
 		"true": function( e ) {
-			e.subscriber.set( true );
+			this.set( true );
 		},
 		"false": function( e ) {
-			e.subscriber.set( false );
+			this.set( false );
 		},
 		toggle: function( e ) {
-			var subscriber = e.subscriber;
+			var subscriber = this;
 			subscriber.set( !subscriber.get() );
 		},
-		zero: function( e ) {
-			e.subscriber.set( 0 );
+		"0": function( e ) {
+			this.set( 0 );
 		},
 		preventDefault: function( e ) {
 			e.preventDefault();
 		},
-		stopPropagation: function (e) {
+		stopPropagation: function( e ) {
 			e.stopPropagation();
 		},
 		alert: function( e ) {
-			alert( isUndefined( this.options ) ? e.subscriber.get() : this.options );
+			alert( isUndefined( e.handler.options ) ? this.get() : e.handler.options );
 		},
 		log: function( e ) {
-			console.log( isUndefined( this.options ) ? e.subscriber.get() : this.options );
+			console.log( isUndefined( e.handler.options ) ? this.get() : e.handler.options );
 		},
 		sort: {
 			initialize: function( publisher, subscriber, handlerObj, options ) {
@@ -306,8 +322,9 @@
 				handlerObj.asc = !!options[1];
 			},
 			get: function( e ) {
-				e.subscriber.sort( this.by, this.asc );
-				this.asc = !this.asc;
+				var handler = e.handler;
+				this.sort( handler.by, handler.asc );
+				handler.asc = !handler.asc;
 			}
 		}
 	} );
@@ -456,6 +473,7 @@
 		caption: function( elem, parseContext, subscriptions, options ) {
 			$( elem ).prepend( "<option value=''>" + options + "</option>" );
 		},
+
 		//#debug
 		//use @debug
 		debug: function( /*elem, parseContext, subscriptions, options*/ ) {
@@ -498,7 +516,7 @@
 
 				subscriptions.push( {
 					publisher: elem,
-					eventTypes: updateEvent,
+					eventTypes: updateEvent + " resetForm",
 					subscriber: path,
 					handler: "*updateModelValue",
 					options: options[2]
@@ -508,8 +526,10 @@
 
 		},
 
-		focus: function( elem ) {
-			$( elem ).focus();
+		focusLater: function( elem ) {
+			setTimeout( function() {
+				$( elem ).focus();
+			}, 1 );
 		},
 
 		//data-sub="`updateButton"
@@ -525,7 +545,7 @@
 			}, 1 );
 		},
 
-		init: function( elem, parseContext, subscriptions, options ) {
+		initSubs: function( elem, parseContext, subscriptions, options ) {
 			var methodName = options;
 			//var methodName = options.split( "," )[0];
 			rootModel.get( methodName, elem, parseContext, subscriptions, options );
@@ -542,15 +562,15 @@
 		//
 		//
 		listView: //render whole list of items
-			"!init after*.:.|*renderInside" +
+			"^init after*.:.|*renderInside" +
 				//render newly appended data item by appending it to end of the view
-			"!afterCreate.1:.|*appendTmplItem" +
+			"^afterCreate.1:.|*appendTmplItem" +
 				//render the updated data item in the view
-			"!afterUpdate.1:.|*updateTmplItem" +
+			"^afterUpdate.1:.|*updateTmplItem" +
 				//delete the deleted data item in the view
-			"!afterDel.1:.|*removeTmplItem",
+			"^afterDel.1:.|*removeTmplItem",
 
-		fullyLoadedListView: "!init after*:.|*renderInside",
+		fullUpdateListView: "^init after*:.|*renderInside",
 
 		//a general class rule to synchronize
 		// the control with viewAdapter to a model
@@ -561,38 +581,44 @@
 		val: "@val:.",
 
 		//data-sub="`options:path"
-		options: "!init after*:.|*options",
+		options: "^init after*:.|*options",
 
 		//data-sub="`show:path"
-		show: "!init after*:.|*show",
+		show: "^init after*:.|*show",
 
 		//data-sub="`hide:path"
-		hide: "!init after*:.|*hide",
+		hide: "^init after*:.|*hide",
+
+		addClass: "^init after*:.|*addClass",
+
+		removeClass: "^init after*:.|*removeClass",
+
+		focus: "^init after*:.|*focus",
 
 		//data-sub="`enableLater:path"
-		enableLater: "!after*:.|*enable",
+		enableLater: "^after*:.|*enable",
 
 		//data-sub="`disableLater:path"
-		disableLater: "!after*:.|*disable",
+		disableLater: "^after*:.|*disable",
 
 		//data-sub="`enable:path"
-		enable: "!init after*:.|*enable",
+		enable: "^init after*:.|*enable",
 
 		//data-sub="`disable:path"
-		disable: "!init after*:.|*disable",
+		disable: "^init after*:.|*disable",
 
 		//data-sub="`html:path"
-		html: "!init after*:.|get html *toString",
+		html: "^init after*:.|get html *toString",
 
 		//data-sub="`text:path"
-		text: "!init after*:.|get text *toString",
+		text: "^init after*:.|get text *toString",
 
-		showPlural: "!init after*:.|*showPlural",
+		showPlural: "^init after*:.|*showPlural",
 
 		//data-sub="`showValue:path"
-		showValue: "!init after*:.|*showValue",
+		showValue: "^init after*:.|*showValue",
 
-		textCount: "!init after*:.|*textCount",
+		textCount: "^init after*:.|*textCount",
 
 		//data-sub"`alert:_,hello"
 		//"hello" will be passed as options

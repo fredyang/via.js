@@ -37,13 +37,13 @@ test( "buildSubscriptionObjects, path, theme", function() {
 	                           "will return not define the rules object into its data storage" );
 
 	$container = $( "<div data-sub='@ns:a'>" +
-	                "<input data-sub='@ns:.b' />" +
+	                "<input data-sub='@ns:b' />" +
 	                " <span data-sub='@theme:mytheme " +
 	                "@options:elemOption " +
 	                "@ns:b " +
-	                "@pub:change|.c|handler|pubOption;" +
-	                "click|.e|handler|_" +
-	                "@pub:change|.f|handler" +
+	                "@pub:change|c|handler|pubOption;" +
+	                "click|e|handler|_" +
+	                "@pub:change|f|handler" +
 	                "@sub:/d|afterUpdate|handler'>" +
 	                "</span>" +
 	                "</div>" );
@@ -74,10 +74,10 @@ test( "buildSubscriptionObjects, path, theme", function() {
 	subscriptions = $span.buildSubscriptionObjects();
 
 	deepEqual( $span.dataSub(), {
-		ns: "b",
+		ns: "a.b",
 		theme: "mytheme",
 		options: "elemOption",
-		pub: "change|.c|handler|pubOption;click|.e|handler|_;change|.f|handler",
+		pub: "change|c|handler|pubOption;click|e|handler|_;change|f|handler",
 		sub: "/d|afterUpdate|handler"
 	}, "If the path of element is not relative, then the path is the fullpath, " +
 	   "theme can also be overrided, rule like @pub or @sub can be used mulitple times," +
@@ -99,7 +99,7 @@ test( "buildSubscriptionObjects, path, theme", function() {
 	deepEqual( subscriptions[1], {
 			publisher: $span[0],
 			eventTypes: "change",
-			subscriber: "b.c",
+			subscriber: "a.b.c",
 			handler: "handler",
 			options: "pubOption",
 			delegate: undefined
@@ -113,7 +113,7 @@ test( "buildSubscriptionObjects, path, theme", function() {
 	deepEqual( subscriptions[2], {
 			publisher: $span[0],
 			eventTypes: "click",
-			subscriber: "b.e",
+			subscriber: "a.b.e",
 			handler: "handler",
 			options: "_",
 			delegate: undefined

@@ -1,5 +1,5 @@
 //
-//<@depends>event.js, model.js, declarative.js, template.js</@depends>
+//<@depends>eventSubscription.js, model.js, declarative.js, template.js</@depends>
 //#merge
 (function( $, via ) {
 	//#end_merge
@@ -249,7 +249,7 @@
 			                   //create queryable shadow objects to support query
 			               "@queryableListView" +
 			//render the whole list of items
-			               "!init after*:*queryResult|*renderInside",
+			               "^init after*:*queryResult|*renderInside",
 
 		//data-sub="`sort:.,firstName" //context path is items
 		//set *query.sort.by to a preset value of a column
@@ -260,14 +260,14 @@
 		      "`queryChanged",
 
 		//data-sub="`resetSort" //context path is items
-		resetSort: "!init afterUpdate:*query.sort.by|*show;" +
+		resetSort: "^init afterUpdate:*query.sort.by|*show;" +
 		           "$click:*resetSort" +
 		           "`queryChanged",
 
 		//data-sub="`pager:.,#pagerTemplate"
 		//render pager using the data under items*query.page
-		pager: "!init after*:*query.page|*renderInside" +
-		       "!init after*:*hasResult|*show" +
+		pager: "^init after*:*query.page|*renderInside" +
+		       "^init after*:*hasResult|*show|_" +
 		       "`changePage" +
 		       "`preventDefault",
 
@@ -279,7 +279,7 @@
 		//this is for the behavior of the enable paging button
 		//enable when page size is set
 		//trigger query when it is click
-		applyPaging: "!init afterUpdate:*query.page.size|*enable" +
+		applyPaging: "^init afterUpdate:*query.page.size|*enable" +
 		             "$click:*query.page.enabled|*true" +
 		             "`queryChanged",
 
@@ -299,7 +299,7 @@
 
 		resetQuery: "$click:*resetQuery" +
 		            "`queryChanged" +
-		            "!init afterUpdate:*query.enabled|*show",
+		            "^init afterUpdate:*query.enabled|*show",
 
 		hasQueryResult: "`show:*hasResult",
 

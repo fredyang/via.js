@@ -43,16 +43,19 @@
 		//{{ts /}} so that it can emit a timestamp
 		ts: function x () {
 			return x.enabled ?
-				"<span style='color:red' data-sub='`show:/*ts|fast'>ts:" + (+new Date() + "").substring( 7, 10 ) + "</span>":
+				"<span style='color:red' data-sub='`show:/*ts'>ts:" + (+new Date() + "").substring( 7, 10 ) + "</span>":
 				"";
 		},
 
-		addItemNs: function () {
+		addRowItemNs: function () {
 			if ((this.view.index + "").startsWith("_")) {
-				return "@ns:" + this.view.ctx.modelPath + "." + (this.view.ctx.e.publisher.count() -1);
+				return "@ns:/" + this.view.ctx.modelPath + "." + (this.view.ctx.e.publisher.count() -1);
 			} else {
-				return "@ns:" + this.view.ctx.modelPath + "." + this.view.index;
+				return "@ns:/" + this.view.ctx.modelPath + "." + this.view.index;
 			}
+		},
+		addDataSourceNs: function () {
+			return "@ns:/" + this.view.ctx.modelPath;
 		}
 
 	} );

@@ -1,5 +1,5 @@
 //
-//<@depends>event.js, model.js, declarative.js, template.js</@depends>
+//<@depends>eventSubscription.js, model.js, declarative.js, template.js</@depends>
 //#merge
 (function( $, via ) {
 	//#end_merge
@@ -17,17 +17,9 @@
 	var clearObj = util.clearObj;
 	var toLogicalPath = util.toLogicalPath;
 	var viaFn = via.fn;
-	var viewHandlerGateway = via.debug.viewHandlerGateway;
-	var isString = via.util.isString;
+	var subscribe = via.subscribe;
 
-	function indexReplacer ( match, $1, $2, $3, $4 ) {
-		if ($1) {
-			return $1 + ($2 - 1);
-		} else {
-			return $3 + ($4 - 1);
-		}
-	}
-
+	var trigger = via.trigger;
 	//#end_merge
 
 	var editMode = {
@@ -85,20 +77,28 @@
 			itemsModel.set( [] );
 		}
 
-		itemsModel.create( "*edit", {
+		itemsModel.createIfUndefined( "*edit", {
 			mode: 0, //not in edit mode
 			item: null, //editing item
 			selectedIndex: -1, //the index for the item being edit in array
 			itemTemplate: newItem
 		} );
 
-		itemsModel.cd( "*edit.selectedIndex" )
-			.mapEvent( "afterUpdate", "enterUpdateMode", function( value, e ) {
-				return e.publisher.get( "..mode" ) == editMode.update;
-			} )
-			.mapEvent( "afterUpdate", "cancelUpdateMode", function( value, e ) {
-				return e.publisher.get( "..mode" ) == editMode.none;
-			} );
+		subscribe( null, itemsModel.cd( "*edit.selectedIndex" ), "afterUpdate", function( e ) {
+
+			var publisher = e.publisher,
+
+				mode = publisher.get( "..mode" );
+
+			if (mode == editMode.update) {
+
+				trigger( publisher.cd( "..item" ).path, publisher.path, "enterUpdateMode" );
+
+			} else if (mode == editMode.none) {
+
+				trigger( publisher.path, publisher.path, "cancelUpdateMode", e.proposed, e.removed );
+			}
+		} );
 
 		//when switch from read mode to new mode or from new mode to read mode
 		//the selectedIndex does not change, that is why we need to
@@ -116,7 +116,7 @@
 	customSubsProps.switchUpdateMode = function( elem, parseContext, subscriptions, options ) {
 
 		subscriptions.push( {
-			publisher: parseContext.ns + "*edit",
+			publisher: parseContext.ns + "*edit.item",
 			eventTypes: "enterUpdateMode*",
 			subscriber: elem,
 			handler: "*renderEditItem",
@@ -234,20 +234,20 @@
 		//handle user's action to create a new item for an array model(subscriber)
 		//subscriber is items
 		newRow: function( e ) {
-			e.subscriber.newRowItem();
+			this.newRowItem();
 		},
 
 		//handle user's action to edit an item in listview
 		//subscriber is the array model "items"
 		editRow: function( e ) {
-			e.subscriber.editRowItem( null, e.selectedRowIndex() );
+			this.editRowItem( null, e.selectedRowIndex() );
 			e.stopPropagation();
 		},
 
 		//handle user's action to update the editing item
 		//subscriber is the "items" or items*queryResult
 		saveEditRow: function( e ) {
-			e.subscriber.saveEditItem();
+			this.saveEditItem();
 			e.stopPropagation();
 		},
 
@@ -255,7 +255,7 @@
 		//so that subscriber is not items or items.queryResult
 		//but it is "items.edit.item"
 		saveEditItem: function( e ) {
-			e.subscriber.mainModel().saveEditItem();
+			this.mainModel().saveEditItem();
 			e.stopPropagation();
 		},
 
@@ -263,104 +263,20 @@
 		//subscriber is items or items*queryResult
 		removeRow: function( e ) {
 			var selectedRowIndex = e.selectedRowIndex();
-			e.subscriber.removeRowItemByIndex( selectedRowIndex );
+			this.removeRowItemByIndex( selectedRowIndex );
 			e.stopPropagation();
 		},
 
 		//subscriber is items
 		cancelEditRow: function( e ) {
-			e.subscriber.resetEditItem();
+			this.resetEditItem();
 			e.stopPropagation();
 		},
 
 		//subscriber is "items*edit.item"
 		cancelEditItem: function( e ) {
-			e.subscriber.mainModel().resetEditItem();
+			this.mainModel().resetEditItem();
 			e.stopPropagation();
-		},
-
-		alignAfterRemove: function( e ) {
-			var rowsContainer = e.subscriber,
-				parentPath = e.publisher.path,
-				deletedRowIndex = e.originalPublisher.indexPath(),
-				subscriptions,
-				handler,
-				i,
-				subscription,
-				temp,
-				oldItemPathToReplace;
-
-			temp = "(" + parentPath.replace( ".", "\\." ) + "\\.)(\\d+)|" +
-			       "(" + parentPath.replace( ".", "#+" ) + "#+)(\\d+)";
-
-			oldItemPathToReplace = new RegExp( temp, "g" );
-
-			$( rowsContainer ).children( ":gt(" + deletedRowIndex + ")" ).find( "*" ).andSelf().each(
-				function() {
-
-					var oldEventTypes,
-						newEventTypes,
-						newEventSeedData,
-						$publisher,
-						delegateSelector,
-						dataSubOfRowView = $( this ).dataSub();
-
-					if (!dataSubOfRowView) {
-						return;
-					}
-
-					var newNs = dataSubOfRowView.ns.replace( oldItemPathToReplace, indexReplacer );
-					if (newNs == dataSubOfRowView.ns) {
-						return;
-					}
-
-					dataSubOfRowView.ns = newNs;
-
-					subscriptions = $( this ).subscriptions();
-
-					for (i = 0; i < subscriptions.length; i++) {
-
-						subscription = subscriptions[i];
-
-						if (isString( subscription.publisher )) {
-
-							subscription.publisher = subscription.publisher.replace( oldItemPathToReplace, indexReplacer );
-
-						} else if (isString( subscription.subscriber )) {
-
-							var oldSubscriber = subscription.subscriber;
-
-							var newSubscriber = oldSubscriber.replace( oldItemPathToReplace, indexReplacer );
-
-							if (oldSubscriber != newSubscriber) {
-
-								subscription.subscriber = newSubscriber;
-								//if subscriber is changed, we need to update the view handler as well
-								//so that view handler will not update deleted subscriber
-								handler = subscription.handler;
-								oldEventTypes = subscription.eventTypes;
-								newEventTypes = subscription.eventTypes = oldEventTypes.replace( oldItemPathToReplace, indexReplacer );
-								delegateSelector = handler.delegateSelector;
-
-								newEventSeedData = {
-									handler: handler,
-									subscriber: newSubscriber
-								};
-
-								$publisher = $( subscription.publisher );
-
-								if (delegateSelector) {
-									$publisher.undelegate( delegateSelector, oldEventTypes, viewHandlerGateway );
-									$publisher.delegate( delegateSelector, newEventTypes, newEventSeedData, viewHandlerGateway );
-								} else {
-									$publisher.unbind( oldEventTypes, viewHandlerGateway );
-									$publisher.bind( newEventTypes, newEventSeedData, viewHandlerGateway );
-								}
-							}
-						}
-					}
-				}
-			);
 		},
 
 		//------model handler------
@@ -368,7 +284,7 @@
 		//handle the change of items*edit.mode
 		//if it is in create mode render content in container,
 		// otherwise empty container
-		//!init afterUpdate:.|*renderNewItem
+		//^init afterUpdate:.|*renderNewItem
 		renderNewItem: buildTemplateHandler(
 			//getFilter
 			function( e ) {
@@ -377,25 +293,22 @@
 			},
 			//setFilter
 			function( value, e ) {
-				e.subscriber.html( value ).show();
+				this.html( value ).show();
 			} ),
 
 		//publiser is items
 		//handle event enterUpdateMode
 		renderEditItem: buildTemplateHandler(
 			//getFilter
-			function( e ) {
-				return e.publisher.mainModel().get( "*edit.item" );
-			},
+			"get",
 			//setFilter
 			function( value, e ) {
-				e.subscriber.children().eq( e.originalPublisher.get() ).replaceWith( value );
+				this.children().eq( e.originalPublisher.get() ).replaceWith( value );
 			} )
 
 	} );
 
 	extend( viaClasses, {
-
 
 		//handle the delete button evnet in the list view
 		deletableRow: "$delete:.|*removeRow",
@@ -415,7 +328,7 @@
 		// actual events to them, here is an example
 		//<input type="button" value="edit" data-sub="`editButton"/>
 		//@editableListView create shadow objects
-		//@switchUpdateMode let view subscribe model change to referesh the row view
+		//@switchUpdateMode let view subscribe model change to refresh the row view
 		//
 		//context path should be an array, such as items or items.queryableResult
 		//data-sub="`listView:.,contacts.contactRow
@@ -435,19 +348,13 @@
 		newItemButton: "$click:.|*newRow" +
 		               "`hide:*edit.mode",
 
-		//publisher is items*edit.item model
+		//publisher is items*edit model
 		//it render the view which is used to edit new item
-		//data-sub="@ns:*edit.item `newItemView:.,#contactRowInNewMode"
-		newItemView: "!enterNewMode*:..|*renderNewItem" +
-		             "!cancelNewMode:..mode|hide"
+		//data-sub="@ns:*edit.item `newItemView:..,#contactRowInNewMode"
+		newItemView: "^enterNewMode*:*edit|*renderNewItem" +
+		             "^cancelNewMode:*edit.mode|hide"
 
 	} );
-
-	via.themes.alignable = {
-		classes: {
-			listView: viaClasses.listView + "!afterDel.1:.|*alignAfterRemove"
-		}
-	};
 
 	//#merge
 })( jQuery, via );

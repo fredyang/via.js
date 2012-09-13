@@ -12,14 +12,14 @@ version = $(shell cat version.txt)
 date=$(shell git log -1 --pretty=format:%ad)
 
 core_files = ${src_dir}/model.js\
-			${src_dir}/event.js\
-			${src_dir}/application.js\
+			${src_dir}/eventSubscription.js\
 			${src_dir}/declarative.js\
 			${src_dir}/template.js\
 			${src_dir}/must-have-extensions.js\
 
 extensions = ${nice_to_have}/validation.js\
 			${nice_to_have}/queryableListView.js\
+			${nice_to_have}/alignableListView.js\
 			${nice_to_have}/editableListView.js\
 			${nice_to_have}/history.js\
 			${nice_to_have}/tabs.js\

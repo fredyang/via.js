@@ -1,4 +1,4 @@
-module( "event.js" );
+module( "eventSubscription.js" );
 
 var debug = via.debug;
 var filters = via.filters;
@@ -10,7 +10,7 @@ var finalizers = filters.finalizers;
 var disposers = filters.disposers;
 getters.fakeGet = function() {};
 setters.fakeSet = function( value, e ) {
-	e.subscriber.set( value );
+	this.set( value );
 };
 converters.fakeConvert = function() {};
 disposers.fakeDispose = function() {};
@@ -290,7 +290,7 @@ test( "model to view", function() {
 
 	via.set( "name", "john" );
 	via.set( "handlerNameChangeForView", function( e ) {
-		//e.subscriber == a view
+		//this == a view
 		//e.publisher == a model
 	} );
 
@@ -383,7 +383,7 @@ test( "view to model", function() {
 	via( "customer" ).unsubscribe();
 
 	var viewHandler = function( e, firstName, lastName ) {
-		e.subscriber.set( firstName + "," + lastName );
+		this.set( firstName + "," + lastName );
 	};
 
 	via( "customer" ).subscribe( jQueryView, "change", viewHandler );
@@ -400,12 +400,12 @@ test( "view to model", function() {
 
 	//compare with line 437
 	via.set( "setCustomer", function x ( e ) {
-		equal( x, this.get,
+		equal( x, e.handler.get,
 			"If a model subscribe directly to the view, and the handler is missing, " +
 			"the model is the handler by itself, in the handler, " +
 			"the 'this' refer to the handler, but not the model proxy, " +
 			"the 'e' refer to the event argument but not the value to be set into model" );
-		e.subscriber.set( "..customer", e.publisher.val() );
+		this.set( "..customer", e.publisher.val() );
 	} );
 
 	via( "setCustomer" ).subscribe( jQueryView, "change" );
@@ -552,7 +552,7 @@ test( "test model event propagation", function() {
 	var originalPublishers = [];
 
 	via.subscribe( null, "customer.firstName", "afterUpdate", function( e ) {
-		subscriber = e.subscriber;
+		subscriber = this;
 	} );
 
 	via.subscribe( null, "customer", "afterUpdate.*", function( e ) {
@@ -561,7 +561,7 @@ test( "test model event propagation", function() {
 	} );
 
 	rootModel.set( "customer.firstName", "fred" );
-	equal( subscriber, null, "subscriber can be null" );
+	equal( subscriber, window, "subscriber can be null" );
 
 	deepEqual( publishers, ["customer", "customer"],
 		"the publisher is always the current publisher" );
@@ -717,9 +717,9 @@ test( "simple function as handler", function() {
 	via.set( "name2", "" );
 
 	var simpleHandler = function( e ) {
-		equal( this.get, arguments.callee, "a simple handler is the get function" );
-		equal( this.seed, 100, "handler's init is called" );
-		e.subscriber.set( e.publisher.get() );
+		equal( e.handler.get, arguments.callee, "a simple handler is the get function" );
+		equal( e.handler.seed, 100, "handler's init is called" );
+		this.set( e.publisher.get() );
 	};
 
 	var init = function( publisher, subscriber, handlerObj, options ) {
@@ -740,20 +740,20 @@ test( "handlerObj as handler", function() {
 	via.set( "name2", "" );
 	var handlerObj = {
 		get: function( e ) {
-			ok( (arguments.callee == handlerObj.get) && (this.get == handlerObj.get),
+			ok( (arguments.callee == handlerObj.get) && (e.handler.get == handlerObj.get),
 				"full handler's object's get function is used" );
 
-			equal( this, handlerObj, "the execution context, is the same as handlerObj" );
+			equal( e.handler, handlerObj, "the execution context, is the same as handlerObj" );
 
 			ok( !this.init, "the context object does not have init function" );
 
-			return e.publisher.get() + this.seed;
+			return e.publisher.get() + e.handler.seed;
 		},
 		set: function( value, e ) {
-			e.subscriber.set( value );
+			this.set( value );
 		},
-		convert: function( value ) {
-			return value + this.seed;
+		convert: function( value, e ) {
+			return value + e.handler.seed;
 		},
 		initialize: function( publisher, subscriber, handlerObj2, options2 ) {
 			equal( publisher.path, "name", "publisher is passed into init" );
@@ -791,13 +791,13 @@ test( "common handler as handler", function() {
 	var handlerObj = {
 
 		get: function( e ) {
-			return e.publisher.get() + this.seed;
+			return e.publisher.get() + e.handler.seed;
 		},
 		set: function( value, e ) {
-			e.subscriber.set( value );
+			this.set( value );
 		},
-		convert: function( value ) {
-			return value + this.seed;
+		convert: function( value, e ) {
+			return value + e.handler.seed;
 		},
 		initialize: function( publisher, subscriber, handlerObj2, options2 ) {
 			handlerObj2.seed = options2.seed;
@@ -832,7 +832,7 @@ test( "use common getter/setter/converter/initializer/finalizer/disposer to buil
 
 	setters.testSet = function( value, e ) {
 		setCalled = true;
-		e.subscriber.set( value );
+		this.set( value );
 	};
 
 	converters.testConvert = function( value ) {
@@ -1000,7 +1000,7 @@ test( "mapEvent", function() {
 	} );
 
 	via( "lightOn" ).subscribe( $text, "overlimit", function( e ) {
-		e.subscriber.set( true );
+		this.set( true );
 	} );
 
 	$text.val( 101 ).trigger( "change" );
@@ -1022,9 +1022,9 @@ test( "adhoc model function as handler", function() {
 		color: "green",
 		handleColorChange: function( e ) {
 			if (e.publisher.get() == "green") {
-				e.subscriber.html( "go" );
+				this.html( "go" );
 			} else {
-				e.subscriber.html( "stop" );
+				this.html( "stop" );
 			}
 		}
 	} );

@@ -1,5 +1,5 @@
 //
-//<@depends>event.js, model.js, declarative.js, template.js</@depends>
+//<@depends>eventSubscription.js, model.js, declarative.js, template.js</@depends>
 //#merge
 (function( $, via ) {
 	//#end_merge
@@ -19,15 +19,18 @@
 	var customSubsProps = via.customSubsProps;
 	var isFunction = $.isFunction;
 	var viaClasses = via.classes;
-	var isBoolean = via.util.isBoolean;
 	var isUndefined = via.util.isUndefined;
 	var subscribe = via.subscribe;
 	var toTypedValue = via.util.toTypedValue;
+	var mergeLogicalPath = via.mergeLogicalPath;
+	var isPrimitive = via.util.isPrimitive;
 	//#end_merge
 
-	defaultOptions.errors = {};
+	defaultOptions.errors = {
+		defaultError: "Please enter a valid value"
+	};
 
-	var beforeUpdateAndValidate = "beforeUpdate validate",
+	var afterUpdateAndValidate = "afterUpdate validate",
 		pathsOfInvalidModels = shadowRoot.pathsOfInvalidModels = [],
 		invalidPathesModel = via( "*pathsOfInvalidModels" ),
 		rEmpty = /^\s*$/,
@@ -38,14 +41,8 @@
 		rDigit = /^\d+$/,
 		rInvalidDate = /Invalid|NaN/,
 		rRegEx = /^(\/(\\[^\x00-\x1f]|\[(\\[^\x00-\x1f]|[^\x00-\x1f\\\/])*\]|[^\x00-\x1f\\\/\[])+\/[gim]*)(,(.*))*$/,
-		rFirstToken = /(\w+)(,(.*))?/,
+		rFirstToken = /([^,]+)(,(.*))?/,
 		rFirstTwoToken = /(\w+),(\w+)(,(.*))?/;
-
-	/*
-	 * 1. the objects in path "*pathsOfInvalidModels", it holds all the path of model which is in error
-	 * 2. the object in path "model*errors", it holds all error message that is
-	 * 3. the object in path "model*isValid", it determine whether the model is valid
-	 * */
 
 	//check whether model's path or the path of model's children
 	// is listed in pathsOfInvalidModels
@@ -65,40 +62,12 @@
 		return true;
 	}
 
-	//model*isValid store a boolean value indicating whether
-	//the model is valid or not, it will be only created when it is manually checked
-	function getOrCreateIsValidFlag ( modelPath ) {
-		var isValidPathOfModel = modelPath + "*isValid";
-		//isValid is undefined initially
-		var isValid = via.get( isValidPathOfModel );
-		if (isUndefined( isValid )) {
-			//create model first, they will be updated, when "*pathsOfInvalidModels" is updated
-			//"*pathsOfInvalidModels" is updated when during the beforeUpdate event fire
-			rootModel.set( isValidPathOfModel, null );
-			subscribe( modelPath, "*pathsOfInvalidModels", "after*", synchronizeIsValidWithInvalidPathCount );
-		}
-		return isValid;
-
-	}
-
-	function synchronizeIsValidWithInvalidPathCount ( e ) {
-		via.set( e.subscriber.path + "*isValid", hasInvalidSubPathOfModel( e.subscriber.path ) );
-	}
-
-	viaFn.isValid = function( subPath ) {
-
-		var fullPath = this.fullPath( subPath ); // this.cd( subPath ).path;
-		//check whether validation has been performed before
-		//if so, just shortcut the process by calling isValid function
-		var isValid = getOrCreateIsValidFlag( fullPath );
-		if (isBoolean( isValid )) {
-			return isValid;
-		}
+	function traverseModelNeedValidation ( path, process ) {
 
 		//the following code try to trigger the "validate" event, so that the validator will
 		// be called to check current value of the model
-		//you can not call beforeUpdate, because there might be other non-validator handler
-		//that are attached to beforeUpdate
+		//you can not call afterUpdate, because there might trigger other non-validator handler
+		//that are attached to afterUpdate
 		var allSubscriptions = via.subscriptions();
 		var validatedPaths = {};
 
@@ -107,63 +76,23 @@
 			subscription = allSubscriptions[i];
 			var shouldRaiseValidationEvent = isString( (publisherPath = subscription.publisher) ) &&
 			                                 !validatedPaths[publisherPath] &&
-			                                 publisherPath.startsWith( fullPath ) &&
+			                                 publisherPath.startsWith( path ) &&
 			                                 subscription.eventTypes.contains( "validate" );
 
 			if (shouldRaiseValidationEvent) {
 
 				validatedPaths[publisherPath] = true;
+				process( publisherPath );
 
-				trigger(
-					publisherPath,
-					publisherPath,
-					"validate",
-					rootModel.get( publisherPath ) //proposed value
-				);
 			}
 		}
-
-		//after validate fired, we can check the invalid paths count for the model,
-		return hasInvalidSubPathOfModel( fullPath );
-	};
-
-	via.isValid = function( path ) {
-		return rootModel.isValid( path );
-	};
-
-	extend( via.Event.prototype, {
-
-		//1. add the error message to the *error object
-		//2. add the model path to *pathsOfInvalidModels
-		addError: function( error ) {
-
-			this.publisher.createIfUndefined( "*errors", [] )
-				.cd( "*errors" )
-				.pushUnique( error );
-
-			invalidPathesModel.pushUnique( this.publisher.path );
-
-		},
-
-		//1. remove the error message to the *error object
-		//2. remove the model path to *pathsOfInvalidModels if necessary
-		removeError: function( error ) {
-
-			if (this.publisher.createIfUndefined( "*errors", [] )
-				.cd( "*errors" )
-				.removeItem( error ).isEmpty()) {
-
-				invalidPathesModel.removeItem( this.publisher.path );
-			}
-		}
-
-	} );
+	}
 
 	function isModelRequired ( path ) {
 		var subscriptionByModel = via( path ).subsFromOthers();// subscriptions.getByPublisher( path );
 		for (var i = 0; i < subscriptionByModel.length; i++) {
 			var subscription = subscriptionByModel[i];
-			if (subscription.handler.get === via.handlers( "required" ).get) {
+			if (subscription.handler.get === via.handlers( "v_required" ).get) {
 				return true;
 			}
 		}
@@ -213,16 +142,17 @@
 		}
 	}
 
-	function buildValidationHandler ( validator ) {
+	function buildModelHandlerForValidation ( validator ) {
 
 		var validationHandler = {
+
 			get: function( e ) {
 				//"this" refers to the handler
 				//if it violate required rule, don't do further validation,
 				//as we expect the required rule will capture it first.
 				var isValid,
 					violateRequiredRule,
-					error = buildErrorMessage( validator, this.options );
+					error = buildErrorMessage( validator, e.handler.options );
 
 				//if model is empty, only check the "require" validator
 				//If it is required, then it is invalid, no further validation is checked
@@ -238,7 +168,7 @@
 
 				} else {
 
-					isValid = validator.isValid( e.proposed, this.options );
+					isValid = validator.isValid( e.proposed, e.handler.options );
 				}
 
 				if (!isValid) {
@@ -247,8 +177,8 @@
 					//add error when the current rule is the "required rule"
 					//or when "required" rule is not violated
 					if (!violateRequiredRule || validator.name === "required") {
-						e.error();
-						e.addError( error );
+						//e.error();
+						e.publisher.addError( error );
 					}
 
 					//this is equivalent the following
@@ -273,7 +203,7 @@
 
 				} else {
 
-					e.removeError( error );
+					e.publisher.removeError( error );
 				}
 
 			}
@@ -326,10 +256,11 @@
 			defaultOptions.errors[validatorName] = validator.error;
 		}
 
-		via.handlers( validatorName, buildValidationHandler( validator ) );
+		var handlerKey = "v_" + validatorName;
+		via.handlers( handlerKey, buildModelHandlerForValidation( validator ) );
 
 		//data-sub="`required:path" or data-sub="`required:path,options"
-		viaClasses[validatorName] = "!beforeUpdate validate:.|*" + validatorName;
+		viaClasses[validatorName] = "^afterUpdate validate:.|*" + handlerKey;
 
 	};
 
@@ -572,16 +503,29 @@
 			name: "equal",
 			error: "Please enter the same value again.",
 			isValid: function( value, options ) {
-				return rootModel.get( options.path ) === value;
+				return rootModel.get( options.comparePath ) === value;
 			},
 			initialize: function( publisher, subscriber, handler, options ) {
 				var match;
 				if (options && (match = rFirstToken.exec( options ))) {
 
+					var comparePath = publisher.cd( match[1] ).path;
 					handler.options = {
-						path: match[1],
+						comparePath: comparePath,
 						error: match[3]
 					};
+
+					publisher.subscribe( comparePath, "afterUpdate", function( e ) {
+						if (!this.isEmpty()) {
+							trigger(
+								this.path,
+								this.path,
+								"validate",
+								this.get() //proposed value
+							);
+						}
+					} );
+
 				} else {
 					throw "invalid options for equal validator";
 				}
@@ -608,7 +552,7 @@
 		},
 		{
 			name: "fixedValue",
-			error: "Please enter a value {0}",
+			error: 'Please enter value "{0}"',
 			isValid: function( value, options ) {
 				return value == options.fixedValue;
 			},
@@ -633,10 +577,14 @@
 	] );
 
 	function checkModel ( path, validator, options ) {
+
 		if (isString( validator )) {
-			subscribe( null, path, beforeUpdateAndValidate, "*" + validator, options );
+
+			subscribe( null, path, afterUpdateAndValidate, "*v_" + validator, options );
+
 		} else if (isFunction( validator )) {
-			subscribe( null, path, beforeUpdateAndValidate, buildValidationHandler( {
+
+			subscribe( null, path, afterUpdateAndValidate, buildModelHandlerForValidation( {
 				isValid: validator,
 				error: options
 			} ) );
@@ -644,33 +592,127 @@
 		return this;
 	}
 
-	//via("x").check(validatorName, error)
-	//example
-	//via("x").check("number", "my error message")
-	//or
-	//via("x").check(isValidFn, error)
-	//example
-	//via("x").check(function( value ) { return false; }, "my error message");
-	viaFn.check = function( validator, options ) {
-		checkModel( this.path, validator, options );
-		return this;
-	};
-
-	viaFn.checkAll = function( validatorSet ) {
-		var subPath, fullPath, validators, i, validator;
-		for (subPath in validatorSet) {
-			fullPath = this.fullPath( subPath );
-			validators = validatorSet[subPath];
-			for (i = 0; i < validators.length; i++) {
-				validator = validators[i];
-				if (isString( validator ) || isObject( validator )) {
-					checkModel( fullPath, validator );
-				} else if (isArray( validator )) {
-					checkModel( fullPath, validator[0], validator[1] );
-				}
-			}
+	function clearErrors ( path ) {
+		var errorsModel = via( path + "*errors" );
+		if (!errorsModel.isEmpty()) {
+			errorsModel.clear();
+			invalidPathesModel.removeItem( path );
 		}
-		return this;
+	}
+
+	extend( viaFn, {
+
+		/*
+		 * 1. the objects in path "*pathsOfInvalidModels", it holds all the path of model which is in error
+		 * 2. the object in path "model*errors", it holds all error message that is
+		 * */
+		isValid: function( subPath ) {
+
+			var fullPath = this.fullPath( subPath ); // this.cd( subPath ).path;
+			traverseModelNeedValidation( fullPath, function( publisherPath ) {
+				trigger(
+					publisherPath,
+					publisherPath,
+					"validate",
+					rootModel.get( publisherPath ) //proposed value
+				);
+			} );
+
+			//after validate fired, we can check the invalid paths count for the model,
+			return hasInvalidSubPathOfModel( fullPath );
+		},
+
+		//via("x").check(validatorName, error)
+		//example
+		//via("x").check("number", "my error message")
+		//
+		//via("x").check(isValidFn, error)
+		//example
+		//via("x").check(function( value ) { return false; }, "my error message");
+		check: function( validator, options ) {
+			if (isObject( validator )) {
+				var subPath,
+					fullPath,
+					validators,
+					i,
+					currentValidator,
+					validatorSet = validator;
+
+				for (subPath in validatorSet) {
+					fullPath = this.fullPath( subPath );
+					validators = validatorSet[subPath];
+					for (i = 0; i < validators.length; i++) {
+						currentValidator = validators[i];
+						if (isString( currentValidator ) || isObject( currentValidator )) {
+							checkModel( fullPath, currentValidator );
+						} else if (isArray( currentValidator )) {
+							checkModel( fullPath, currentValidator[0], currentValidator[1] );
+						}
+					}
+				}
+			} else {
+
+				if (isFunction( validator ) || (isString( validator ) && validator.startsWith( "#" ))) {
+
+					if (isString( validator )) {
+						validator = this.helper( validator.substr( 1 ) );
+					}
+
+					subscribe( null, this.path, afterUpdateAndValidate, function( e ) {
+						e.publisher.clearErrors();
+						var errorMessage = validator( e.publisher.get() );
+						if (isString( errorMessage )) {
+							e.publisher.addError( errorMessage );
+						}
+
+						if (errorMessage === false) {
+							e.publisher.addError( defaultOptions.errors.defaultError );
+						}
+					} );
+
+				} else if (isString( validator )) {
+
+					checkModel( this.path, validator, options );
+
+				}
+
+			}
+			return this;
+		},
+
+		clearErrors: function( subPath ) {
+			var fullPath = this.fullPath( subPath );
+			clearErrors( fullPath );
+
+			if (!isPrimitive( this.get( subPath ) )) {
+				traverseModelNeedValidation( fullPath, clearErrors );
+			}
+		},
+
+		addError: function( error ) {
+			this.createIfUndefined( "*errors", [] )
+				.cd( "*errors" )
+				.pushUnique( error );
+
+			invalidPathesModel.pushUnique( this.path );
+			return this;
+
+		},
+
+		removeError: function( error ) {
+			if (this.createIfUndefined( "*errors", [] )
+				.cd( "*errors" )
+				.removeItem( error ).isEmpty()) {
+
+				invalidPathesModel.removeItem( this.path );
+			}
+			return this;
+		}
+
+	} );
+
+	via.isValid = function( path ) {
+		return rootModel.isValid( path );
 	};
 
 	function isEmptyString ( value ) {
@@ -682,46 +724,81 @@
 		invalidPathesModel.removeItem( path );
 	} );
 
-	//add a click handler to element to validate
-	customSubsProps.validate = function( elem, parseContext ) {
-		//directly subscribe event instead of push entry into handlers,
-		// so that it is the first subscriptions, and it will be evaluated first
-		subscribe( parseContext.ns, elem, "click", "*validate" );
-		getOrCreateIsValidFlag( parseContext.ns );
-	};
+	via.handlers( {
+		validate: function( e ) {
+			if (!via.isValid( this.path )) {
+				//because it is the first handler, e.stopImmediatePropagation will
+				//stop process all other handler
+				e.stopImmediatePropagation();
+			}
+		},
 
-	via.handlers( "validate", function( e ) {
-		if (!via.isValid( e.subscriber.path )) {
-			e.stopImmediatePropagation();
+		//a model handler, you should use it with model model*showError
+		// like ^after*:*errors|*showError
+		showError: function( e ) {
+			//e.publisher points to "model*errors"
+			if (e.publisher.isEmpty()) {
+
+				this
+					.removeClass( "error" )
+					.next( "span.error" )
+					.remove();
+
+			} else {
+
+				this
+					.addClass( "error" )
+					.next( "span.error" )
+					.remove()
+					.end()
+					.after( "<span class='error'>" + e.publisher.get() + "</span>" );
+			}
 		}
 	} );
 
-	//a model handler, you should use it with model model*showError
-	// like !after*:*errors|*showError
-	via.handlers( "showError", function( e ) {
-		//e.publisher points to "model*errors"
-		if (e.publisher.isEmpty()) {
+	extend( customSubsProps, {
 
-			e.subscriber
-				.removeClass( "error" )
-				.next( "span.error" )
-				.remove();
+		check: function( elem, parseContext, subscriptions, options ) {
+			if (!options) {
+				throw "missing validator path";
+			}
+			if (!options.startsWith( "#" )) {
+				options = "#" + options;
+			}
+			via( parseContext.ns ).check( options );
+		},
 
-		} else {
+		//add a click handler to element to validate
+		validate: function( elem, parseContext /*, subscriptions, options*/ ) {
+			//directly subscribe event instead of push entry into handlers,
+			// so that it is the first subscriptions, and it will be evaluated first
+			subscribe( parseContext.ns, elem, "click", "*validate" );
+		},
 
-			e.subscriber
-				.addClass( "error" )
-				.next( "span.error" )
-				.remove()
-				.end()
-				.after( "<span class='error'>" + e.publisher.get() + "</span>" );
+		resetFormErrors: function( elem, parseContext, subscriptions, options ) {
+			$( elem ).bind( "reset", function() {
+				setTimeout( function() {
+					$( elem ).find( ":input" ).trigger( "resetForm" );
+					via( parseContext.ns ).clearErrors();
+				}, 1 );
+			} );
 		}
 	} );
 
-	viaClasses.showError = "!after*:*errors|*showError";
-	//data-sub="`validate:path" or data-sub="`validate", add a click handler
-	//to a button so that on click will validate
-	viaClasses.validate = "@validate";
+	extend( viaClasses, {
+
+		showError: "^after*:*errors|*showError",
+		//data-sub="`validate:path" or data-sub="`validate", add a click handler
+		//to a button so that on click will validate
+		validate: "@validate:.",
+		//don't use this : viaClasses.validate = "$click:.|*validate";
+		//because it is not garantee to be the first click handler
+
+		check: "@check:.",
+
+		resetFormErrors: "@resetFormErrors:."
+
+	} );
 
 	//#merge
 })( jQuery, via );

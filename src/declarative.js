@@ -1,5 +1,5 @@
 //
-//<@depends>event.js, model.js</@depends>
+//<@depends>eventSubscription.js, model.js</@depends>
 //#merge
 (function( $, via ) {
 	//#end_merge
@@ -12,13 +12,15 @@
 	var toTypedValue = via.util.toTypedValue;
 	var mergeLogicalPath = via.mergeLogicalPath;
 	var isUndefined = via.util.isUndefined;
-	var rBeginDotOrStar = /^[\.\*]/;
 	var subscribe = via.subscribe;
 	//#end_merge
 
 	var
 		//a declaration is like @property:value or @property
-		rDeclaration = /\s*([`@$!])([#\w\. \*]+)(:([\*\.\w$\/][^`@$!]*))*/g,
+		//rDeclaration = /\s*([`@$\^])([#\w\. \*]+)(:([\*\.\w$\/][^`@$\^]*))*/g,
+		//rDeclaration = /\s*([`@$\^])([#\w\. \*]+):?/g,
+		rDeclaration = /\s*([`@\^])([#\w\. \*]+):?|\s*(\$)([#\w\. \*]+):/g,
+
 
 		rSemicolonSeparator = /\s*;\s*/g,
 		//rCommaSeparator = /\s*,\s*/g,
@@ -42,15 +44,33 @@
 		if (!dataSubString) {
 			return;
 		}
-		var rtn = {},
+		var i=0,
+			rtn = {},
+			propertyList = [],
 			match, propertyName, propertyValue, seperator;
 
 		while ((match = rDeclaration.exec( dataSubString ))) {
+			propertyList.push( {
+				seperator: match[1] || match[3],
+				propertyName: $.trim(match[2] || match[4]),
+				from: (RegExp.leftContext + RegExp.lastMatch).length
+			} );
+			if (i !== 0) {
+				propertyList[i - 1].to = RegExp.leftContext.length;
+			}
+			i++;
+		}
+		if (propertyList.length) {
+			propertyList[propertyList.length - 1].to = dataSubString.length;
+		}
 
-			seperator = match[1];
+		for (i = 0; i < propertyList.length; i++) {
+			var item = propertyList[i];
 
-			propertyName = $.trim( match[2] );
-			propertyValue = $.trim( match[4] ) || null;
+			seperator = item.seperator;
+			propertyName = item.propertyName;
+			propertyValue = $.trim( dataSubString.substring( item.from, item.to ) ) || null;
+
 
 			// currently we only support either "@", "`" , "$" and "!" seperator
 			if (seperator == "`") {
@@ -67,8 +87,8 @@
 				propertyValue = propertyName + "|" + propertyValue;
 				propertyName = "pub";
 
-			} else if (seperator == "!") {
-				//!event:path|handler|options|delegate --> @sub:path|events|handler|options|delegate
+			} else if (seperator == "^") {
+				//^event:path|handler|options|delegate --> @sub:path|events|handler|options|delegate
 				//this.get().splice( index, 0, item );
 				propertyValue = propertyValue.split( rSubscriptionValueSeperator );
 				propertyValue.splice( 1, 0, propertyName );
@@ -404,14 +424,17 @@
 
 		$( elem ).dataSub( elementDataSub );
 
-		if (elementDataSub.ns && elementDataSub.ns !== ".") {
+		var ns = elementDataSub.ns;
+		if (ns && ns !== ".") {
 			//this is the case when path is not empty, but it is not "."
 
-			if (rBeginDotOrStar.exec( elementDataSub.ns )) {
-				//this is the case when path begin with . or *
-				// like .firstName or *.index,
-				elementDataSub.ns = mergeLogicalPath( inheritParentProp( elem, "ns" ), elementDataSub.ns );
-			}
+			//			if (rBeginDotOrStar.exec( elementDataSub.ns )) {
+			//				//this is the case when path begin with . or *
+			//				// like .firstName or *.index,
+			//				elementDataSub.ns = mergeLogicalPath( inheritParentProp( elem, "ns" ), elementDataSub.ns );
+			//			}
+
+			elementDataSub.ns = mergeLogicalPath( inheritParentProp( elem, "ns" ), ns );
 
 		} else {
 
@@ -444,7 +467,7 @@
 
 		//only elem has data-sub="xxx" attribute
 		//prevent a elem from being processed twice
-		if (!$( elem ).attr( defaultOptions.subsAttr ) || !$( elem ).dataSub()) {
+		if ($( elem ).attr( defaultOptions.subsAttr ) && !$( elem ).dataSub()) {
 
 			var i,
 				subscription,

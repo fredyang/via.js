@@ -167,6 +167,7 @@
 			} else {
 				asc ? this.sort() : this.sort().reverse();
 			}
+			return this;
 		}
 	} );
 
@@ -380,13 +381,17 @@
 
 			var physicalPath = accessor.physicalPath;
 
-			if (!force && trigger( physicalPath, physicalPath, beforeUpdate, value ).hasError()) {
-				return false;
+			var originalValue = accessor.hostObj[accessor.index];
+			//use "==" is purposeful, we want it to be little bit
+			//flexible for example, if model value is null
+			//and textbox value is "", we don't want to "" to
+			//be set, same for "9" and 9
+			if (originalValue == value) {
+				return this;
 			}
 
-			var originalValue = accessor.hostObj[accessor.index];
-			if (originalValue === value) {
-				return this;
+			if (!force && trigger( physicalPath, physicalPath, beforeUpdate, value ).hasError()) {
+				return false;
 			}
 
 			accessor.hostObj[accessor.index] = value;
@@ -405,29 +410,29 @@
 				return this;
 			}
 
-			var accessor = this.accessor( subPath );
+			var accessor = this.accessor( subPath ),
+				hostObj = accessor.hostObj,
+				physicalPath = accessor.physicalPath,
+				isHostObjectArray = isArray( hostObj );
 
-			var physicalPath = accessor.physicalPath;
-
-			//			if (!force && trigger( physicalPath, physicalPath, "beforeDel" ).hasError()) {
 			if (trigger( physicalPath, physicalPath, "beforeDel" ).hasError()) {
 				return false;
 			}
 
-			for (var i = 0; i < disposingModelCallbacks.length; i++) {
-				disposingModelCallbacks[i]( physicalPath, accessor.logicalPath );
-			}
+			var removedValue = hostObj[accessor.index];
 
-			var removedValue = accessor.hostObj[accessor.index];
+			if (isHostObjectArray) {
 
-			if (isArray( accessor.hostObj )) {
-
-				accessor.hostObj.splice( accessor.index, 1 );
+				hostObj.splice( accessor.index, 1 );
 
 			} else {
 
-				delete accessor.hostObj[accessor.index];
+				delete hostObj[accessor.index];
 
+			}
+
+			for (var i = 0; i < disposingModelCallbacks.length; i++) {
+				disposingModelCallbacks[i]( physicalPath, accessor.logicalPath, isHostObjectArray );
 			}
 
 			trigger( physicalPath, physicalPath, "afterDel", undefined, removedValue );
@@ -549,7 +554,6 @@
 
 		removeAt: function( index ) {
 			this.del( index );
-			alignModelLinks( this.path, index );
 			return this;
 		},
 
@@ -585,7 +589,7 @@
 		clear: function() {
 			var items = this.get();
 			items.splice( 0, items.length );
-			trigger( this.path, this.path, "create" );
+			trigger( this.path, this.path, "afterCreate" );
 			return this;
 		},
 
@@ -677,6 +681,14 @@
 				}
 			}
 			return rtn;
+		},
+
+		toJSON: function( subPath ) {
+			return JSON.stringify( this.get( subPath ) );
+		},
+
+		compare: function( expression ) {
+			return eval( "this.get()" + expression );
 		}
 	};
 
@@ -1015,7 +1027,10 @@
 						localStorage.setItem( key, JSON.stringify( value ) );
 					}
 				}
-			}
+			},
+
+			_modelLinks: modelLinks
+
 		},
 
 		//add a callback function which will be run in
@@ -1073,54 +1088,15 @@
 				//use rule's context as context
 				//.. or .*
 				//$2 is either "." or "*"
-				return remaining ? mergedContext + match[2] + remaining :
-					match[2] === "*" ? mergedContext + "*" :
-						mergedContext;
+				return remaining ?
+					(mergedContext ? mergedContext + match[2] + remaining : remaining) :
+					(match[2] === "*" ? mergedContext + "*" : mergedContext);
 
 				//if subPath is like .ab or *ab
 			}
 			return context + subPath;
 		}
 	} );
-
-	function alignModelLinks ( parentPath, deletedRowIndex ) {
-
-		var oldItemPathToReplace;
-
-		var temp = "(" + parentPath.replace( ".", "\\." ) + "\\.)(\\d+)|" +
-		           "(" + parentPath.replace( ".", "#+" ) + "#+)(\\d+)";
-
-		oldItemPathToReplace = new RegExp( temp, "g" );
-
-		for (var key in modelLinks) {
-			if (hasOwn.call( modelLinks, key )) {
-
-				var paths = modelLinks[key];
-				var newKey = key.replace( oldItemPathToReplace, indexReplacer );
-
-				if (newKey !== key) {
-					modelLinks[newKey] = paths;
-					delete modelLinks[key];
-				}
-
-				for (var i = 0; i < paths.length; i++) {
-					var oldPath = paths[i];
-					var newPath = oldPath.replace( oldItemPathToReplace, indexReplacer );
-					if (newPath != oldPath) {
-						paths[i] = newPath;
-					}
-				}
-			}
-		}
-	}
-
-	function indexReplacer ( match, $1, $2, $3, $4 ) {
-		if ($1) {
-			return $1 + ($2 - 1);
-		} else {
-			return $3 + ($4 - 1);
-		}
-	}
 
 	$( "get,set,del,extend".split( "," ) ).each( function( index, value ) {
 		via[value] = function() {
@@ -1133,7 +1109,6 @@
 	//#merge
 	via.debug.shadowNamespace = shadowNamespace;
 	via.debug.parseWatchedPaths = parseWatchedPaths;
-	via.debug.modelLinks = modelLinks;
 	via.debug.removeAll = function() {
 		for (var key in repository) {
 			if (key !== shadowNamespace) {

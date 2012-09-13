@@ -14,7 +14,7 @@ function assertEmptyDb () {
 	delete rootCopy.__via;
 
 	var empty = $.isEmptyObject( rootCopy )
-		&& $.isEmptyObject( via.modelLinks );
+		&& $.isEmptyObject( via.util._modelLinks );
 
 	if (via.subscriptions) {
 		empty = empty && (via.subscriptions().length === 0);
@@ -566,6 +566,8 @@ test( "via.mergeLogicalPath", function() {
 	equal( mergeLogicalPath( "a.b", "*c" ), "a.b*c", "if index is '*x', combine context and index as mergePath" );
 
 	equal( mergeLogicalPath( "a*b", "*c" ), "a*b*c", "if context is a*b,  index is *c, mergePath is a*b*c" );
+
+	equal( mergeLogicalPath( "a", "..c" ), "c", "if index is '..x', combine context's context and index as mergePath" );
 
 	equal( mergeLogicalPath( "a.b", "..c" ), "a.c", "if index is '..x', combine context's context and index as mergePath" );
 

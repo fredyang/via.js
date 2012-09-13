@@ -1,7 +1,7 @@
 //
 /*
  <@depends>
- event.js,
+ eventSubscription.js,
  model.js,
  declarative.js,
  template.js,

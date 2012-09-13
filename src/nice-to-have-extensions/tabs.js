@@ -1,5 +1,5 @@
 //
-//<@depends>event.js, model.js, declarative.js, template.js</@depends>
+//<@depends>eventSubscription.js, model.js, declarative.js, template.js</@depends>
 
 //there are a few concepts here
 
@@ -26,18 +26,18 @@
 	//when model change, change view
 	via.handlers( {
 		"updateTab": function( e ) {
-			var options = this.options.split( "," );
+			var options = e.handler.options.split( "," );
 			var tabId = options[0];
 			var selectedClass = options[1] || defaultOptions.selectedClass;
 
 			if (e.publisher.get() == tabId) {
-				e.subscriber.addClass( selectedClass );
+				this.addClass( selectedClass );
 			} else {
-				e.subscriber.removeClass( selectedClass );
+				this.removeClass( selectedClass );
 			}
 		},
 		selectTab: function( e ) {
-			e.subscriber.set( this.options.split( "," )[0] );
+			this.set( e.handler.options.split( "," )[0] );
 		}
 	} );
 
@@ -52,7 +52,7 @@
 	//which does not match with the model value
 	//
 	//<div class="tab" data-sub="`tab:modelPath|tabId">content</div>
-	viaClasses.tab = "!init afterUpdate:.|*updateTab";
+	viaClasses.tab = "^init afterUpdate:.|*updateTab";
 
 	//class which include tab class, with additonal behavior
 	//
@@ -72,12 +72,12 @@
 	//	----------- the following update tab holder ------------
 	via.handlers( "updateTabHolder", function( e ) {
 		var selectedTabId = e.publisher.get(),
-			options = (this.options || "").split( "," ),
+			options = (e.handler.options || "").split( "," ),
 			tabIdAttribute = options[0] || defaultOptions.tabIdAttribute,
 			selectedClass = options[1] || defaultOptions.selectedClass,
 			childSelector = "[" + tabIdAttribute + "]";
 
-		e.subscriber.find( childSelector ).andSelf().each( function( index, elem ) {
+		this.find( childSelector ).andSelf().each( function( index, elem ) {
 			var $elem = $( elem ),
 				tabId = $elem.attr( tabIdAttribute );
 			if (tabId == selectedTabId) {
@@ -104,7 +104,7 @@
 	//apply this class the holder of tab
 	//data-sub="`tabHolder:doc.topModule|selectedClass,attributeOfSelectedId
 	//data-sub="`tabHolder:doc.topModule|selected,topModule
-	viaClasses.tabHolder = "!init100 afterUpdate:.|*updateTabHolder";
+	viaClasses.tabHolder = "^init100 afterUpdate:.|*updateTabHolder";
 
 	//tabSelectorHolder is superset of tab holder
 	//apply this class to the holder of tab selector such as ul

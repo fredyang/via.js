@@ -1,5 +1,5 @@
 //
-//<@depends>event.js, model.js, declarative.js</@depends>
+//<@depends>eventSubscription.js, model.js, declarative.js</@depends>
 //#merge
 (function( $, via ) {
 	//#end_merge
@@ -93,7 +93,7 @@
 
 			var publisher = e.publisher,
 
-				handler = this,
+				handler = e.handler,
 
 				//handler.templateId, handler.useDataSourceAsArrayItem, handler.engineName is
 				//built in during initialization , see initializers.buildTemplateOptions
@@ -140,7 +140,7 @@
 
 	//when the template is render, need to recursively import declarative subscritpions
 	finalizers.importSubs = function( value, e ) {
-		//e.subscriber.children().importSubs();
+		//this.children().importSubs();
 		$( value ).importSubs();
 
 	};
@@ -151,15 +151,24 @@
 		render: buildTemplateHandler( "get", "replaceWith" )
 	} );
 
+	//this is for render an array inside of container view
 	//data-sub="@class:foreach|path|templateId"
-	//or data-sub="`foreach:path|templateId"
-	viaClasses.foreach = "!init after*.:.|*renderInside";
+	//or data-sub="`forArray:path|templateId"
+	viaClasses.forArray = "^init after*. after*.1:.|*renderInside";
 
-	viaClasses.renderInside = "!init.:.|*renderInside";
+	//this is for render a single object inside a container
+	viaClasses.forObject = "^init after*.:.|*renderInside";
+
+	//this is for render everything, and update view on change of any decedent
+	viaClasses.forAll = "^init after*:.|*renderInside";
+
+	//this is for render everything but just once, after that it will not update itself
+	viaClasses.forOnce = "^init:.|*renderInside";
+
 
 	//data-sub="@class:render|path|templateId"
 	//or data-sub="`render:path|templateId"
-	viaClasses.render = "!init:.|*render";
+	viaClasses.render = "^init:.|*render";
 
 	//$("div").renderInside(templateId, path)
 	//$("div").renderInside(templateId, path, fn)

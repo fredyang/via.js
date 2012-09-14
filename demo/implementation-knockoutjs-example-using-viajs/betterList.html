@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		select {
+			width: 200px;
+			height: 100px;
+		}
+	</style>
+</head>
+<body>
+<div data-sub="@ns:betterList">
+	New item: <input data-sub='`val:newFruit|keyup'/>
+	<button type="submit" data-sub="`enable:newFruit $click:addFruit">Add</button>
+	<p>Your items:</p>
+	<select multiple="multiple" data-sub="`options:fruits `val:selectedFruits">
+	</select>
+
+	<div>
+		<input type="button" value="remove" data-sub="$click:removeSelectedFruits">
+		<input type="button" value="sort" data-sub="$click:sortFruit">
+	</div>
+</div>
+
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/modelProxy.js"></script>
+<script src="../../src/eventSubscription.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../ref/jsrender.js"></script>
+<script src="../../src/template-engines/template-engine-jsrender.js"></script>
+
+<script>
+	via.set( "betterList", {
+		fruits: ["Banana", "Apple", "Orange"],
+		newFruit: "",
+		addFruit: function( e ) {
+			var subscriber = this;
+			subscriber.cd( "..fruits" ).push( subscriber.get( "..newFruit" ) );
+			subscriber.set( "..newFruit", "" );
+		},
+		selectedFruits: [],
+		removeSelectedFruits: function( e ) {
+			this.cd( "..fruits" ).removeItems( this.get( "..selectedFruits" ) );
+		},
+		sortFruit: function( e ) {
+			this.cd( "..fruits" ).sort();
+		}
+	} );
+
+
+</script>
+
+</body>
+</html>

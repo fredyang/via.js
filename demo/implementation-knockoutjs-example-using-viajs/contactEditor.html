@@ -1,0 +1,204 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		table {
+			width: 100%;
+			border-collapse: collapse;;
+			border-spacing: 0;
+		}
+
+		td, th {
+			border: solid 1px #000000;
+			vertical-align: top;
+		}
+
+		.error {
+			border: solid 1px red;
+			background-color: #ffcccc;
+		}
+
+	</style>
+
+</head>
+<body data-sub="@ns:contactApp">
+
+<h2>Contacts app</h2>
+
+<p>the app has collection of companies, each company has a collection of contact, each contact has
+	collection of phones</p>
+<table>
+	<tr>
+		<th>Company Name</th>
+		<th>Conacts</th>
+	</tr>
+	<tbody data-sub="`alignableListView:companies|company">
+	</tbody>
+	<tr>
+		<td colspan="2">
+			<button href='#' data-sub='$click:addCompany'>Add company</button>
+		</td>
+	</tr>
+</table>
+
+
+<div data-sub="`showValue:companies"></div>
+
+<!--<input type="button" value="submit" data-sub="`validate:companies `alert:.|Data has been submitted."/>-->
+
+<input type="button" value="submit"
+	       data-sub="`alert:.|Done!
+	                `validate:companies"/>
+
+
+<script type="jsrender" id="company">
+	<tr data-sub="{{addRowItemNs /}}">
+		<td>
+			<input type="text"
+			       data-sub="@ns:companyName
+			                `val:.|keyup
+			                `required
+			                `showError">
+
+			<div>
+				<button href='#' data-sub='$click:.|*del'>Delete</button>
+			</div>
+		</td>
+		<td>
+			<table>
+				<tr>
+					<th>First name</th>
+					<th>Last name</th>
+					<th>Phone numbers</th>
+				</tr>
+				<tbody data-sub="`alignableListView:contacts|contact">
+
+				</tbody>
+			</table>
+			<p>
+				<button data-sub='$click:addContact'>Add a contact</button>
+			</p>
+		</td>
+	</tr>
+</script>
+
+
+<script type="jsrender" id="contact">
+	<tr data-sub="{{addRowItemNs /}}">
+		<td>
+			<input data-sub='`val:firstName|keyup'/>
+
+			<div>
+				<button data-sub='$click:.|*del'>Delete</button>
+			</div>
+		</td>
+		<td><input data-sub='`val:lastName|keyup'/></td>
+		<td>
+			<table>
+				<tr>
+					<th>type</th>
+					<th>number</th>
+					<th></th>
+				</tr>
+				<tbody data-sub="`alignableListView:phones|phone">
+
+				</tbody>
+			</table>
+			<p>
+				<button data-sub='$click:addPhone'>Add number</button>
+			</p>
+		</td>
+	</tr>
+</script>
+<script type="jsrender" id="phone">
+	<tr data-sub="{{addRowItemNs /}}">
+		<td>
+			<input data-sub='`val:type|keyup'/>
+		</td>
+		<td><input data-sub='`val:number|keyup'/></td>
+		<td>
+			<button href='#' data-sub='$click:.|*del'>Delete</button>
+		</td>
+	</tr>
+</script>
+
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/modelProxy.js"></script>
+<script src="../../src/eventSubscription.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../ref/jsrender.js"></script>
+<script src="../../src/template-engines/template-engine-jsrender.js"></script>
+<script src="../../src/nice-to-have-extensions/alignableListView.js"></script>
+<script src="../../src/nice-to-have-extensions/validation.js"></script>
+
+<script>
+
+	(function() {
+		//contact is plain old javascript object
+		var Contact = via.util.factory(
+			function Contact ( contact ) {
+				$.extend( this, contact );
+			}, {
+				addPhone: function( e ) {
+					this.cd( "..phones" ).push( {
+						type: "",
+						number: ""
+					} );
+				}
+			}
+		);
+
+		var Company = via.util.factory(
+			function Company ( companyName, contacts ) {
+				this.companyName = companyName;
+				this.contacts = contacts || [];
+			}, {
+				addContact: function( e ) {
+					this.cd( "..contacts" ).push( Contact( {
+						firstName: "",
+						lastName: "",
+						phones: []
+					} ) );
+				}
+			}
+		);
+
+		via.set( "contactApp", {
+				companies: [
+					Company( "ibm", [
+
+						Contact( {
+							firstName: "Danny",
+							lastName: "LaRusso",
+							phones: [
+								{ type: "Mobile", number: "(555) 121-2121" },
+								{ type: "Home", number: "(555) 123-4567" }
+							]
+						} ),
+
+						Contact( {
+							firstName: "Sensei",
+							lastName: "Miyagi",
+							phones: [
+								{ type: "Mobile", number: "(555) 444-2222" },
+								{ type: "Home", number: "(555) 999-1212" }
+							]
+						} )
+					] )
+				],
+				addCompany: function( e ) {
+					this.cd( "..companies" ).push( Company( "" ) );
+				}
+			}
+		);
+
+	})();
+
+</script>
+
+</body>
+</html>

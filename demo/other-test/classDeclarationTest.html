@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>tab and history</title>
+</head>
+<body>
+
+
+<!--`className:pathOfHandler-->
+<input type="button" value="$click:alert" data-sub="$click:alert"/>
+
+<!--`className:modelPath|#pathOfHandler-->
+<input type="button" value="$click:person.firstName|#/alert"
+       data-sub="$click:person.firstName|#/alert"/>
+
+<input type="button" value="`alert:person.firstName" data-sub="`alert:person.firstName"/>
+
+<input type="button" value="`alert:.|hello" data-sub="`alert:.|hello"/>
+
+
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/modelProxy.js"></script>
+<script src="../../src/eventSubscription.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+
+
+<script>
+	via().extend(
+		{
+			person: {
+				firstName: "John",
+				lastName: "Doe"
+			},
+
+			alert: function( e ) {
+				debugger;
+				alert( "hi" );
+			}
+
+		} );
+
+</script>
+
+</html>

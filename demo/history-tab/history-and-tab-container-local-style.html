@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>tab and history</title>
+	<style type="text/css">
+		div[data-tab] {
+			display: none;
+		}
+
+		div[data-tab].focus {
+			display: block;
+		}
+
+		.tabs li {
+			float: left;
+			list-style-type: none;
+			cursor: pointer;
+			border-top: solid 1px;
+			border-bottom: solid 1px;
+			border-left: solid 1px;
+			border-collapse: collapse;
+			padding: 10px;
+			width: 100px;
+		}
+
+		.tabs [data-tab=news].focus {
+			background-color: rgba(84, 102, 214, 0.29);
+		}
+
+		.tabs [data-tab=opinion].focus {
+			background-color: rgb(180, 123, 57);
+		}
+
+		.tabs [data-tab=sports].focus {
+			background-color: rgb(122, 180, 71);
+		}
+
+		.tabs li:last-child {
+			border-right: solid 1px;
+		}
+
+		.tabs ul {
+			clear: both;
+			overflow: auto;
+		}
+
+	</style>
+</head>
+<body>
+<h1>click tabs, enter text, test back and forward button and save url</h1>
+
+<div class="tabs">
+	<ul data-sub="`tabSelectorHolder:category">
+		<li data-tab="news">News</li>
+		<li data-tab="opinion">Opinion</li>
+		<li data-tab="sports">Sports</li>
+	</ul>
+</div>
+<!--or <div data-sub="`tabHolder:category">, the div.tab is optional
+, it is used to speed up the selection
+-->
+<div class="tabs" data-sub="`tabHolder:category">
+	<div data-tab="news">
+		<p>News News News News News News News News News News News News News News News News News News
+			News News News News News News News News News News News News News News News News News
+			News News News News News News News News News News News News News News News News News
+			News News News News News News News News News News News News News News News News News
+			News News News News News News News News News News News News News
+			News News News News News News News NewsNews News News News News News News News News News
+			News News News News News News News News
+			News News News News News News News News News News News News News News News News News
+			News News News News News News News News News News News News News News News News News
+			News News News News News News News News News News News News News News News News News
+			News News News News News News News News News News News News News
+			News News News News News News News News </p>
+	</div>
+	<div data-tab="opinion">
+		<p>Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion
+			Opinion
+			Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion
+			Opinion
+			Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion
+			Opinion
+			Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion
+			Opinion
+			Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion
+			Opinion
+			Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion
+			Opinion
+			Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion
+			Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion
+			Opinion
+			Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion
+			Opinion
+			Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion
+			Opinion
+			Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion
+			Opinion
+			Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion Opinion </p>
+	</div>
+
+	<div data-tab="sports">
+		<p>Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports
+			Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports
+			Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports
+			Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports
+			SportsSports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports
+			Sports
+			Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports
+			Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports
+			Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports Sports
+			Sports </p>
+
+	</div>
+
+	<div data-sub="@ns:person">
+
+		<input type="text" data-sub="`val:.firstName"/>
+
+		<div data-sub="`text:.firstName"></div>
+
+		<input type="text" data-sub="`val:.lastName"/>
+
+		<div data-sub="`text:.lastName"></div>
+	</div>
+</div>
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../ref/jquery.ba-bbq.min.js"></script>
+
+<script src="../../src/modelProxy.js"></script>
+<script src="../../src/eventSubscription.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../src/nice-to-have-extensions/history.js"></script>
+<script src="../../src/nice-to-have-extensions/tabs.js"></script>
+
+<script>
+	via.options.selectedClass = "focus";
+
+	via().extend(
+		{
+			person: {
+				firstName: "John",
+				lastName: "Doe"
+			},
+
+			category: "news"
+		} );
+
+	via.trackChange( "person.firstName", "person.lastName", "category" );
+</script>
+
+</html>

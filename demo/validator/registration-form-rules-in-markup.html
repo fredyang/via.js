@@ -1,0 +1,128 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		.error {
+			border: solid 1px red;
+			background-color: #ffcccc;
+		}
+	</style>
+</head>
+<body>
+
+<form id="myform" data-sub="@ns:registration`resetFormErrors" novalidate="novalidate">
+	<fieldset>
+		<h3>Sample registration form</h3>
+
+		<p> Enter bad values and then press the submit button. </p>
+
+		<p>
+			<label>email *</label>
+
+			<input type="text"
+			       data-sub="@ns:email
+			                `required
+			                `email
+			                `val
+			                `showError"/>
+
+		</p>
+
+		<p>
+			<label>website *</label>
+
+			<input type="text"
+			       data-sub="@ns:url
+			                `required
+			                `url
+			                `val
+			                `showError"/>
+		</p>
+
+		<p>
+			<label>name *</label>
+			<input type="text"
+			       data-sub="@ns:name
+			                `required
+			                `regex:.|/[a-zA-Z ]{5,}/,You must specify a valid name.
+			                `val
+			                `showError"/>
+		</p>
+
+		<p>
+			<label>age</label>
+			<input type="text"
+			       data-sub="@ns:age
+			                 `number
+			                 `val
+			                 `showError"/>
+		</p>
+
+		<p>
+			<label>password</label>
+			<input type="password"
+			       data-sub="@ns:password
+			                 `val
+			                 `required
+			                 `showError"/>
+		</p>
+
+		<p>
+			<label>repeat password</label>
+			<input type="password"
+			       data-sub="@ns:repeat_password
+			       			 `val
+			       			 `required
+			       			 `equal:.|..password,Please enter the same password.
+			       			 `showError"/>
+		</p>
+
+		<p id="terms">
+			<label>I accept the terms</label>
+			<input type="checkbox" data-sub="@ns:accepted
+											 `val
+											 `required
+											 `fixedValue|true,You must agree the terms
+											 `showError"/>
+		</p>
+		<input type="button" value="submit"
+		       data-sub="`alert:/message
+		                `validate"/>
+
+		<button type="reset">Reset</button>
+	</fieldset>
+</form>
+
+<p>
+	global error: <span id="globalError" data-sub="`html:*pathsOfInvalidModels"></span>
+</p>
+
+<p data-sub="`showValue:."></p>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/modelProxy.js"></script>
+<script src="../../src/eventSubscription.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../src/nice-to-have-extensions/validation.js"></script>
+<script>
+	via.extend(
+		{
+			registration: {
+				email: null,
+				url: null,
+				name: null,
+				age: null,
+				password: null,
+				repeat_password: null,
+				accepted: null
+			},
+			message: "You request has been submitted"
+		}
+	);
+</script>
+
+</body>
+</html>

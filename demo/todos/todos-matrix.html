@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<title></title>
+
+	<link href="todos.css" media="all" rel="stylesheet" type="text/css"/>
+
+	<script src="../../ref/jquery.js"></script>
+	<script src="../../ref/jsrender.js"></script>
+	<script src="../../ref/matrix.debug.js"></script>
+	<script src="../../src/modelProxy.js"></script>
+	<script src="../../src/eventSubscription.js"></script>
+	<script src="../../src/declarative.js"></script>
+	<script src="../../src/template.js"></script>
+	<script src="../../src/must-have-extensions.js"></script>
+	<script src="../../src/nice-to-have-extensions/alignableListView.js"></script>
+	<script src="../../src/template-engines/template-engine-jsrender.js"></script>
+	<script src="todos.js"></script>
+	<script>
+		matrix.baseUrl = "../matrix_resource/";
+	</script>
+</head>
+<body>
+<div id="todoapp" data-sub="@ns:todoapp">
+	<div class="title">
+		<h1>Todos</h1>
+	</div>
+	<div class="content">
+		<!-- the text box for adding new tasks-->
+		<div id="create-todo">
+			<input id="new-todo" placeholder="What needs to be done?" type="text"
+			       data-sub="`val:newTask|enter $enter:addTask"/>
+		</div>
+
+		<!--the list for tasks-->
+		<div id="todos">
+			<label data-sub="`show:.tasks">
+				<input type="checkbox" data-sub="`val:isAllDone|updateView $change:toggleAllDone">
+				Mark all as complete
+			</label>
+			<ul id="todo-list" data-sub="`alignableListView:tasks|todo.todoItem"></ul>
+		</div>
+
+		<!--the status bar on the bottom-->
+		<div id="todo-stats" data-sub="`show:tasks">
+			<span class="todo-count">
+				<span class="number" data-sub="`html:unfinishedCount"></span>
+				<span class="word">item<span
+					data-sub="`showPlural:unfinishedCount">s</span> left.</span>
+			</span>
+			 <span class="todo-clear" data-sub='`show:finishedCount'>
+				  <a href="#" data-sub="$click:clearFinishedTasks">Clear
+					  <span class="number-done" data-sub="`html:finishedCount"></span>
+					  completed item<span class="word-done"
+					                      data-sub="`showPlural:finishedCount">s</span>
+				  </a>
+			</span>
+		</div>
+	</div>
+</div>
+</body>
+</html>

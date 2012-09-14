@@ -1,0 +1,31 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+
+<p><span data-sub="`datepicker:meetingDate"/></p>
+
+<input type="text" data-sub="`dateVal:meetingDate"/>
+
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/modelProxy.js"></script>
+<script src="../../src/eventSubscription.js"></script>
+<script src="../../src/declarative.js"></script>
+
+<script type="text/javascript"
+        src=" https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/jquery-ui.min.js"></script>
+<link rel="stylesheet"
+      href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/themes/smoothness/jquery-ui.css"
+      type="text/css" media="all"/>
+
+
+<script src="datepicker-converter.js"></script>
+
+<script>
+	via.set( "meetingDate", new Date( "2012-1-1" ) );
+</script>
+</html>

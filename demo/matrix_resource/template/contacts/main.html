@@ -1,0 +1,167 @@
+<script type="jsrender" id="contacts">
+	<div class="page" data-sub="@ns:contactsApp">
+		<h2>The following table subscribe the change of the physical array</h2>
+
+		<div class="line">
+			<div class="unit size1of1 data simpleTable">
+				<br data-sub="`render:.|contacts.originalContacts"/>
+			</div>
+		</div>
+
+		<h2>The following table subscribe the change of the queryable view of array</h2>
+
+		<div class="line">
+			<div class="unit size1of1 data simpleTable">
+				<br data-sub="`render:.|contacts.querableContacts"/>
+			</div>
+		</div>
+
+	</div>
+</script>
+
+<script type="jsrender" id="contacts.originalContacts">
+	<table data-sub="@ns:.contacts">
+		<tr>
+			<td><a href="#" data-sub="`preventDefault $click:.|*sort|firstName">First Name</a></td>
+			<td><a href="#" data-sub="`preventDefault $click:.|*sort|lastName">Last Name</a></td>
+			<td><a href="#" data-sub="`preventDefault $click:.|*sort|phone">Phone</a></td>
+			<td><a href="#" data-sub="`preventDefault $click:.|*sort|email">Email</a></td>
+			<td><a href="#">Language</a></td>
+			<td></td>
+		</tr>
+		<tbody data-sub="`listView:.|contacts.contactRow
+						`editableListView:.|contacts.editContactRow">
+		</tbody>
+	</table>
+</script>
+
+<script type="jsrender" id="contacts.querableContacts">
+	<div data-sub="@ns:.contacts">
+		<select data-sub="`val:*query.filter.by">
+			<option value="">search by</option>
+			<option value="firstName">First Name</option>
+			<option value="lastName">Last Name</option>
+		</select>
+
+		<select data-sub="`val:*query.filter.ops">
+			<option value="">operator</option>
+			<option value="equals">equals</option>
+			<option value="contains">contains</option>
+		</select>
+
+		<input type="text" data-sub="`val:*query.filter.value|keyup"/>
+		<input type="button" value="Search" data-sub="`applyFilter"/>
+		<input type="button" value="Reset Search" data-sub="`resetFilter"/>
+	</div>
+
+	<table data-sub="@ns:.contacts `hasQueryResult">
+		<tr>
+			<td style="cursor: pointer" data-sub="`sort:.|firstName">First Name</td>
+			<td style="cursor: pointer" data-sub="`sort:.|firstName">Last Name</td>
+			<td style="cursor: pointer" data-sub="`sort:.|phone">Phone</td>
+			<td style="cursor: pointer" data-sub="`sort:.|email">Email</td>
+			<td><a href="#">Language</a></td>
+			<td>
+				<a href="#" data-sub="`resetSort">reset sort</a>
+			</td>
+		</tr>
+		<tbody data-sub="`queryableListView:.|contacts.contactRow
+						`editableListView:*queryResult|contacts.editContactRow">
+		</tbody>
+
+		<tfoot data-sub="`pager:.|contacts.pager">
+		</tfoot>
+	</table>
+
+	<p data-sub="`noQueryResult:.contacts">No result found</p>
+	<a value="reset query" data-sub="`preventDefault `resetQuery:.contacts" href="#">Reset All</a>
+
+</script>
+
+<script type="jsrender" id="contacts.contactRow">
+	<tr>
+		<td>{{:firstName}}</td>
+		<td>{{:lastName}}</td>
+		<td>{{:phone}}</td>
+		<td>{{:email}}</td>
+		<td>
+			{{for languages}}
+			<p>{{:#data}}</p>
+			{{/for}}
+		</td>
+		<td>
+			<a href="#" data-sub="`preventDefault `editButton">Edit</a>
+			<a href="#" data-sub="`preventDefault `deleteButton">Delete</a>
+			{{ts /}}
+		</td>
+	</tr>
+</script>
+
+<script type="jsrender" id="contacts.pager">
+	<tr>
+		<td colspan="6">
+			{{if enabled}}
+
+			<a href="#" page="disabled" data-sub="`pageButton">Show All</a>
+
+			{{if index !== 0 }}
+			<a href="#" page="first" data-sub="`pageButton">First</a>
+			{{else}}
+			<span>First</span>
+			{{/if}}
+
+
+			{{if index !== 0 }}
+			<a href="#" page="previous" data-sub="`pageButton">Previous</a>
+			{{else}}
+			<span>Previous</span>
+			{{/if}}
+
+			{{if index !== count -1 }}
+			<a href="#" page="next" data-sub="`pageButton">Next</a>
+			{{else}}
+			<span>Next</span>
+			{{/if}}
+
+			{{if index !== count -1 }}
+			<a href="#" page="last" data-sub="`pageButton">Last</a>
+			{{else}}
+			<span>Last</span>
+			{{/if}}
+
+			<span>Page {{:(index + 1)}} of {{:count}} </span>
+
+			{{else}}
+
+
+			page size: <select data-sub="`val:*query.page.size">
+			<option value=""></option>
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+		</select>
+			<input value="enable paging" type="button" data-sub="`applyPaging"/>
+			{{/if}}
+
+			{{ts /}}
+		</td>
+	</tr>
+</script>
+
+<script type="jsrender" id="contacts.editContactRow">
+	<tr data-sub="{{addDataSourceNs /}}">
+		<td><input type="text" data-sub="`val:.firstName"/></td>
+		<td><input type="text" data-sub="`val:.lastName"/></td>
+		<td><input type="text" data-sub="`val:.phone"/></td>
+		<td><input type="text" data-sub="`val:.email"/></td>
+		<td>
+		</td>
+		<td>
+			<a href="#" data-sub="`preventDefault `updateButton">Update</a>
+			<a href="#" data-sub="`preventDefault `cancelButton">Cancel</a>
+			{{ts /}}
+		</td>
+	</tr>
+</script>

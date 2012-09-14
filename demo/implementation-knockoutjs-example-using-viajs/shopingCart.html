@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+
+<body>
+<div data-sub="@ns:shoppingCart">
+	<table>
+		<thead>
+		<tr>
+			<th>Category</th>
+			<th>Product</th>
+			<th>Price</th>
+			<th>Quantity</th>
+			<th>Subtotal</th>
+			<th></th>
+		</tr>
+		</thead>
+		<tbody data-sub='`alignableListView:orderLines'>
+		<tr data-sub="{{addRowItemNs /}}">
+			<td>
+				<select data-sub='"@caption:Select...
+							  `options:/shoppingCart.categoryLookup|name
+							  `val:categoryName'> </select>
+			</td>
+			<td>
+				<select data-sub='@caption:Select...
+							  `options:productLookup|name
+							  `val:productName'> </select>
+			</td>
+			<td>
+				<span data-sub='`html:price'> </span>
+			</td>
+			<td>
+				<input data-sub='`val:quantity|keyup'/>
+			</td>
+			<td>
+				<span data-sub='`html:subTotal'> </span>
+			</td>
+			<td>
+				<button data-sub="$click:.|*del">Remove</button>
+			</td>
+		</tr>
+		</tbody>
+	</table>
+	<p class='grandTotal'>
+		Total value: <span data-sub='`html:totalPrice'> </span>
+	</p>
+	<button data-sub='$click:addLines'>Add product</button>
+	<div data-sub="`showValue:orderToSubmit"></div>
+</div>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/modelProxy.js"></script>
+<script src="../../src/eventSubscription.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../ref/jsrender.js"></script>
+<script src="../../src/template-engines/template-engine-jsrender.js"></script>
+<script src="../../src/nice-to-have-extensions/alignableListView.js"></script>
+<script src="sampleProductCategories.js"></script>
+
+<script>
+
+	var Orderline = via.util.factory( {
+		categoryName: "",
+		productName: "",
+		quantity: "",
+		productLookup: function() {
+			var categoryName = this.get( "categoryName" );
+			var category = $( sampleProductCategories ).filter( function() {
+				return this.name == categoryName;
+			} )[0];
+			return category && category.products;
+		},
+		price: function() {
+			var productName = this.get( "productName" );
+			if (productName) {
+				var productLookup = this.get( "productLookup" );
+				if (productLookup) {
+					var product = $( productLookup ).filter( function() {
+						return this.name == productName;
+					} )[0];
+					return product && product.price;
+				}
+			}
+			return "";
+		},
+		subTotal: function() {
+			var quantity = this.get( "quantity" );
+			var price = this.get( "price" );
+			return quantity && price && quantity * price || "";
+		}
+	} );
+
+	via.set( "shoppingCart", {
+		orderLines: [Orderline()],
+		categoryLookup: sampleProductCategories,
+
+		//this is accessed as helper
+		addLines: function( e ) {
+			this.cd( "..orderLines" ).push( Orderline() );
+		},
+
+		//this is accessed using prox.get
+		totalPrice: function() {
+			var total = 0;
+			this.cd( "orderLines" ).each( function( i, model ) {
+				total += model.get( "subTotal" );
+			} );
+			return total;
+		},
+
+		orderToSubmit: function() {
+			return $.map( this.get( "orderLines" ), function( line ) {
+				return line.productName && line.quantity && {
+					productName: line.categoryName,
+					quantity: line.quantity
+				}
+			} );
+		}
+	} );
+</script>
+</body>
+</html>

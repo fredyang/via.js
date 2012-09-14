@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		.error {
+			border: solid 1px red;
+			background-color: #ffcccc;
+		}
+	</style>
+</head>
+<body>
+
+<form id="myform" data-sub="@ns:registration`resetFormErrors" novalidate="novalidate">
+	<fieldset>
+		<h3>Sample registration form</h3>
+
+		<p> Enter bad values and then press the submit button. </p>
+
+		<p>
+			<label>email *</label>
+			<input type="text" name="email" data-sub="@ns:email `val `showError"/>
+		</p>
+
+		<p>
+			<label>website *</label>
+			<input type="text" name="url" data-sub="@ns:url `val `showError"/>
+		</p>
+
+		<p>
+			<label>name *</label>
+			<input type="text" name="name" data-sub="@ns:name `val `showError"/>
+		</p>
+
+		<p>
+			<label>age</label>
+			<input type="text" name="age" data-sub="@ns:age `val `showError"/>
+		</p>
+
+		<p>
+			<label>password</label>
+			<input type="password"
+			       data-sub="@ns:password
+					                 `val
+					                 `showError"/>
+		</p>
+
+		<p>
+			<label>repeat password</label>
+			<input type="password"
+			       data-sub="@ns:repeat_password
+					       			 `val
+					       			 `showError"/>
+		</p>
+
+		<p id="terms">
+			<label>I accept the terms</label>
+			<input type="checkbox" data-sub="@ns:accepted `val `showError"/>
+		</p>
+		<input type="button" value="submit"
+		       data-sub="`alert:/message
+		                 `enableLater:*isValid
+		                 `validate"/>
+
+		<button type="reset">Reset</button>
+	</fieldset>
+</form>
+
+<div data-sub="`showValue:registration"></div>
+<p>
+	global error: <span id="globalError" data-sub="`html:*pathsOfInvalidModels"></span>
+</p>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/modelProxy.js"></script>
+<script src="../../src/eventSubscription.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../src/nice-to-have-extensions/validation.js"></script>
+<script>
+	via.extend(
+		{
+			registration: {
+				email: null,
+				url: null,
+				name: null,
+				age: null,
+				password: null,
+				repeat_password: null,
+				accepted: null
+			},
+			message: "You request has been submitted"
+		}
+	);
+
+	via( "registration" ).check( {
+		email: ["email", "required"],
+		url: ["url", "required"],
+		name: [
+			["regex", "/[a-zA-Z ]{5,}/,You must specify a valid name."],
+			"required"
+		],
+		age: ["number"],
+		password: ["required"],
+		repeat_password: ["required", ["equal", "..password,Please enter the same password."]],
+		accepted: ["required", ["fixedValue", "true,You must agree the terms" ]]
+	} );
+
+</script>
+</body>
+</html>

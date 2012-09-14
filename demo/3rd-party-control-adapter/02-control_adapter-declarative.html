@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+
+<p><span id="datepicker" data-sub="!init afterUpdate:meetingDate|*modelToDatepicker
+								   $onDateChanged:meetingDate|*datepickerToModel"/></p>
+
+<input type="text" id="txtDate" data-sub="!init afterUpdate:meetingDate|get val *dateToString
+		                                  $change:meetingDate|val set *stringToDate"/>
+
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/modelProxy.js"></script>
+<script src="../../src/eventSubscription.js"></script>
+<script src="../../src/declarative.js"></script>
+
+<script type="text/javascript"
+        src=" https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/jquery-ui.min.js"></script>
+<link rel="stylesheet"
+      href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/themes/smoothness/jquery-ui.css"
+      type="text/css" media="all"/>
+
+
+<script src="datepicker-converter.js"></script>
+
+<script>
+	via.set( "meetingDate", new Date( "2012-1-1" ) );
+</script>
+</html>

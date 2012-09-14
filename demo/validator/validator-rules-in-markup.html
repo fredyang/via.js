@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>attach validation rule to model in markup</title>
+	<style type="text/css">
+		.error {
+			border: solid 1px red;
+			background-color: #ffcccc;
+		}
+	</style>
+</head>
+<body>
+<p>
+	An optional number n1:
+
+	<input type="text" data-sub="@ns:n1
+								 `val
+								 `regex:.|/^\d+$/,you should enter a number!!!
+								 `showError"/>
+
+</p>
+
+
+<p>
+	a required number n2:
+	<input type="text" data-sub="@ns:n2
+							     `val:.|keyup,updateModel
+							     `required
+							     `number
+							     `showError"/>
+</p>
+
+<p>
+	n3 (custom validator):
+	<input type="text" data-sub="@ns:n3
+	                             `val
+	                             `check:.|#..customValidator
+	                             `showError"/>
+</p>
+
+<p>
+	global error: <span id="globalError" data-sub="`html:*pathsOfInvalidModels"></span>
+</p>
+
+<input value="Submit" type="button"
+       data-sub="`alert:message
+                 `validate"/>
+
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/modelProxy.js"></script>
+<script src="../../src/eventSubscription.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../src/nice-to-have-extensions/validation.js"></script>
+
+
+<script>
+	via.set( "n1", null );
+	via.set( "n2", null );
+	via.set( "n3", null );
+
+	via.set( "customValidator", function( value ) {
+		if (!$.isNumeric( value )) {
+			return "Please enter a number between 1 and 100";
+		} else if (value > 50) {
+			return "Please enter a lower value";
+		} else if (value < 50) {
+			return "Please enter a higher value";
+		}
+	} );
+
+	via.set( "message", "You request has been submitted" );
+</script>
+
+
+</html>

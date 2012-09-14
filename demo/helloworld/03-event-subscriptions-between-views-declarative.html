@@ -1,0 +1,35 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		label {
+			display: block;
+		}
+	</style>
+</head>
+<body>
+
+<div>
+	<label>Please input your name:
+		<input type="text" id="txtName"/>
+	</label>
+	<div id="divMessage" data-sub="!change:$#txtName|#helloApp.handleTxtChange"/>
+</div>
+
+</body>
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/modelProxy.js"></script>
+<script src="../../src/eventSubscription.js"></script>
+<script src="../../src/declarative.js"></script>
+<script>
+	//convert the programmatic subscription into declarative subscription
+	via.set( "helloApp", {
+		handleTxtChange: function( e ) {
+			var name = e.publisher.val();
+			this.html( name ? "hello, " + name : "" );
+		}
+	} );
+</script>
+</html>

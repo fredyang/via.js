@@ -1,5 +1,13 @@
 ==================================================
 
+Get started
+---------------------------------------
+<a href="http://code.semanticsworks.com/via.js/doc/introduction.html">Introduction</a>
+
+<a href="http://code.semanticsworks.com/via.js/demo/index.html">Demos</a>
+
+<a href="http://code.semanticsworks.com/via.js/test/index.html">Unit test</a>
+
 What you need to build your own via.js
 --------------------------------------
 
@@ -37,14 +45,6 @@ If you don't need that, using core is just fine. The "all" package is includes f
  If you want to build "all" package only, type
 
  make all
-
-Learn
----------------------------------------
-<a href="http://code.semanticsworks.com/via.js/demo/index.html">Demos</a>
-
-<a href="http://code.semanticsworks.com/via.js/doc/introduction.html">Introduction</a>
-
-<a href="http://code.semanticsworks.com/via.js/test/index.html">Unit test</a>
 
 Questions?
 ----------

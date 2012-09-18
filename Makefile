@@ -37,10 +37,10 @@ all:debug_js = ${dist_dir}/via.all.debug.js
 core:src_files = ${core_files}\
 				${src_dir}/outro.txt
 				
-core:uglyfy_output = ${dist_dir}/via.uglyfy.min.js
-core:closure_output = ${dist_dir}/via.min.js
-core:out_js = ${dist_dir}/via.js
-core:debug_js = ${dist_dir}/via.debug.js
+core:uglyfy_output = ${dist_dir}/via.core.uglyfy.min.js
+core:closure_output = ${dist_dir}/via.core.min.js
+core:out_js = ${dist_dir}/via.core.js
+core:debug_js = ${dist_dir}/via.core.debug.js
 
 
 default: 

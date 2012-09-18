@@ -23,7 +23,7 @@
 		shadowNamespace = "__via",
 		rShadowKey = /^__via\.([^\.]+?)(?:\.|$)/,
 		//try to match xxx in string this.get("xxx")
-		rWatchedPath = /this\.(?:get)\s*\(\s*(['"])([\*\.\w/]+)\1\s*\)/g,
+		rWatchedPath = /this\.(?:get)\s*\(\s*(['"])([\*\.\w\/]+)\1\s*\)/g,
 
 		//key is publisher
 		//value is array of subscribers

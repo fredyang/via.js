@@ -54,7 +54,7 @@
 		<input type="button" value="Reset Search" data-sub="`resetFilter"/>
 	</div>
 
-	<table data-sub="@ns:.contacts `hasQueryResult">
+	<table data-sub="@ns:.contacts `withQueryResult">
 		<tr>
 			<td style="cursor: pointer" data-sub="`sort:.|firstName">First Name</td>
 			<td style="cursor: pointer" data-sub="`sort:.|firstName">Last Name</td>
@@ -73,7 +73,7 @@
 		</tfoot>
 	</table>
 
-	<p data-sub="`noQueryResult:.contacts">No result found</p>
+	<p data-sub="`withoutQueryResult:.contacts">No result found</p>
 	<a value="reset query" data-sub="`preventDefault `resetQuery:.contacts" href="#">Reset All</a>
 
 </script>

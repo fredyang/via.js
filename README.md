@@ -40,9 +40,9 @@ If you don't need that, using core is just fine. The "all" package is includes f
 
 Learn
 ---------------------------------------
-<a href="http://code.semanticsworks.com/via.js/">Step by step</a>
+<a href="http://code.semanticsworks.com/via.js/demo/index.html">Demos</a>
 
-<a href="http://code.semanticsworks.com/via.js/todos/todos.html">Using via.js to implement backbone's Todos</a>
+<a href="http://code.semanticsworks.com/via.js/doc/introduction.html">Introduction</a>
 
 <a href="http://code.semanticsworks.com/via.js/test/index.html">Unit test</a>
 

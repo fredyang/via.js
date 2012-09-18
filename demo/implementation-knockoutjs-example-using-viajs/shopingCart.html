@@ -3,6 +3,7 @@
 <html>
 <head>
 	<title></title>
+	<script src='../../doc/analytic.js'></script>
 </head>
 
 <body>
@@ -46,7 +47,7 @@
 		</tbody>
 	</table>
 	<p class='grandTotal'>
-		Total value: <span data-sub='`html:totalPrice'> </span>
+		Total value: <span data-sub='`text:totalPrice'> </span>
 	</p>
 	<button data-sub='$click:addLines'>Add product</button>
 	<div data-sub="`showValue:orderToSubmit"></div>
@@ -65,38 +66,56 @@
 <script>
 
 	var Orderline = via.util.factory( {
+
 		categoryName: "",
+
 		productName: "",
+
 		quantity: "",
+
 		productLookup: function() {
-			var categoryName = this.get( "categoryName" );
-			var category = $( sampleProductCategories ).filter( function() {
-				return this.name == categoryName;
-			} )[0];
+			var categoryName = this.get( "categoryName" ),
+
+				category = $( sampleProductCategories ).filter( function() {
+					return this.name == categoryName;
+				} )[0];
+
 			return category && category.products;
 		},
+
 		price: function() {
-			var productName = this.get( "productName" );
+
+			var productLookup,
+				product,
+				productName = this.get( "productName" );
+
 			if (productName) {
-				var productLookup = this.get( "productLookup" );
+				productLookup = this.get( "productLookup" );
 				if (productLookup) {
-					var product = $( productLookup ).filter( function() {
+					product = $( productLookup ).filter( function() {
 						return this.name == productName;
 					} )[0];
+
 					return product && product.price;
 				}
 			}
 			return "";
 		},
+
 		subTotal: function() {
-			var quantity = this.get( "quantity" );
-			var price = this.get( "price" );
+
+			var quantity = this.get( "quantity" ),
+				price = this.get( "price" );
+
 			return quantity && price && quantity * price || "";
 		}
+
 	} );
 
 	via.set( "shoppingCart", {
+
 		orderLines: [Orderline()],
+
 		categoryLookup: sampleProductCategories,
 
 		//this is accessed as helper
@@ -106,6 +125,7 @@
 
 		//this is accessed using prox.get
 		totalPrice: function() {
+			"this.get('orderLines')";
 			var total = 0;
 			this.cd( "orderLines" ).each( function( i, model ) {
 				total += model.get( "subTotal" );

@@ -1,0 +1,608 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Hello world, via.js - Model</title>
+	<link href="../demo/css/oocss.css" rel='stylesheet'/>
+	<link rel="stylesheet" type="text/css" href="introduction.css" media="all">
+	<link href='../demo/SyntaxHighlighter/styles/shCore.css' rel='stylesheet'/>
+	<link href='../demo/SyntaxHighlighter/styles/shThemeDefault.css' rel='stylesheet'/>
+	<script src='../demo/SyntaxHighlighter/scripts/XRegExp.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shCore.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushJScript.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushXml.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushCss.js'></script>
+	<script src='analytic.js'></script>
+	<script language="javascript" type="text/javascript">
+		SyntaxHighlighter.defaults.gutter = false;
+		SyntaxHighlighter.defaults.toolbar = false;
+		SyntaxHighlighter.config.bloggerMode = true;
+		SyntaxHighlighter.all();
+	</script>
+</head>
+<body>
+<div class="page oldSchool">
+
+<h2>Event Subscription</h2>
+
+
+<p>
+	On the view side, DOM event model is already implemented by all browser, and jQuery normalizes
+	DOM event behavior cross-browser. On the model side, via.js implements similar event
+	behavior of view. In fact, the most important goal of using model proxy is to create model
+	event.
+</p>
+
+<h3>View event</h3>
+
+<p>via.js use existing DOM event and jQuery event binding implementation to implement view event
+	subscription with a very thin wrapper.
+</p>
+
+<h3>Model event</h3>
+
+<p>Model event works very similar to DOM event and jQuery events, it supports the following
+	features.</p>
+
+<ol class="simpleList">
+	<li>Event bubbling
+		<p>Model person's firstName's event can bubble up person. For example, if person firstName
+			raise an event
+			"afterChange", then person will raise "afterChange.1" after that.</p></li>
+	<li>Event cascading
+		<p>Model person's firstName's event can cascade to person's fullName, because of the
+			internal
+			dependencies between fullName and firstName. This is automatic, no code is required from
+			developers.</p></li>
+	<li>Customs event types.
+		<p>The built-in events include "beforeCreate", "beforeUpdate", "beforeRemove",
+			"afterCreate", "afterUpdate", "afterRemove" event. But we can raise and subscribe
+			customs model events just like the built-in events are raised and subscribed.
+		</p>
+	</li>
+</ol>
+
+<p>
+	Below is a person model. Changing the person's property will raise event, and we subscribe the
+	events with null subscirber and print the events argument so that we can see how model event is
+	raised, bubbled up, and broadcasted.
+</p>
+
+<pre class="brush:javascript">
+	via().set( "p", {
+		firstName: "John",
+		lastName: "Doe",
+		fullName: function() {
+			return this.firstName + "," + this.lastName;
+		},
+		addresses: [
+			{
+				street: "Yonge Street 1",
+				city: "Toronto"
+			},
+			{
+				street: "5th Ave 1",
+				city: "New York"
+			}
+		]
+	} );
+
+	function printEvent ( e ) {
+		console.log(
+			"publisher path/value: " + e.publisher.path + "/" + e.publisher.get() +
+			", originalPublisher path/value: " + e.originalPublisher.path + "/" + e.originalPublisher.get() +
+			", subscribedEvent: " + e.subscribedEvent +
+		             ", type: " + e.type +
+		             ", level: " + e.level +
+		             ", proposed: " + e.proposed +
+		             ", removed: " + e.removed );
+	}
+</pre>
+
+<pre class="brush:javascript">
+	via("_").subscribe("person.firstName", "*", printEvent);
+	via.set("helloApp.firstName", "Tom")
+	//this subcriptions will generate the following
+</pre>
+<div class="simpleTable data">
+	<table>
+		<col style="width: auto;">
+		<col style="width: auto;">
+		<col style="width: 80px">
+		<col style="width: 115px;">
+		<col style="width: 50px;">
+		<col style="width: 90px;">
+		<col style="width: 85px;">
+		<tr>
+			<td>publisher path<br/>/value</td>
+			<td>originalPublisher.path<br/>/value</td>
+			<td>subscribedEvent</td>
+			<td>type</td>
+			<td>level</td>
+			<td>proposed</td>
+			<td>removed</td>
+		</tr>
+		<tr>
+			<td>p.firstName/John</td>
+			<td>p.firstName/John</td>
+			<td>*</td>
+			<td>beforeUpdate</td>
+			<td>0</td>
+			<td>Tom</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p.firstName/Tom</td>
+			<td>p.firstName/Tom</td>
+			<td>*</td>
+			<td>afterUpdate</td>
+			<td>0</td>
+			<td>Tom</td>
+			<td>John</td>
+		</tr>
+	</table>
+</div>
+
+<pre class="brush:javascript">
+	via("_").subscribe("p.fullName", "*", printEvent);
+	via.set("p.firstName", "Tom")
+	//this subcriptions will generate the following
+</pre>
+
+<div class="simpleTable data">
+	<table>
+		<col style="width: auto;">
+		<col style="width: auto;">
+		<col style="width: 80px">
+		<col style="width: 115px;">
+		<col style="width: 50px;">
+		<col style="width: 90px;">
+		<col style="width: 85px;">
+		<tr>
+			<td>publisher path<br/>/value</td>
+			<td>originalPublisher.path<br/>/value</td>
+			<td>subscribedEvent</td>
+			<td>type</td>
+			<td>level</td>
+			<td>proposed</td>
+			<td>removed</td>
+		</tr>
+		<tr>
+			<td>p.fullName/John,Doe</td>
+			<td>p.firstName/John</td>
+			<td>*</td>
+			<td>beforeUpdate</td>
+			<td>0</td>
+			<td>undefined</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p.fullName/Tom,Doe</td>
+			<td>p.firstName/Tom</td>
+			<td>*</td>
+			<td>afterUpdate</td>
+			<td>0</td>
+			<td>undefined</td>
+			<td>undefined</td>
+		</tr>
+	</table>
+</div>
+
+<p>We can see that the "set" method first trigger beforeUpdate event, then trigger afterUpdate
+	event.</p>
+
+<pre class="brush:javascript">
+	via("_").subscribe("p", "*", printEvent);
+	via.set("p.firstName", "Tom")
+	//this subcriptions will generate the following
+</pre>
+
+<div class="simpleTable data">
+	<table>
+		<col style="width: auto;">
+		<col style="width: auto;">
+		<col style="width: 80px">
+		<col style="width: 120px;">
+		<col style="width: 50px;">
+		<col style="width: 90px;">
+		<col style="width: 85px;">
+		<tr>
+			<td>publisher path<br/>/value</td>
+			<td>originalPublisher.path<br/>/value</td>
+			<td>subscribedEvent</td>
+			<td>type</td>
+			<td>level</td>
+			<td>proposed</td>
+			<td>removed</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.fullName/John,Doe</td>
+			<td>*</td>
+			<td>beforeUpdate.1</td>
+			<td>1</td>
+			<td>undefined</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.firstName/John</td>
+			<td>*</td>
+			<td>beforeUpdate.1</td>
+			<td>1</td>
+			<td>Tom</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.fullName/Tom,Doe</td>
+			<td>*</td>
+			<td>afterUpdate.1</td>
+			<td>1</td>
+			<td>undefined</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.firstName/Tom</td>
+			<td>*</td>
+			<td>afterUpdate.1</td>
+			<td>1</td>
+			<td>Tom</td>
+			<td>John</td>
+		</tr>
+	</table>
+</div>
+
+<p>We can see that event trigged by "firstName" cascade to "fullName", moreover, events happend to
+	children model can also bubbled upt the parent model.
+</p>
+
+<pre class="brush:javascript">
+	via( "_" ).subscribe( "p", "*", printEvent );
+	via("p.addresses").push({
+			street: "Ave road",
+			city: "YVR"
+	});
+	//this subcriptions will generate the following
+</pre>
+
+<div class="simpleTable data">
+	<table>
+		<col style="width: auto;">
+		<col style="width: auto;">
+		<col style="width: 80px">
+		<col style="width: 120px;">
+		<col style="width: 50px;">
+		<col style="width: 90px;">
+		<col style="width: 85px;">
+		<tr>
+			<td>publisher path<br/>/value</td>
+			<td>originalPublisher.path<br/>/value</td>
+			<td>subscribedEvent</td>
+			<td>type</td>
+			<td>level</td>
+			<td>proposed</td>
+			<td>removed</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.addresses.2/undefined</td>
+			<td>*</td>
+			<td>beforeCreate.2</td>
+			<td>2</td>
+			<td>[object Object]</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.addresses.2/[object Object]</td>
+			<td>*</td>
+			<td>afterCreate.2</td>
+			<td>2</td>
+			<td>undefined</td>
+			<td>undefined</td>
+		</tr>
+	</table>
+</div>
+<p>We can see that other model manipulation method such as "push" can also generate events.
+	And the events contains lots details such level which is the depth from the model triggering the
+	event to the model subscribing the events. Event type also appended with the extension ".level"
+	such as ".2"
+</p>
+<pre class="brush:javascript">
+	via( "_" ).subscribe( "p", "*", printEvent );
+	via("p.addresses").removeAt(0);
+	//this subcriptions will generate the following
+</pre>
+
+<div class="simpleTable data">
+	<table>
+		<col style="width: auto;">
+		<col style="width: auto;">
+		<col style="width: 80px">
+		<col style="width: 120px;">
+		<col style="width: 50px;">
+		<col style="width: 90px;">
+		<col style="width: 85px;">
+		<tr>
+			<td>publisher path<br/>/value</td>
+			<td>originalPublisher.path<br/>/value</td>
+			<td>subscribedEvent</td>
+			<td>type</td>
+			<td>level</td>
+			<td>proposed</td>
+			<td>removed</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.addresses.0/[object Object]</td>
+			<td>*</td>
+			<td>beforeDel.2</td>
+			<td>2</td>
+			<td>undefined</td>
+			<td>undefined</td>
+		</tr>
+		<tr>
+			<td>p/[object Object]</td>
+			<td>p.addresses.0</td>
+			<td>*</td>
+			<td>afterDel.2</td>
+			<td>2</td>
+			<td>undefined</td>
+			<td>[object Object]</td>
+		</tr>
+	</table>
+</div>
+
+<p>In the above case, removing a a item in model array generate a "beforeDel.2" and "afterDel.2"
+	events. The idea is that all the model build-in proxy maninpulation method can trigger events,
+	and we can write our custom manipuation method which generate custom events as well.
+</p>
+
+<!--<h3>Debugging event</h3>-->
+
+<h2>Subscription</h2>
+
+<h3>Unified event subscription</h3>
+
+<p>
+	via.js use a the following unified event subscription for all objects regardless whether they
+	are view and mode.
+</p>
+
+<pre class="brush:javascript">
+	subscriber.subscribe ( publisher, events, handler, [options], [delegate] );
+</pre>
+
+<p>
+	There is no restriction that what can subscribe what. Both publisher and subscriber can be model
+	or view. There is some example.
+</p>
+
+<div class="data simpleTable">
+	<table>
+		<col style="width:90px">
+		<col style="width:90px">
+		<col>
+		<tr>
+			<td>Subscriber</td>
+			<td>Publisher</td>
+			<td>Subscription Code</td>
+		</tr>
+		<tr>
+			<td>model<br/>(model proxy)</td>
+			<td>view<br/>(jQuery object)</td>
+			<td>
+			<pre class="brush:javascript">
+				//model "helloApp.name" subscribe event of view "#txtName"
+				via( "helloApp.name" ).subscribe( "$#txtName", "change",
+					function( e ) {
+						this.set( e.publisher.val() );
+					}
+				);
+			</pre>
+			</td>
+		</tr>
+		<tr>
+			<td>model<br/>(model proxy)</td>
+			<td>model<br/>(model proxy)</td>
+			<td>
+				<pre class="brush:javascript">
+					via("color").subscribe("level", "afterUpdate",
+						function (e) {
+					        if (e.publisher.get() > 5) {
+					            this.set("red");
+					        }
+						}
+					);
+				</pre>
+			</td>
+		</tr>
+		<tr>
+			<td>view<br/>(jQuery object)</td>
+			<td>model<br/>(model proxy)</td>
+			<td>
+				<pre class="brush:javascript">
+					//view #divMessage subscribe an event of "model"
+					$( "#divMessage" ).subscribe( "helloApp.message", "afterUpdate",
+						function( e ) {
+								this.html( e.publisher.get() );
+						}
+					);
+				</pre>
+			</td>
+		</tr>
+		<tr>
+			<td>view<br/>(jQuery object)</td>
+			<td>view<br/>(jQuery object)</td>
+			<td>
+				<pre class="brush:javascript">
+					$( "#divMessage" ).subscribe( "$#txtName", "change",
+						function( e ) {
+							var name = e.publisher.val();
+							this.html( name ? "Hello," + name : "" );
+						}
+					);
+				</pre>
+			</td>
+		</tr>
+	</table>
+
+</div>
+<p>We can see that both model and view can subscribe events of model and view. If the publisher is
+	a jQuery object(view), we use <strong>"$selector"</strong> to differentiate model path.
+</p>
+
+<p>A subscription always has one and only publisher, and any number of subcriber (from zero to
+	many). Normally, a subscription should have at least one. If a subscrptio does not have a
+	subscriber, it becomes event binding. But this is necessary in some case, but use it sparingly.
+	Below is how it can be done.
+</p>
+
+<div class="simpleTable data">
+	<table>
+		<col style="width:90px">
+		<col style="width:90px">
+		<col>
+		<tr>
+			<td>Subscriber</td>
+			<td>Publisher</td>
+			<td>Subscription Code</td>
+		</tr>
+		<tr>
+			<td>null</td>
+			<td>model<br/>(model proxy)</td>
+			<td>
+					<pre class="brush:javascript">
+						via.subscribe(null, "helloApp.message", "afterUpdate",
+							function (e) {
+								alert(e.publisher.get());
+							}
+						);
+					</pre>
+			</td>
+		</tr>
+		<tr>
+			<td>null</td>
+			<td>view<br/>(jQuery object)</td>
+			<td>
+					<pre class="brush:javascript">
+						via.subscribe(null, "$#txtName", "change",
+							function (e) {
+								alert(e.publisher.val());
+							}
+						);
+					</pre>
+			</td>
+		</tr>
+	</table>
+</div>
+
+<p>The delegate parameter is useful only when publisher is DOM element. It is the same concept of
+	jQuery delegate. In the following example, there is only one subscriptions is created.
+</p>
+
+
+<pre class="brush:html">
+
+	&lt;div class="color"&gt;
+		&lt;input type="button" value="blue" /&gt;
+		&lt;input type="button" value="red" /&gt;
+		&lt;input type="button" value="yellow" /&gt;
+	&lt;/div&gt;
+</pre>
+<pre class="brush:javascript">
+	via( "helloApp.color" ).subscribe( "$.color", "click", "val set", null, "input[type='button']" );
+</pre>
+<h3>Wildcarded events</h3>
+
+<p>
+	When you subscribe an model event, you can use wildcard "*" to subscribe events matched the
+	patterns and you can also subscribe more than one types of event by concatinate them with " "
+	(space). Below is some examples.
+</p>
+
+<pre class="brush:javascript">
+	$("#debug").subscribe("customers", "afterUpdate* afterCreate*", function () {});
+</pre>
+
+<div class="data simpleTable">
+	<table>
+		<tr>
+			<td>Value of events parameter</td>
+			<td>Event matched</td>
+			<td>Event not matched</td>
+		</tr>
+		<tr>
+			<td>*</td>
+			<td>all events(events happend to the node, and child nodes)</td>
+			<td>none</td>
+		</tr>
+		<tr>
+			<td>afterUpdate</td>
+			<td>afterUpdate</td>
+			<td>every event other than "afterUpdate"</td>
+		</tr>
+		<tr>
+			<td>afterUpdate*</td>
+			<td>afterUpdate , afterUpdate.1, afterUpdate.2</td>
+			<td>beforeUpdate</td>
+		</tr>
+		<tr>
+			<td>afterUpdate.*</td>
+			<td>afterUpdate.1, afterUpdate.2</td>
+			<td>afterUpdate , beforeUpdate</td>
+		</tr>
+		<tr>
+			<td>afterUpdate* afterCreate*</td>
+			<td>afterUpdate, afterUpdate.1, afterCreate, afterCreate.1</td>
+			<td>afterDel</td>
+		</tr>
+		<tr>
+			<td>after*</td>
+			<td>afterUpdate, afterUpdate.1, afterCreate, afterCreate.1</td>
+			<td>beforeDel</td>
+		</tr>
+		<tr>
+			<td>after*.</td>
+			<td>afterUpdate, afterCreate, afterDel</td>
+			<td>afterUpdate.1, beforeUpdate</td>
+		</tr>
+	</table>
+</div>
+
+<h3>init event</h3>
+
+<p>"init" event is special event, it is triggered right after a subscription is created. And the
+	subscription handler will be invoked immediately. In the following example, "init" event is used
+	to populate the fullName value to the label.</p>
+
+<pre class="brush:javascript">
+	$("#divMessage").subscribe("helloApp.fullName", "init afterUpdate", "get html");
+</pre>
+
+<p>In fact, you can specify a number after as time (in minisecond) to trigger the event right after
+	the subscription is created. In the following example the "init" event is triggered 100
+	minisecond after the subscription is created.
+</p>
+
+<pre class="brush:javascript">
+	$("#divMessage").subscribe("helloApp.fullName", "init100 afterUpdate", "get html");
+</pre>
+
+<p>If you use "init" event only like the following, there is no subscription actually created,
+	instead the subscription handler will be call once. This is similar to the "one" event binding
+	in jQuery.
+</p>
+
+<pre class="brush:javascript">
+	$("#divMessage").subscribe("helloApp.fullName", "init", "get html");
+</pre>
+
+<!--<h3>Debugging subscriptions</h3>-->
+
+
+</div>
+</body>
+</html>

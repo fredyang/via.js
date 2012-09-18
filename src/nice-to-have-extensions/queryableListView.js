@@ -301,9 +301,9 @@
 		            "`queryChanged" +
 		            "!init afterUpdate:*query.enabled|*show",
 
-		hasQueryResult: "`show:*hasResult",
+		withQueryResult: "`show:*hasResult",
 
-		noQueryResult: "`hide:*hasResult"
+		withoutQueryResult: "`hide:*hasResult"
 	} );
 
 	//#merge

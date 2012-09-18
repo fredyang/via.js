@@ -21,6 +21,7 @@
 		}
 
 	</style>
+	<script src='../../doc/analytic.js'></script>
 
 </head>
 <body data-sub="@ns:contactApp">
@@ -49,7 +50,7 @@
 <!--<input type="button" value="submit" data-sub="`validate:companies `alert:.|Data has been submitted."/>-->
 
 <input type="button" value="submit"
-	       data-sub="`alert:.|Done!
+       data-sub="`alert:.|Done!
 	                `validate:companies"/>
 
 
@@ -139,59 +140,58 @@
 
 	(function() {
 		//contact is plain old javascript object
-		var Contact = via.util.factory(
-			function Contact ( contact ) {
-				$.extend( this, contact );
-			}, {
-				addPhone: function( e ) {
-					this.cd( "..phones" ).push( {
-						type: "",
-						number: ""
-					} );
-				}
-			}
-		);
+		var util = via.util,
+			factory = util.factory;
 
-		var Company = via.util.factory(
-			function Company ( companyName, contacts ) {
-				this.companyName = companyName;
-				this.contacts = contacts || [];
-			}, {
-				addContact: function( e ) {
-					this.cd( "..contacts" ).push( Contact( {
-						firstName: "",
-						lastName: "",
-						phones: []
-					} ) );
-				}
+		var Contact = factory( {
+			addPhone: function( e ) {
+				this.cd( "..phones" ).push( {
+					type: "",
+					number: ""
+				} );
 			}
-		);
+		} );
+
+		var Company = factory( {
+			addContact: function( e ) {
+				this.cd( "..contacts" ).push( Contact( {
+					firstName: "",
+					lastName: "",
+					phones: []
+				} ) );
+			}
+		} );
 
 		via.set( "contactApp", {
-				companies: [
-					Company( "ibm", [
+				companies: Company.makeSome( [
+					{
+						companyName: "ibm",
 
-						Contact( {
-							firstName: "Danny",
-							lastName: "LaRusso",
-							phones: [
-								{ type: "Mobile", number: "(555) 121-2121" },
-								{ type: "Home", number: "(555) 123-4567" }
-							]
-						} ),
-
-						Contact( {
-							firstName: "Sensei",
-							lastName: "Miyagi",
-							phones: [
-								{ type: "Mobile", number: "(555) 444-2222" },
-								{ type: "Home", number: "(555) 999-1212" }
-							]
-						} )
-					] )
-				],
+						contacts: Contact.makeSome( [
+							{
+								firstName: "Danny",
+								lastName: "LaRusso",
+								phones: [
+									{ type: "Mobile", number: "(555) 121-2121" },
+									{ type: "Home", number: "(555) 123-4567" }
+								]
+							},
+							{
+								firstName: "Sensei",
+								lastName: "Miyagi",
+								phones: [
+									{ type: "Mobile", number: "(555) 444-2222" },
+									{ type: "Home", number: "(555) 999-1212" }
+								]
+							}
+						] )
+					}
+				] ),
 				addCompany: function( e ) {
-					this.cd( "..companies" ).push( Company( "" ) );
+					this.cd( "..companies" ).push( Company( {
+						companyName: "",
+						contacts: []
+					} ) );
 				}
 			}
 		);

@@ -9,6 +9,7 @@
 			height: 100px;
 		}
 	</style>
+	<script src='../../doc/analytic.js'></script>
 </head>
 <body>
 
@@ -50,25 +51,18 @@
 
 	//instead of using the above code, use via.util.factory, so that you don't need to use
 	// new Person to create a person, although "new" operator is still supported
-
-	var Person = via.util.factory(
-		function Person ( name, children ) {
-			this.name = name;
-			this.children = children;
-		},
-		{
-			addChild: function( e ) {
-				this.cd( "children" ).push( "new child" )
-			}
+	var Person = via.util.factory( {
+		addChild: function( e ) {
+			this.cd( "children" ).push( "new child" )
 		}
-	);
+	} );
 
 	via.set( "collectionsApp", {
-		people: [
-			Person( "Annabelle", ["Arnie", "Anders", "Apple"] ),
-			Person( "Bertie", ["Boutros-Boutros", "Brianna", "Barbie", "Bee-bop"] ),
-			Person( "Charles", ["Cayenne", "Cleopatra"] )
-		]
+		people: Person.makeSome( [
+			{ name: "Annabelle", children: ["Arnie", "Anders", "Apple"] },
+			{ name: "Bertie", children: ["Boutros-Boutros", "Brianna", "Barbie", "Bee-bop"] },
+			{ name: "Charles", children: ["Cayenne", "Cleopatra"]}
+		] )
 	} );
 
 </script>

@@ -11,12 +11,12 @@
 	<script src="../../src/template.js"></script>
 	<script src="../../src/must-have-extensions.js"></script>
 	<script src="../../src/nice-to-have-extensions/queryableListView.js"></script>
-	<script type="text/javascript"
-	        src="../../src/template-engines/template-engine-jqueryTmpl.js"></script>
+	<script src="../../src/template-engines/template-engine-jqueryTmpl.js"></script>
 	<script src="data.js"></script>
 	<script type="text/javascript">
 		via( "contacts" ).queryable();
 	</script>
+	<script src='../../doc/analytic.js'></script>
 </head>
 <body data-sub="@ns:contacts">
 <h3>original contacts</h3>
@@ -52,7 +52,7 @@
 
 <input value="Reset Search" type="button" data-sub="`resetFilter"/>
 
-<table data-sub="`hasQueryResult">
+<table data-sub="`withQueryResult">
 	<thead>
 	<tr>
 		<th style="cursor: pointer" data-sub="`sort:.|firstName">First Name
@@ -70,7 +70,7 @@
 	</tfoot>
 </table>
 
-<p data-sub="`noQueryResult">No result found</p>
+<p data-sub="`withoutQueryResult">No result found</p>
 
 <p>
 	<input value="reset query" type="button" data-sub="`resetQuery"/>

@@ -23,7 +23,7 @@
 		shadowNamespace = "__via",
 		rShadowKey = /^__via\.([^\.]+?)(?:\.|$)/,
 		//try to match xxx in string this.get("xxx")
-		rWatchedPath = /this\.(?:get)\s*\(\s*(['"])([\*\.\w]+)\1\s*\)/g,
+		rWatchedPath = /this\.(?:get)\s*\(\s*(['"])([\*\.\w\/]+)\1\s*\)/g,
 
 		//key is publisher
 		//value is array of subscribers
@@ -755,8 +755,8 @@
 
 		//only try to parse function body
 		//if it is a parameterless function
-		//or it has a magic function name "__"
-		if (!isFunction( value ) || value.name == "__") {
+		//or it has a magic function name "_"
+		if (!isFunction( value ) || value.name == "_") {
 			return;
 		}
 
@@ -834,31 +834,44 @@
 		}
 	}];
 
+	function makeSome ( seeds ) {
+		var rtn = [];
+		for (var i = 0; i < seeds.length; i++) {
+			rtn.push( new this( seeds[i] ) );
+		}
+		return rtn;
+	}
+
 	//helpers
 	extend( via, {
 
 		util: util = {
 
-			factory: function( Constructor, prototype ) {
-				var F;
-				if (isFunction( Constructor )) {
-					F = eval( "(function " + Constructor.name + " () {})" );
+			factory: function( constructor, prototype ) {
+				var F, rtn;
+
+				if (isFunction( constructor )) {
+
+					F = constructor;
 
 				} else {
+
 					F = function() {};
-					prototype = Constructor;
-					Constructor = null;
+					prototype = constructor;
+					constructor = function( seed ) {
+						extend( this, seed );
+					};
 				}
 
 				extend( F.prototype, prototype );
-
-				return function() {
+				rtn = function() {
 					var f = new F();
-					if (Constructor) {
-						Constructor.apply( f, arguments );
-					}
+					constructor.apply( f, arguments );
 					return f;
 				};
+
+				rtn.makeSome = makeSome;
+				return rtn;
 			},
 
 			//user do not need to use createShadowIfNecessary parameter

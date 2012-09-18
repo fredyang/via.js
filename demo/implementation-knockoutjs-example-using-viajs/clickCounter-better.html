@@ -3,6 +3,7 @@
 <html>
 <head>
 	<title></title>
+	<script src='../../doc/analytic.js'></script>
 </head>
 <body>
 <div data-sub="@ns:clickApp">
@@ -16,6 +17,7 @@
 		That's too many clicks! Please stop before you wear out your fingers.
 		<button data-sub="$click:clickCount|*0">Reset clicks</button>
 	</div>
+	<div data-sub="`showValue:clickCount" />
 </div>
 
 <script src="../../ref/jquery.js"></script>

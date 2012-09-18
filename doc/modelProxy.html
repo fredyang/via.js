@@ -1,0 +1,314 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Hello world, via.js - Model</title>
+	<link href="../demo/css/oocss.css" rel='stylesheet'/>
+	<link rel="stylesheet" type="text/css" href="introduction.css" media="all">
+	<link href='../demo/SyntaxHighlighter/styles/shCore.css' rel='stylesheet'/>
+	<link href='../demo/SyntaxHighlighter/styles/shThemeDefault.css' rel='stylesheet'/>
+	<script src='../demo/SyntaxHighlighter/scripts/XRegExp.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shCore.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushJScript.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushXml.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushCss.js'></script>
+	<script src='analytic.js'></script>
+	<script language="javascript" type="text/javascript">
+		SyntaxHighlighter.defaults.gutter = false;
+		SyntaxHighlighter.defaults.toolbar = false;
+		SyntaxHighlighter.config.bloggerMode = true;
+		SyntaxHighlighter.all();
+	</script>
+</head>
+<body>
+<div class="page oldSchool">
+
+<h2>
+	Model
+</h2>
+
+<p>
+	In the "hello world" demo of previous article, we use a model proxy to import an Plain Old
+	Javascript Object into internal repository, and then we use it again to subscribe event, get
+	value from the repository and set value to the repostiory. The reason that we need a proxy
+	is that we want to intercept the access to value, so that we can inject code before value is
+	changed and after value is changed.
+</p>
+
+<h3>Observerable pattern</h3>
+
+<p>Observerable pattern is a pattern we can use to create model proxy. If you hear it for the first
+	name, you may ask, does it mean that, an object cannot be observed if it is not an
+	"Observerable" object. Of course not. I guess the original intention of calling it
+	"Observerable" is to express the semantics that the Observerable object can notify others when
+	it is changed. If you are confused, think of it as "Notifiable" or "Subscribable". The following
+	example shows a simplified implementation of observerable. the real implementation
+	is much more sophiscated.
+</p>
+
+	<pre class="brush:javascript">
+		//the Observerable constructor
+		function Observerable(value) {
+			//some private state which will be closured
+			var _value = value,
+				callbacks = [];
+
+		    var observerable = function (v) {
+				if (v === undefined) {
+					return _value;
+			    } else {
+					_value = v;
+                    for (var i = 0; i < callbacks.length; i++ ) {
+	                callbacks[i](v);
+                }
+			};
+
+			observerable.change = function (callback) {
+				callbacks.push(callback);
+		    };
+			return observerable;
+		}
+	</pre>
+
+<p>Let's use implement a simple scenario with abserverable. We have two variables score and status.
+	When score is under 60, status is "failed", otherwise status is "passed". </p>
+
+<pre class="brush:javascript">
+	
+	var observerableScore = Observerable();
+	var status = "unknown";
+
+	observerableScore.change(function (value) {
+		if (value &lt; 60) {
+			status = "failed";
+		} else {
+			status = "passed";
+		}
+	});
+
+	observerableScore(70);
+
+	//print status, it is passed
+	console.log(status);
+</pre>
+<p>The Observerable works, but there are three problems. </p>
+
+<ol class="simpleList">
+	<li>If we want to intercept the access to a value, you need to an Observerable.</li>
+	<li>Every Observerable is a new function with a new closure. Although closure is the very best
+		feature in JavaScript, if we have 10 objects and each object has 10 fields, we will create
+		100 functions with 100 private closures. An advanced user knows how to avoide this gotcha,
+		naive user can abuse this.
+	</li>
+	<li>The Observerable only support get and set operations over an value.</li>
+</ol>
+
+<h3>Model Proxy in via.js</h3>
+
+<p>In order not to introduce new concept, we call the proxy in via.js "model proxy" or just "proxy".
+	In the following, we use them interchangeably. The model proxy has the following features
+</p>
+
+<!--is different from Observerable in that creating a proxy does not create
+	a new function, because all models and every parts of a model are observerable(subscribable)
+	, and we don't need to create a function make model observerable(subscribable). Creating an
+	proxy is extremely cheap, and it can gargabe collected easily. s-->
+<ol class="simpleList">
+	<li>A repository is used internally to hold all models, all modles are subscribable.
+	</li>
+	<li>All proxies share a common closure of repository. Proxy extremely cheap to create, and
+		it can be garbage collected after it is out of scope.
+	</li>
+	<li>A proxy can support extensible access methods. The built-in method include get, set, remove,
+		push, pop and etc. But you can create your own access method.
+	</li>
+</ol>
+
+<p>
+	Here is implementation using via.js to solve the above example.
+</p>
+
+<pre class="brush:javascript">
+	//build a model
+	var rootProxy = via();
+	rootProxy.set("score", null);
+	rootProxy.set("status", "unknown");
+
+	//subscribe events for model
+	var statusProxy = via("status");
+	statusProxy.subscribe("score", "afterUpdate", function (e) {
+		var value = e.publisher.get();
+		if (value &lt; 60 ) {
+			this.set("failed");
+		} else {
+			this.set("passed");
+		}
+	});
+
+	//change model
+	rootProxy.set("score", 70);
+
+	//print status, "passed"
+	console.log(statusProxy.get());
+</pre>
+
+<h3>Accessing model properties model proxy method</h3>
+
+<!--Please note, <strong>proxy method is extensible</strong>, we will conver that later.
+	Below is some code on how to create proxy and invoke built-in proxy method.-->
+<p>via is the proxy factory. After a proxy is created, we can use proxy method to access the
+	model. We can also create new proxy method just like built methods are created.</p>
+
+<pre class="brush:javascript">
+	var rootPath = "";
+	//or
+	//var rootProxy = via();
+	var rootProxy = via(rootPath);
+	//create an node "customer" under root model
+	rootProxy.set("customer", {
+		firstName: "John",
+		lastName: "Doe"
+	});
+
+	//traverse to node "customer", and change "firstName" of customer
+	var customerProxy = rootProxy.cd("customer");
+	customerProxy.set("firstName", "Tom");
+
+	//access descendent using multi-segment path
+	rootProxy.set("customer.lastName", "Roe");
+	//
+	//traverse to node using mulit-segment path
+	var lastNameProxy = rootProxy.cd("customer.lastName");
+	//
+	//traverse back to parent node
+	var anotherCustomerProxy = lastNameProxy.cd("..");
+	//
+	//traverse to sibling
+	var anotherFirstNameProxy = lastNameProxy.cd("..firstName");
+	//
+	//traverse to node of two level up
+	var anotherRootProxy = lastNameProxy.cd("...");
+	//
+	//traverse to root
+	var anotherRootProxy2 = lastNameProxy.cd("/");
+
+	//delete firstName of customerProxy
+	customerProxy.del("firstName");
+
+	//array access method
+	rootModel.set( "contacts", [
+		{
+			firstName: "John",
+			lastName: "Smith"
+		},
+		{
+			firstName: "Joe",
+			lastName: "Davis"
+		},
+		{
+			firstName: "Mary",
+			lastName: "Curtis"
+		}
+	]);
+
+	contactsProxy = via("contacts");
+	//
+	//get the first item in model array
+	var firstContact = contactsProxy.first();
+	//
+	//get the last item in model array
+	var lastContact = contactsProxy.last();
+	//
+	//get item by index in a model array
+	var secondContact = contactsProxy.get(1);
+
+	//add a new item
+	contactsProxy.push({
+		firstName: "x",
+		lastName: "y"
+	});
+
+	//create a new proxy method
+	//it is shared in all proxy
+	via.fn.log = function () {
+	    this.log(this.get());
+	};
+
+	contactsProxy.log();
+</pre>
+
+<h3>Accessing model functions using proxy.get() and proxy.set()</h3>
+
+<p>In side the model, we can also have functions. When these functions are assessed using proxy.get
+	and proxy.set, they are callled <strong>model methods</strong>, because the "this" variable
+	always refer to parent proxy of context model proxy. Here's a sample of using model methods.
+</p>
+
+<pre class="brush:javascript">
+	via.set("test", {
+
+		//model property
+		firstName: "John",
+
+			//model property
+		lastName: "Doe",
+
+		//model method
+		fullName: function () {
+			//"this" refer the parent proxy via("test")
+			return this.get("firstName") + "," + this.get("lastName");
+		},
+
+		//model method
+		getGreeting: function (msg) {
+			//"this" refer the parent proxy via("getGreeting")
+			return msg + "," + this.get("fullName");
+		},
+
+		//model method
+		changeName: function (fullName) {
+			var parts = fullName.split(",");
+			//"this" refer the parent proxy via("getGreeting")
+			this.set("firstName", parts[0]);
+			this.set("lastName", parts[1]);
+		};
+	});
+
+	//read model using model method
+	var fullName = via.get("helloApp.fullName");
+	var greeting = via.get("helloApp.getGreeting", "hello");
+
+	//set model using model method
+	via.set("helloApp.changeName", "Tom,Roe");
+</pre>
+
+<h3>Accessing model functions using model proxy.helper()</h3>
+
+<p>When a model function is accessed using proxy.helper, it is called <strong>model helper</strong>,
+	the "this" variable refer to the global object.
+</p>
+
+<pre class="brush:javascript">
+	via.helper("helloApp.sayHi", function (name) {
+		alert("hi, " + name);
+	});
+
+	var sayHi = via.helper("helloApp.sayHi");
+
+	sayHi("John");
+</pre>
+
+
+<p><strong>There is no technical difference between model method and model helper. They are
+	classified as such depending one the way they are invoked not the way they are.</strong></p>
+
+<h2>View</h2>
+
+<p>In via.js, anything which is not accessed using model proxy is considered as view, but normally,
+	a view is a jQuery object. In the following, we use view and jQuery object interchangeably.
+</p>
+
+<p>Next I will talk about <a href="eventSubscription.html">event subscription</a></p>
+</div>
+</body>
+</html>

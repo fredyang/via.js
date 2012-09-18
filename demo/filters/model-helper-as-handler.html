@@ -8,6 +8,7 @@
 			display: block;
 		}
 	</style>
+	<script src='../../doc/analytic.js'></script>
 </head>
 <body>
 
@@ -27,14 +28,17 @@
 		getColor: function( e ) {
 			return e.publisher.val();
 		},
-		setColor: function (value, e) {
-			this.css("color", value);
+		updateViewColor: function( e ) {
+			var value = e.publisher.get();
+			this.css( "color", value );
+
 		},
 		color: "red"
 	} );
 
-	via("test.color").subscribe("$#txtColor", "change", "#/test.getColor set");
-	$("#txtColor").subscribe("test.color", "init", "get val");
-	$("#divSamples").subscribe("test.color", "init afterUpdate", "get #/test.setColor");
+	via( "test.color" ).subscribe( "$#txtColor", "change", "#/test.getColor set" );
+	debugger;
+	$( "#txtColor" ).subscribe( "test.color", "init", "get val" );
+	$( "#divSamples" ).subscribe( "test.color", "init afterUpdate", "#/test.updateViewColor" );
 </script>
 </html>

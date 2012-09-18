@@ -23,3 +23,8 @@ table div.syntaxhighlighter {
 h1, h2, h3, h4, h5, h6, ul, ol, dl, p, blockquote, .media {
 	margin: 10px 0;
 }
+
+blockquote {
+	margin-left: 40px;
+	margin-right: 40px;
+}

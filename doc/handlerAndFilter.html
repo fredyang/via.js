@@ -1,0 +1,666 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Hello world, via.js - Model</title>
+	<link href="../demo/css/oocss.css" rel='stylesheet'/>
+	<link rel="stylesheet" type="text/css" href="introduction.css" media="all">
+	<link href='../demo/SyntaxHighlighter/styles/shCore.css' rel='stylesheet'/>
+	<link href='../demo/SyntaxHighlighter/styles/shThemeDefault.css' rel='stylesheet'/>
+	<script src='../demo/SyntaxHighlighter/scripts/XRegExp.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shCore.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushJScript.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushXml.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushCss.js'></script>
+	<script src='analytic.js'></script>
+	<script language="javascript" type="text/javascript">
+		SyntaxHighlighter.defaults.gutter = false;
+		SyntaxHighlighter.defaults.toolbar = false;
+		SyntaxHighlighter.config.bloggerMode = true;
+		SyntaxHighlighter.all();
+	</script>
+</head>
+<body>
+<div class="page oldSchool">
+<h2>Handler and filter</h2>
+
+<p> Handler is where the work is done. The impact of changing from event binding to event
+	subscription is more than just simple renaming. It affects profoundly how the handler is created
+	and used. <strong>The goal is that we can quickly create handlers and reuse them, and we can
+		also create them programatically or declaratively.</strong>
+</p>
+
+<h3>Non-reusable handlers for event binding</h3>
+
+<p>
+	Using jQuery event binding, we normally write code like the following.
+</p>
+
+<pre class="brush:javascript">
+	$( "#txtName" ).change( function(e) {
+	    via("helloApp.name").set(this.value);
+	} );
+</pre>
+
+<p>Besides the problem of thinking like computer, the above handler had a hard reference to on
+	"helloApp.name" model, which makes the handler not reusable. If we want to use another text box
+	to
+	capture input value for another model, we have to rewrite a new handler like below.
+</p>
+<pre class="brush:javascript">
+	$("#txtAge").change(function (e) {
+		via("helloApp.age").set(this.value);
+	});
+</pre>
+
+<h3>Reusable and composable handlers of event subscription</h3>
+
+<p>Let's rewrite the above event binding using event subscription.</p>
+
+<pre class="brush:javascript">
+	//create a common handlers
+	function getViewValueAndSetModel (e) {
+		this.set(e.publisher.val());
+	}
+
+	//referrence the common handler by key
+	via("helloApp.name").subscribe("$#txtName", getViewValueAndSetModel );
+	via("helloApp.age").subscribe("$#txtAge", getViewValueAndSetModel" );
+</pre>
+
+<p>
+	In the above code, what the handler does is strictly between the subscriber and the publisher,
+	and there is no hard reference to external state, which make it reusable. If another
+	subscription use the same the types of subcriber and publisher, it can reuse the same handler.
+</p>
+
+<p>
+	Not only we want our handler reusable, we also want to make our handler composable. via.js uses
+	<a href="http://www.eaipatterns.com/PipesAndFilters.html">"Pipes and Filters"</a> pattern to
+	achieve this goal.
+</p>
+
+<!--
+<pre class="brush:javascript">
+	via.handlers("getViewValueAndSetModel", {
+		get: "val",
+		set: "set"
+	});
+
+	// or we can write
+	via.handlers("getViewValueAndSetModel", "val set");
+</pre>
+-->
+
+<h3>Filter in event subscription</h3>
+
+<p>Filters are tasks in a handler. via.js breaks down a handler into 6 filters. There are four
+	filters(<strong>getter, setter, converter, finalizer</strong> ) which are used when an event is
+	triggered. The only required filter is <strong>getter</strong>. Another two filters
+	(<strong>initializer and disposer</strong>) are used during event subscription is created or
+	disposed. Each filter can be used in one of four forms (<strong>function, common filter,
+		publisher/subscriber method, model helper</strong>). The following describes different forms
+	of filter of different types.
+</p>
+
+
+<!--
+	via( "age" ).subscribe( $text, "ageChange", "*testGet *testSet testConvert testInit testDispose" );
+-->
+<h4>Function filter</h4>
+
+<p>Function is the native form of filter, all forms of filter will be converted to filter
+	function.</p>
+
+<ol class="simpleList">
+	<li>getter (required, get the value of publisher or do all the work of a handler)
+		<pre class="brush:javascript">
+			function get(e) {
+				//you can do all your work in the filter
+				//and return undefined
+				//or
+				//get the value from e.publisher
+				//return a value so that the next filter can contine the processing
+			}
+		</pre>
+	</li>
+	<li>converter (optional, convert the value returned from getter)
+	<pre class="brush:javascript">
+		function convert(value, e) {
+			//return a new value by converting the value paramter
+			// or return a promise which will resolve a converted value.
+		}
+	</pre>
+		<p>
+			Please note that the convert filter does not necessary return a converted value
+			immediately, it can return a jQuery promise (such as <a
+			href="http://api.jquery.com/jQuery.ajax/">jqXHR</a>), which promise a converted
+			value in the future. The async converter is very powerful feature. We will talk about
+			it in template and AJAX.
+		</p>
+
+	</li>
+	<li>setter (optional, update subscriber with the value returned from converter)
+	<pre class="brush:javascript">
+		function set(value, e) {
+			//set this
+		}
+	</pre>
+		<p>In via.js, one creative usage of setter is to append the rendered markup into DOM
+			element.</p>
+	</li>
+	<li>
+		finalizer (optional, action will perform on the side effect that setter has
+		created).
+		<pre class="brush:javascript">
+			function finalize(value, e) {
+				//value is value which is passed into set filter
+			}
+		</pre>
+		<p>
+			In via.js, one of the usage of finalizer is used to parse the
+			markup appended into DOM to build declarative subscriptions.
+		</p>
+	</li>
+</ol>
+
+<p>
+	The other two filters are only used during subscription is made or subscription is removed. Both
+	of them are optional. The are normally used for common handlers.
+</p>
+
+<ol class="simpleList">
+	<li>initializer(optional, it is called during subscription is created)
+	<pre class="brush:javascript">
+		function initialize ( publisher, subscriber, handlerObject, options ) {
+			//publisher, subscribe are either jQuery object or model proxy
+			//handlerObject is the handlerObject being build
+			//options is the options that passed into 
+			//subscriber.subscribe(publisher, events, handler, options)
+		}
+	</pre>
+		<p>
+			It is useful when create a customized copy of reusable handlers, and wrapping
+			and third party widget.
+		</p>
+	</li>
+	<li>
+		disposer (optional, it is called during unsubscribing)
+		<pre class="brush:javascript">
+			function dispose(publisher, subscriber) {
+				//cleanup publisher and subscriber
+			}
+		</pre>
+		<p>It is useful to cleanup some state for third party widget.</p>
+	</li>
+</ol>
+
+<h4>Common filter</h4>
+
+<p>Common filters are the filters which can be reused in a handler. To create common filter we
+	can use the following code.</p>
+
+<pre class="brush:javascript">
+	via.filters.converters.toNumber = function( value ) {
+		return +value;
+	};
+
+	//add other filters use the following objects
+	//via.filters.getters
+	//via.filters.setters
+	//via.filters.initializers
+	//via.filters.disposers
+	//via.filters.finalizers
+
+	//use "*filterName" to reference the filter.
+</pre>
+
+<p>
+	A common filter expression is a string. For the above common converter, we can use string
+	"*toNumber" to represent the filter.
+</p>
+
+<h4>Publisher/subscriber method as filter</h4>
+
+<p><strong>This kind of filter is only applicable to getter and setter only.</strong> The expression
+	is a string
+	which represent the method of publisher/subscriber. For example, we can use "val" to as the
+	$jQueryObject.val method, and "set" to represent proxy.set method. If a method require a propety
+	name, you need to use "methodName*propertyName". For example, if we want to use
+	$jQueryObject.css("color", value) method, we need to use expression "css*color". Please
+	know that if publisher/subscriber is a model proxy, "get" or "set" method can also apply to
+	to the model method.
+</p>
+
+<pre class="brush:javascript">
+	$view.subscribe( "color", "init afterUpdate", "css*color" );
+</pre>
+
+<h4>Model helper as filter</h4>
+
+<p>Previously, we have discussed model helper, which should be referenced with proxy.helper(). To
+	refer to model helper, use "#pathOfModelHelper".
+</p>
+
+
+<h3>Handler in event subscription</h3>
+
+<p>Event subscription handler is composed with different filters. A handler can be expressed
+	in four forms.
+</p>
+
+<h4>Handler in function form</h4>
+
+<p>This is the most simple form of handler, this is very similar to traditonal handler used
+	in event binding.</p>
+
+<pre class="brush:javascript">
+	subscriber.subscribe(publisher, events, function (e) {}, options);
+</pre>
+
+<p>
+	Internally, the handler the function will be transformed into the get filter of hanler object.
+	So the above quote is essentially the same as below.
+</p>
+
+<pre class="brush:javascript">
+	subscriber.subscribe(publisher, events, {
+		get: function (e) {}
+	},
+	options);
+</pre>
+
+<h4>Handler in the form of literal object</h4>
+
+<p>Internally, all forms of handler will be convert to an handler object. But you can use a handler
+	object directly. The filters can in one of the filter forms discussed ealier.</p>
+
+<pre class="brush:javascript">
+	//the filter should be in one form of these (function, common filter,
+	//publisher/subscriber method, embedded function)
+	subscriber.subscribe(publisher, events, {
+		get: getter,
+		set: setter,
+		convert:converter,
+		finalize: finalizer,
+		initialize: initializer,
+		dispose: disposer
+	},
+	options);
+</pre>
+
+
+<h4>Handler in form of string of filter keys</h4>
+
+<p>This is special form of literal object. If all filters of a literal handler object
+	are filter keys, we can use a string concatinating all filter keys. The keys should be
+	concatinate in the order of "getter setter converter finalizer initializer disposer".
+</p>
+
+<pre class="brush:javascript">
+	subscriber.subscribe(publisher, events, "getter setter converter finalizer initializer disposer", options);
+	//if you have missing member you can use null in place of the misss filter. for example
+	subscriber.subscribe(publisher, events, "getter setter null finalizer null disposer", options);
+	//if you have don't have remaining filter, you can just leave them empty like below
+	subscirber.subscriber(publisher, events, "getter setter");
+</pre>
+
+<p>Normally, you need to have at least one get filter and one set filter. But sometimes, you can
+	have
+	only one filter, and via.js can infer another filter from the type of publisher and subscriber.
+</p>
+
+<pre class="brush:javascript">
+	via("helloApp.name").subscribe("$#txtBox", "change", "val");
+	//via.js can infer "val" as "val set", because publisher is a view, and subscriber is model
+	//this is equivalent to the following
+	via("helloApp.name").subscribe("$#txtBox", "change", "val set");
+	//
+	$("divMessage").subscribe("helloApp.message", "afterUpdate", "html");
+	//via.js can infer "html" as "get html", because publisher is a model, and subscriber is a view.
+	//this is equivalent to the following
+	$("divMessage").subscribe("helloApp.message", "afterUpdate", "get html");
+</pre>
+
+<h4>Common handler</h4>
+
+<p>Before you can use common handler, you need to build a common handlers. The syntax is,</p>
+
+<pre class="brush:javascript">
+	via.handlers(commonHandlerName, handler);
+</pre>
+
+<p>The handler can be in one of the handler forms discussed above, such as handler function, handler
+	oject (object form and string form). After you build a common, handler you can reference it
+	in event subscriptions like the following.</p>
+
+<pre class="brush:javascript">
+	subscriber.subscribe(publisher, events, "*commonHandlerName", options);
+</pre>
+
+<h4>Model helper as handler</h4>
+
+<p>As dicussed before model helper are just model function. You can put your handler function into
+	the model first, then reference it as a handler using string "#pathOfEmbeddedFunction".
+</p>
+
+<pre class="brush:javascript">
+	via.set( "test", {
+		updateViewColor: function (e) {
+			var value = e.publisher.val();
+			this.css("color", value);
+
+		},
+		color: "red"
+	} );
+	//reference the embedded function using "#pathOfEmbeddedFunction"
+	$("#divSamples").subscribe("helloApp.color", "init afterUpdate", "#helloApp.updateViewColor");
+</pre>
+
+<p>A special form of using model helper as handler is as follow. In this case, the handler
+	is the subscriber itself, so that you can leave the handler empty.</p>
+
+<pre class="brush:javascript">
+	via.extend({
+		name: "",
+		handleViewChange: function (e) {
+			//this function is not invoked using proxy.set(),
+			//this function is get filter and handler
+			//"this" refer to handler object
+			this.set("..name", e.publisher.val());
+		}
+	});
+
+	via("handleViewChange").subscribe("$#txtName", "change", "#handleViewChange");
+
+	//Because the handler is same as subscriber, we can leave the handler empty, like this
+	via("handleViewChange").subscribe("$#txtName", "change");
+
+</pre>
+
+
+<!--	<strong>Although via.js encourage you write your handler from the perspective for subscriber and
+		change subscriber
+		only, it does not enforce what you can do in the handler.</strong>
+-->
+
+<h3>Event arguements of model event and view event</h3>
+
+<p>
+	Although the subscriptions of of model event and view event are unified, but the underlining
+	implementations are still different. via.js try to normalize the behavior of these two event
+	implementation. In the following chart, the highlighted part are the shared members. The other
+	properties are specific to model event arugment only or model event argument only.
+</p>
+
+<div class="data simpleTable">
+	<table>
+		<col style="width:220px">
+		<col style="width:auto;">
+		<col style="width:220px">
+		<tr>
+			<td>Event argument members<br/>
+			</td>
+			<td>model event argument</td>
+			<td>view event argument</td>
+		</tr>
+		<tr>
+			<td>instanceof</td>
+			<td>via.Event</td>
+			<td>jQuery.Event</td>
+		</tr>
+		<tr class="commonFeature">
+			<td>publisher</td>
+			<td>
+				model proxy pointing to publisher in parameter of the subscribe method
+			</td>
+			<td>$(e.currentTarget)</td>
+		</tr>
+		<tr class="commonFeature">
+			<td>originalPublisher</td>
+			<td>
+				model proxy pointing to publisher which originally trigger the event.
+			</td>
+			<td>$(e.target)</td>
+		</tr>
+		<tr class="commonFeature">
+			<td>subscriber</td>
+			<td colspan="2">
+				model proxy(if subscriber is model)<br/>
+				jQuery object(if subscriber is view)
+			</td>
+		</tr>
+		<tr class="commonFeature">
+			<td>type</td>
+			<td colspan="2">
+				the name of triggering event
+			</td>
+		</tr>
+
+		<tr class="commonFeature">
+			<td>stopPropagation()</td>
+			<td>
+				support
+			</td>
+			<td>inherit from jQuery.Event</td>
+		</tr>
+		<tr class="commonFeature">
+			<td>stopImmediatePropagation()</td>
+			<td>
+				support
+			</td>
+			<td>inherit from jQuery.Event</td>
+		</tr>
+		<tr>
+			<td>proposed</td>
+			<td>
+				availabe in beforCreate, beforeUpdate event
+			</td>
+			<td>n/a</td>
+		</tr>
+		<tr>
+			<td>removed</td>
+			<td>
+				availabe in afterDel, afterUpdate event
+			</td>
+			<td>n/a</td>
+		</tr>
+		<tr>
+			<td>level</td>
+			<td>
+				support, a number show the level from current model to the original model
+			</td>
+			<td>n/a</td>
+		</tr>
+		<tr>
+			<td>stopCascade()</td>
+			<td>
+				support, when called the event will not be broadCast to dependent property
+			</td>
+			<td>n/a</td>
+		</tr>
+		<tr>
+			<td>error()</td>
+			<td>
+				support, when called in beforeUpdate, beforeCreate event handler, will abort
+				update, create operations
+			</td>
+			<td>n/a</td>
+		</tr>
+		<tr>
+			<td>isDependent()</td>
+			<td>
+				support, true if publisher model is not the ascendent of original publisher
+			</td>
+			<td>n/a</td>
+		</tr>
+		<tr>
+			<td>Other jQuery Event propeteries such as target, related target, pageX, pageY, ...
+			</td>
+			<td>n/a</td>
+			<td>inherit from jQuery.Event</td>
+		</tr>
+	</table>
+
+</div>
+
+<h3>Debugging Handler and filter</h3>
+
+<h2>Application</h2>
+
+<p>We have discussed model, view, event, subscription, filter and handler. In via.js, these are all
+	the components of a web application. Building a application using via.js consist of following
+	tasks.
+</p>
+<ol class="simpleList">
+	<li>Provision view objects using markup</li>
+	<li>Provision model objects using model proxy</li>
+	<li>Let view objects subscribe events of other objects</li>
+	<li>Let model objects subscribe events of other objects</li>
+</ol>
+
+<p>via.js provide a API to organize your application.</p>
+<pre class="brush:javascript">
+	via.application( {
+		models: [
+			{
+				path: "modelPath",
+				value: modelValue,
+
+				//optional by default it is
+				contextView: "body",
+				subs: [
+					//can be any type of subscriptions, but typically is like
+					[modelSubPath, jQuerySelectUnderContextView, viewEvents, handler, options/*optional*/, delegate/*optional*/]
+				]
+			}
+		],
+
+		views: [
+			{
+				view: $( "#divMessage" ),
+				//optional by default is root model ""
+				contextModel: "test",
+				subs: [
+					//can be any type of subscriptions, but typically is like
+					[childJQueryObjectUnderView, subModelUnderContextModel, modelEvents, options/*optional*/, delegate/*optional*/]
+				]
+			}
+		]
+
+	} );
+</pre>
+<p>We can use the application method to rewrite the "hello world" application like the
+	following.</p>
+<pre class="brush:javascript">
+	via.application( {
+		models: [
+			{
+				path: "test",
+				value: {
+					name: "",
+					message: function() {
+						var name = this.get( "name" );
+						return name ? "hello, " + name : "";
+					}
+				},
+				subs: [
+					["name", "$#txtName", "change", "val set"]
+				]
+			}
+		],
+
+		views: [
+			{
+				view: $( "#divMessage" ),
+				contextModel: "test",
+				subs: [
+					//$ means the current view
+					["$", "message", "afterUpdate", "get html"]
+				]
+			}
+		]
+	} );
+</pre>
+<p>We can see that an application consists of a set of models and views. A model has properties and
+	functions they are either methods or helpers. A model also has a set of subscriptions. These
+	subscriptions is basically a set of rules which tells the model how to behave itself to respond
+	external events, especially view events. Similarly, a view is an element in the page, and it has
+	also a set of subscriptions, which tells the view how to behave itself to respond to external
+	events, especially model events. From a point of view, model and view are almost the same.
+	via.js
+	has an other method, which treat them the same way, at least from the aspect of developer use,
+	it
+	is called stage.
+</p>
+
+<pre class="brush:javascript">
+	via.stage(actors);
+	//or
+	via.stage(actor1, actor2, ...);
+	//e.g
+	var modelActor = {
+		actor: modelPath,
+		model: modelValue,
+		//optional
+		context: "body"
+		subs: [
+			//can be any type of subscriptions, but typically is like
+			[modelSubPath, jQuerySelectUnderContext, viewEvents, handler, options/*optional*/, delegate/*optional*/]
+		]
+	};
+	var viewActor = {
+		actor: jQueryObject,
+		context: modelPath,
+		subs: [
+			//can be any type of subscriptions, but typically is like
+			[childJQueryObjectUnderView, subModelUnderContextModel, modelEvents, options/*optional*/, delegate/*optional*/]
+		]
+	};
+</pre>
+
+<p>The idea is that an application is like a stage, views and models are just like actors
+	on the stage. They behave by themself based on a set of rules (subscriptions). As a developer,
+	you are like a director, put the actors on the stage, let the actors play they own role. Once
+	the show starts, there is no director, manager, controller anymore. Actors are on their own.
+	Below is how to use stage method to rewrite the hello world application.
+</p>
+<pre class="brush:javascript">
+	via.stage(
+		{
+			actor: "test", //model path
+
+			//model value
+			model: {
+				name: "",
+				message: function() {
+					var name = this.get( "name" );
+					return name ? "hello, " + name : "";
+				}
+			},
+
+			//optional
+			//context "body",
+			subs: [
+				//children, publisher, events, events, options, delegate
+				["name", "$#txtName", "change", "val set"]
+			]
+		},
+
+		{
+			actor: "#divMessage",
+			context: "test", //model path
+			subs: [
+				["$", "message", "afterUpdate", "get html"]
+			]
+		}
+	);
+</pre>
+
+<p> Please note that the stage method and application method does the same thing, and there is no
+	technical difference. You can use either of them to suit your taste. Besides the application and
+	stage method, via.js also provide a declarative way to build application.
+</p>
+</div>
+</body>
+</html>

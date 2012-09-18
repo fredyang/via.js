@@ -1,0 +1,458 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Hello world, via.js</title>
+	<link href="../demo/css/oocss.css" rel='stylesheet'/>
+	<link rel="stylesheet" type="text/css" href="introduction.css" media="all">
+	<link href='../demo/SyntaxHighlighter/styles/shCore.css' rel='stylesheet'/>
+	<link href='../demo/SyntaxHighlighter/styles/shThemeDefault.css' rel='stylesheet'/>
+	<script src='../demo/SyntaxHighlighter/scripts/XRegExp.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shCore.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushJScript.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushXml.js'></script>
+	<script src='../demo/SyntaxHighlighter/scripts/shBrushCss.js'></script>
+	<script src='analytic.js'></script>
+	<script language="javascript" type="text/javascript">
+		SyntaxHighlighter.defaults.gutter = false;
+		SyntaxHighlighter.defaults.toolbar = false;
+		SyntaxHighlighter.config.bloggerMode = true;
+		SyntaxHighlighter.all();
+	</script>
+</head>
+<body>
+<div class="page oldSchool">
+<h1>Hello world, via.js</h1>
+
+<p>This article introduce via.js using the classic "Hello world" example. You are pre-warned that
+	it is very long introduction, feel free to see the <a href="../demo/index.html">sample list</a>
+	when you are
+	borned.
+</p>
+
+<h2>What is via.js?</h2>
+
+<p>via.js is a jQuery based library which can be used to build complex client-side driven web
+	application with well-structured JavaScript. It uses well known publish-subscribe pattern to let
+	both models and views behave themself by raising event and subscribing event. Let's call it
+	a MVES(Model-View-Event-Subscrption) library. Below is a highlight of some of its features.
+
+
+<ol class="simpleList">
+
+	<li>Deep integration with jQuery and heavily reuse its API</li>
+	<li>Lightweight proxy object instead of Observerable function</li>
+	<li>Unified event publishing and subscription for all objects(view and model)</li>
+	<li>Reusable and composable subscription handlers</li>
+	<li>Support multiple template engines and simultaneously</li>
+	<li>Support different styles of using the library, declarative, programmatic or mixed.</li>
+	<li>Small in both source size and runtime memory.</li>
+	<li>Unit testable</li>
+</ol>
+
+<h2>Background</h2>
+
+<p>HTML5 app is hot, here is a quote from <a href="http://throneofjs.com/">Throne of JS</a></p>
+
+<blockquote>
+	It's no longer good enough to build web apps around full page loads and then "progressively
+	enhance" them to behave more dynamically. Building apps which are fast, responsive and modern
+	require you to completely rethink your approach. This is a big transition to make and it is
+	further complicated by the plethora of great options out there. Don't just sit around and wait
+	for things to shake out.
+</blockquote>
+
+
+<p>Although jQuery is the most popular client side library nowadays, it does not suggest a patten to
+	write complex client side application. Today, we have so many MVC, MVVM or MV-Whateverjavascript
+	UI frameworks. To nam a few, there are AngularJS, Backbone, Batman, CanJs, Ember, knockout,
+	Meteor Spine and more. The common goal is to write large scale Single Page Application in a
+	maintainable, repeatable structure.
+</p>
+
+<p>Via.js is my adventure to do something different. via.js does not try to solve all the challenge
+	to build Single Page Application, instead it focus the area of view and model interaction.</p>
+
+<h2>Hello World</h2>
+
+<p>Let's jump into the code and see what via.js can do. Instead of throwing you lots of code, this
+	article mainly focus on a very simple "Hello world" application, and discuss the idea behind the
+	library, which is bigger than the library itself. Basically, the app allows user input a name in
+	the text box, and when it changes, a greeting message will be displayed in a label. I will start
+	with tradtional implementation and gradually use the features of via.js, explaining how to use
+	these features.
+</p>
+
+<h3>Event binding</h3>
+
+<p>
+	<a href="http://en.wikipedia.org/wiki/Event-driven_programming">Event driven programming</a>
+	has been extremely popular in GUI developement. The following is a typical
+	<a href="../demo/helloworld/01-event-binding.html"> implementation</a> using event binding.
+</p>
+
+
+	<pre class="brush:html">
+		&lt;label&gt;Please input your name: &lt;input type="text" id="txtName"/&gt;&lt;/label&gt;
+		&lt;div id="divMessage"/&gt;
+	</pre>
+	<pre class='brush:javascript'>
+		$( "#txtName" ).bind("change", function() {
+			var name = $( this ).val();
+			$( "#divMessage" ).html( name ? "Hello," + name : "" );
+		} );
+	</pre>
+
+<p>
+	For simple scenario like this, event binding works. In a slightly more complicated scerario, the
+	code can be excessively complex. So what is the problem. The problem
+	is the word "bind", which leads people to think like a computer. When I write the above code,
+	I will think, "I bind the text box to this handler so that when text
+	box is changed, the handler get executed." The first person, "I" is essentially equivalent of
+	the computer. To a computer , everything can be manipulatable, everything is resource and
+	lifeless. Applying this thinking, I as developer, is templated to do too many things,
+	although I shoudn't, in the handler. Why? Because I am the computer, because I can. We might
+	think that we get it right by modularize the code inside the handler. However, if the direction
+	of first step is wrong, it is impossible make it correct down the road.
+</p>
+
+<h3>Event subscriptions between views</h3>
+
+<!--
+Instead of using
+	event binding directly, viajs wrap event binding into event subscriptions. Under the hood,
+	event binding is still there. However, we can think like object using event subscription.
+
+-->
+<p>No matter how far down the wrong road you've gone, turn back. This why I want to use a different
+	way of thinking, <a
+		href="http://www.amazon.com/Object-Thinking-DV-Microsoft-Professional-David/dp/0735619654">
+		object thinking</a>, by using via.js. The following is the first <a
+		href="../demo/helloworld/02-event-subscriptions-between-views-programatic.html">implementation</a>
+	using via.js.
+</p>
+
+<pre class="brush:html">
+		&lt;label&gt;Please input your name: &lt;input type="text" id="txtName"/&gt;&lt;/label&gt;
+		&lt;div id="divMessage"/&gt;
+	</pre>
+
+<pre class="brush:javascript">
+	$( "#divMessage" ).subscribe( "$#txtName", "change",
+		function( e ) {
+			var name = e.publisher.val();
+			this.html( name ? "Hello," + name : "" );
+		}
+	);
+</pre>
+<p>
+	When I write the above code, I think from the perspective of object "#divMessage".
+	Firstly, I subscribe the "change" event of textbox object. When the event happens, so I change
+	my content accordingly. The following is detailed comparison of event binding and event
+	subscription.
+</p>
+
+<div class="simpleTable data">
+	<table>
+		<col style="width: 200px;">
+		<tr>
+			<td></td>
+			<td>Event Binding</td>
+			<td>Event Subscription</td>
+		</tr>
+		<tr>
+			<td>Event Publisher</td>
+			<td>object (#txtName)</td>
+			<td>object (#txtName)</td>
+		</tr>
+		<tr>
+			<td>Event Subscriber</td>
+			<td>computer</td>
+			<td>object ("#divMessage)</td>
+		</tr>
+		<tr>
+			<td>Behavior</td>
+			<td>It is the behavior of computer</td>
+			<td>It is the behavior of object (#divMessage)</td>
+		</tr>
+		<tr>
+			<td>Ownership</td>
+			<td>Binding and its handler belong to computer</td>
+			<td>Subscription and its handler belong to object ("#divMessage)</td>
+		</tr>
+		<tr>
+			<td>what is read inside the handler</td>
+			<td>
+				can be anything
+			</td>
+			<td>
+				Only publisher, subscriber or both (*)
+			</td>
+		</tr>
+		<tr>
+			<td>what is manipulated inside the handler</td>
+			<td>
+				can be anything
+			</td>
+			<td>
+				Only subscriber (*)
+			</td>
+		</tr>
+		<tr>
+			<td>Dependencies</td>
+			<td>
+				Hard coded dependencies ("#divMessage") , they can be anything
+			</td>
+			<td>
+				Local dependencies e, this (subscriber)
+			</td>
+		</tr>
+		<tr>
+			<td>Testability of handler</td>
+			<td>Hard, because dependencies are so arbitrary, they can not easily be faked</td>
+			<td>Easy, because dependencies (e, this) can be easily be faked.</td>
+		</tr>
+		<tr>
+			<td>Reusability of handler</td>
+			<td>Hard to reuse because of hard dependencies</td>
+			<td>Easy to reuse because of only local dependencies</td>
+		</tr>
+		<tr>
+			<td>Mindset of developer</td>
+			<td>Computer thinking (I can manipuate everything)</td>
+			<td>Object thinking (I behave myself humblely)</td>
+		</tr>
+	</table>
+</div>
+
+<p>*Techinically, you can still do whatever you want in handler of event subscription, and
+	sometimes it is also necessary for whatever reason, but this defeat the purpose of event
+	subscription.
+</p>
+
+<p> From event binding to event subscription, it is a subtle yet fundamentally important change.
+	The benefit of the change is not obvious for now. We will talk about it for the rest of the
+	article.
+</p>
+
+<h3>Event subscription between models and views</h3>
+
+<p>In the previous example, we have views only. For simple scenario like this, there is no need
+	to use model at all, but I will use it anyway to show the benefit of using it, which is
+	decoupling views. In the following, the view "divMessage" does not subscribe the event of
+	the view "txtName" any more. Instead, a model "helloApp.message" is created, the model is
+	similar
+	to the concept of <a
+		href="http://knockoutjs.com/documentation/observables.html">observerable</a>
+	in knockoutjs, however you don't need to mark it observerable explicitly. Then let the view
+	"divMessage" subscribe the event of the model "helloApp.message", and the model
+	"helloApp.message" subscribe the event of view "txtName". The following is the <a
+		href="../demo/helloworld/04.0-event-subsriptions-between-model-view-programatic.html">code</a>.
+</p>
+	<pre class="brush:html">
+		&lt;label&gt;Please input your name: &lt;input type="text" id="txtName"/&gt;&lt;/label&gt;
+		&lt;div id="divMessage"/&gt;
+	</pre>
+	<pre class="brush:javascript">
+		//define a model
+		via.set( "helloApp", {
+			message: ""
+		} );
+
+		//view #divMessage subscribe an event of model "test.message"
+		$( "#divMessage" ).subscribe( "helloApp.message", "afterUpdate", function( e ) {
+			this.html( e.publisher.get() );
+		} );
+
+		//model "helloApp.message" subscribe an event of text box "txtName"
+		via( "helloApp.message" ).subscribe( "$#txtName", "change", function( e ) {
+			var name = e.publisher.val()
+			this.set( name ? "hello, " + name : "" );
+		} );
+	</pre>
+<!--
+<p>
+In this example, we build a model using viajs, the model has two members, name and message.
+The name property is similar the concept of observerable, the message funtion is similar the
+concept "computed observerable" in other framework. We will talk about it more later, what we
+care about right now is that they can raise event when they are changed. The internal event
+cascading from "helloApp.name" to "helloApp.message" is automatic, no coding is required.
+Then the model "helloApp.name" subscribe the change of view "#txtName" so that it update itself
+accordingly, and view "#divMessage" subscribe the change of model "helloApp.message" to update
+itself accordingly.
+</p>
+-->
+
+<p>
+	So why we want to decouple views, what is wrong that a view subscribe event of another view?
+	There is nothing wrong at all. However, view are the most dynamic parts of a application.
+	while models reflect the business logic and they are relative stable compared to view.
+	Let's say originally, we have two view (b, c) subscribe the change of view (a). If we replace
+	view a with view d, we need to update these two subscriptions. However, if we create a model A,
+	and let view (b, c) subscribe model A, and let model A subscribe event of view a. When view a,
+	change, we only need to update the subscription of model A but not view (b, c). In the <a
+	href="../demo/helloworld/04.0.1-event-subsriptions-between-model-view-programatic.html">
+	following.</a>, we may change text box into dropdownlist without affecting the view
+	"#divMessage".
+	</a>
+</p>
+
+<pre class="brush:javascript">
+	&lt;label&gt;Please input your name: &lt;select id="ddlName"&gt;
+		&lt;option&gt;&lt;/option&gt;
+		&lt;option&gt;John&lt;/option&gt;
+		&lt;option&gt;Tom&lt;/option&gt;
+		&lt;option&gt;Ammy&lt;/option&gt;
+	&lt;/select&gt;&lt;/label&gt;
+
+	&lt;div id="divMessage"/&gt;
+</pre>
+
+<pre class="brush:javascript">
+	//define a model
+	via.set( "helloApp", {
+		message: ""
+	} );
+
+	//view #divMessage subscribe an event of model "test.message"
+	$( "#divMessage" ).subscribe( "helloApp.message", "afterUpdate", function( e ) {
+		this.html( e.publisher.get() );
+	} );
+
+	//model "helloApp.message" subscribe an event of dropdown list "ddlName"
+	via( "helloApp.message" ).subscribe( "$#ddlName", "change", function( e ) {
+		var name = e.publisher.val()
+		this.set( name ? "hello, " + name : "" );
+	} );
+</pre>
+
+<p>Another benefit of using model is that, we can easily persist the state of model or send it back
+	to server. If we don't have such requirements, we don't necessary to use model.</p>
+
+<p>So far so good. But the logic of building the message is embedded in the event handler of
+	subscription to model "helloApp.message", this should be encapsulated in model. So let's
+	move the logic out of the handler and embedded it in the model like the
+	<a href="../demo/helloworld/04.1-event-subsriptions-between-model-view-programatic.html">
+		following.
+	</a>
+</p>
+
+<pre class="brush:javascript">
+	//define a model
+	via.set( "helloApp", {
+	    name: "",
+	    message: function() {
+	        var name = this.get("name");
+	        return name ? "hello, " + name : "";
+	    }
+	} );
+	//model "helloApp.name" subscribe an event of text box "txtName"
+	via( "helloApp.name" ).subscribe( "$#txtName", "change", function( e ) {
+	    this.set( e.publisher.val() );
+	} );
+	//view #divMessage subscribe an event of model "test.message"
+	$( "#divMessage" ).subscribe( "helloApp.message", "afterUpdate", function( e ) {
+	    this.html( e.publisher.get() );
+	} );
+</pre>
+
+<p>In the code, the model "helloApp.message" become a function, which depends on the model
+	"helloApp.name". This function is simliar <a
+		href="http://knockoutjs.com/documentation/computedObservables.html">computedObserverable
+		concept</a> in knockoutjs. However you don't need to explicitly create it, viajs just
+	can cascade the "afterUpdate" from "helloApp.name" to "helloApp.message" internally.
+</p>
+
+<h3>Declarativel Event subscription</h3>
+
+<p>We have seen programmatic event subscription. viajs aslo support declarative event subscription
+	using renamable attribute, which by default is named "data-sub". The following is
+	an <a href="../demo/helloworld/09-event-subscriptions-between-model-view-declarative2.html">example.</a>
+</p>
+
+<pre class="brush:html">
+	&lt;!--subscriptions is declaratively embedded in the markup, no id is required for view--&gt;
+	&lt;label&gt;Please input your name: &lt;input type="text" data-sub="`val:helloApp.name"/&gt;
+	&lt;/label&gt;
+	&lt;div data-sub="`html:helloApp.message"/&gt;
+</pre>
+<pre class="brush:javascript">
+	//define a model
+	via.set( "test", {
+		name: "",
+		message: function() {
+			return this.name ? "hello, " + this.name : "";
+		}
+	} );
+</pre>
+
+<p>Delarative subscription between views is also supported. If we don't use model at all, we can use
+	the <a href="../demo/helloworld/03-event-subscriptions-between-views-declarative.html">following
+		code</a>.
+</p>
+
+<pre class="brush:html">
+	&lt;label&gt;Please input your name:
+			&lt;input type="text" id="txtName"/&gt;
+		&lt;/label&gt;
+		&lt;div id="divMessage" data-sub="!change:$#txtName|#helloApp.handleTxtChange"/&gt;
+</pre>
+
+<pre class="brush:javascript">
+	via.set( "helloApp", {
+		handleTxtChange: function( e ) {
+			var name = e.publisher.val();
+			this.html( name ? "hello, " + name : "" );
+		}
+	} );
+</pre>
+
+<p>Declarative event subscription looks similar to declarative binding in knockoutjs.
+	But the concept used here is event subscription but not binding, which is different from
+	knockoutjs. Declarative subscription is just another form of subscriptions, it produces the same
+	code of programmatic subscription. Declarative subscription is very useful when used with
+	template, expecially in nested template rendering. We will talk about that later.</p>
+
+<p>
+	In this simple scenario, both event binding and event subscription work. In fact, event binding
+	works more efficiently. However, they reflect different way of thinking, and has tramendous
+	impact down the path of develepment. Below it is the thinking you use when writing in viajs.
+	They should be read in the context of an object.</p>
+
+<strong>
+	<ul class="simpleList">
+		<li>I behave myself based on events of other objects, however no other objects can change
+			me.
+		</li>
+		<li>I cannot change other objects either, all I can do is to raise my events, others decide
+			what they need to do.
+		</li>
+	</ul>
+</strong>
+
+
+<p>I believe, they are in line with the object thinking documented in the book <a
+	href="http://www.amazon.com/Object-Thinking-DV-Microsoft-Professional-David/dp/0735619654">Object
+	thinking</a>. Having said that, it doesn't mean that we should abandon computer thinking.
+	Actually I use computer thinking all the time when I write statement "if/else", "for/while", and
+	I can't leave without it. However, object thinking just scales better.</p>
+
+<h3>
+	Where is my controller?
+</h3>
+
+<p>The answer is, there is no controller, because there is no need for one. In viajs, all
+	objects regardless if they are view or model, they are the master of their own domain. Everybody
+	behave themself, why we need a controller or manager? If you are really obsessed with
+	controller, you can think of viajs as the ultimate controller, so that you don't need a
+	controller here. We have Model (model proxy), View (jQuery object), Event (jQuery event or model
+	event), Subscription, now we have <a href="http://www.mves.org/">MVES</a> ? Another funny
+	acronym.
+</p>
+
+<p>Next, I will talk about <a href="modelProxy.html">model proxy</a></p>
+
+</div>
+
+</body>
+</html>

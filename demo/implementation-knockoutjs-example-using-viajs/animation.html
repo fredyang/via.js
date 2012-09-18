@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<style>
+		.rock {
+			background-color: #ECA;
+		}
+
+		.gasgiant {
+			background-color: #AEC;
+		}
+
+		.planets > div {
+			margin-top: 10px;
+			height: 30px;
+			border: solid 1px #CCC;
+		}
+
+		.page {
+			border: solid 1px #CCC;
+			background-color: #EED;
+			overflow: auto;
+			padding: 10px;
+			/*background: #EED;*/
+		}
+	</style>
+	<script src='../../doc/analytic.js'></script>
+</head>
+
+<body data-sub="@ns:animation">
+
+<div class="page">
+
+	<h2>Planets</h2>
+
+	<p>
+		<label>
+			<input type='checkbox' data-sub='`val:displayAdvancedOptions'/> Display advanced options
+		</label>
+	</p>
+
+	<p data-sub='`slideDownLater:displayAdvancedOptions'>
+		Show:
+		<label><input type='radio' value='all' data-sub='`val:chosenType'/>All</label>
+		<label><input type='radio' value='rock' data-sub='`val:chosenType'/>Rocky planets</label>
+		<label><input type='radio' value='gasgiant' data-sub='`val:chosenType'/>Gas giants</label>
+	</p>
+
+	<p data-sub="`showValue:chosenType"></p>
+
+	<div data-sub='`listView:planets !afterCreate.1:planets|#..slideDownNewRow' class="planets">
+		<div data-sub="{{addRowItemNs /}} `slideDownLater:choosen" class="{{:type}}"> {{:name}}
+		</div>
+	</div>
+
+	<!--
+		$click:addPlanet||rock -- model addPlanet subscribe click event,
+		handler is the model itself, options is "rock"
+	-->
+	<p data-sub='`slideDownLater:displayAdvancedOptions'>
+		<button data-sub='$click:addPlanet||rock'>Add rocky planet</button>
+		<button data-sub='$click:addPlanet||gasgiant'>Add gas giant</button>
+	</p>
+</div>
+
+<script src="../../ref/jquery.js"></script>
+<script src="../../src/modelProxy.js"></script>
+<script src="../../src/eventSubscription.js"></script>
+<script src="../../src/declarative.js"></script>
+<script src="../../src/template.js"></script>
+<script src="../../src/must-have-extensions.js"></script>
+<script src="../../ref/jsrender.js"></script>
+<script src="../../src/template-engines/template-engine-jsrender.js"></script>
+<script src="../../src/nice-to-have-extensions/alignableListView.js"></script>
+<script src="sampleProductCategories.js"></script>
+
+<script>
+
+	(function addReusableExtension() {
+		//register a common handler slideDown
+		via.handlers( "slideDown", function( e ) {
+			this[e.publisher.get() ? "slideDown" : "slideUp"]();
+		} );
+
+		//register a class slideDown
+		via.classes.slideDownLater = "!afterUpdate:.|*slideDown" + //after model update try to apply common handler "slideDown" to the view
+		                             "!init:.|*show"; //initially apply model value to the to command handler "show"
+	})();
+
+	(function applicationSepecificLogic() {
+
+		var Planet = via.util.factory( {
+			choosen: function() {
+				var value = this.get( "...chosenType" );
+				var temp = value == "all" || value == this.get().type;
+				return temp;
+			}
+		} );
+
+		via.set( "animation", {
+			planets: Planet.makeSome( [
+				{ name: "Mercury", type: "rock"},
+				{ name: "Venus", type: "rock"},
+				{ name: "Earth", type: "rock"},
+				{ name: "Mars", type: "rock"},
+				{ name: "Jupiter", type: "gasgiant"},
+				{ name: "Saturn", type: "gasgiant"},
+				{ name: "Uranus", type: "gasgiant"},
+				{ name: "Neptune", type: "gasgiant"},
+				{ name: "Pluto", type: "rock"}
+			] ),
+			chosenType: "all",
+			displayAdvancedOptions: false,
+			addPlanet: function _ ( e ) {
+				var type = e.handler.options;
+				this.cd( "..planets" ).push( Planet( {
+					name: "new " + type,
+					type: type
+				} ) );
+			},
+			slideDownNewRow: function( e ) {
+				var subscriber = this;
+				setTimeout( function() {
+					var newRow = subscriber.children( ":last" );
+					if (newRow.is( ":visible" )) {
+						newRow.hide().slideDown();
+					}
+				}, 0 );
+			}
+		} );
+
+	})();
+
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 //
-//<@depends>eventSubscription.js, model.js, declarative.js, template.js</@depends>
+//<@depends>eventSubscription.js, modelProxy.js, declarative.js, template.js</@depends>
 
 //there are a few concepts here
 
@@ -52,7 +52,7 @@
 	//which does not match with the model value
 	//
 	//<div class="tab" data-sub="`tab:modelPath|tabId">content</div>
-	viaClasses.tab = "^init afterUpdate:.|*updateTab";
+	viaClasses.tab = "!init afterUpdate:.|*updateTab";
 
 	//class which include tab class, with additonal behavior
 	//
@@ -104,7 +104,7 @@
 	//apply this class the holder of tab
 	//data-sub="`tabHolder:doc.topModule|selectedClass,attributeOfSelectedId
 	//data-sub="`tabHolder:doc.topModule|selected,topModule
-	viaClasses.tabHolder = "^init100 afterUpdate:.|*updateTabHolder";
+	viaClasses.tabHolder = "!init100 afterUpdate:.|*updateTabHolder";
 
 	//tabSelectorHolder is superset of tab holder
 	//apply this class to the holder of tab selector such as ul

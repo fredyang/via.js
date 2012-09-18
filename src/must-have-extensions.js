@@ -1,5 +1,5 @@
 //
-//<@depends>eventSubscription.js, model.js, declarative.js, template.js</@depends>
+//<@depends>eventSubscription.js, modelProxy.js, declarative.js, template.js</@depends>
 //#merge
 (function( $, via ) {
 	//#end_merge
@@ -216,7 +216,7 @@
 		},
 
 		//this is useful for debugging
-		//via.classes.showValue = "^init after*:.|*showValue"";
+		//via.classes.showValue = "!init after*:.|*showValue"";
 		showValue: function( e ) {
 			this.html( "<span style='color:red'>" + e.publisher.path + " : " + e.publisher.toJSON() + "</span>" );
 		},
@@ -562,15 +562,15 @@
 		//
 		//
 		listView: //render whole list of items
-			"^init after*.:.|*renderInside" +
+			"!init after*.:.|*renderInside" +
 				//render newly appended data item by appending it to end of the view
-			"^afterCreate.1:.|*appendTmplItem" +
+			"!afterCreate.1:.|*appendTmplItem" +
 				//render the updated data item in the view
-			"^afterUpdate.1:.|*updateTmplItem" +
+			"!afterUpdate.1:.|*updateTmplItem" +
 				//delete the deleted data item in the view
-			"^afterDel.1:.|*removeTmplItem",
+			"!afterDel.1:.|*removeTmplItem",
 
-		fullUpdateListView: "^init after*:.|*renderInside",
+		fullUpdateListView: "!init after*:.|*renderInside",
 
 		//a general class rule to synchronize
 		// the control with viewAdapter to a model
@@ -581,44 +581,44 @@
 		val: "@val:.",
 
 		//data-sub="`options:path"
-		options: "^init after*:.|*options",
+		options: "!init after*:.|*options",
 
 		//data-sub="`show:path"
-		show: "^init after*:.|*show",
+		show: "!init after*:.|*show",
 
 		//data-sub="`hide:path"
-		hide: "^init after*:.|*hide",
+		hide: "!init after*:.|*hide",
 
-		addClass: "^init after*:.|*addClass",
+		addClass: "!init after*:.|*addClass",
 
-		removeClass: "^init after*:.|*removeClass",
+		removeClass: "!init after*:.|*removeClass",
 
-		focus: "^init after*:.|*focus",
+		focus: "!init after*:.|*focus",
 
 		//data-sub="`enableLater:path"
-		enableLater: "^after*:.|*enable",
+		enableLater: "!after*:.|*enable",
 
 		//data-sub="`disableLater:path"
-		disableLater: "^after*:.|*disable",
+		disableLater: "!after*:.|*disable",
 
 		//data-sub="`enable:path"
-		enable: "^init after*:.|*enable",
+		enable: "!init after*:.|*enable",
 
 		//data-sub="`disable:path"
-		disable: "^init after*:.|*disable",
+		disable: "!init after*:.|*disable",
 
 		//data-sub="`html:path"
-		html: "^init after*:.|get html *toString",
+		html: "!init after*:.|get html *toString",
 
 		//data-sub="`text:path"
-		text: "^init after*:.|get text *toString",
+		text: "!init after*:.|get text *toString",
 
-		showPlural: "^init after*:.|*showPlural",
+		showPlural: "!init after*:.|*showPlural",
 
 		//data-sub="`showValue:path"
-		showValue: "^init after*:.|*showValue",
+		showValue: "!init after*:.|*showValue",
 
-		textCount: "^init after*:.|*textCount",
+		textCount: "!init after*:.|*textCount",
 
 		//data-sub"`alert:_,hello"
 		//"hello" will be passed as options

@@ -1,5 +1,5 @@
 //
-//<@depends>eventSubscription.js, model.js, declarative.js</@depends>
+//<@depends>eventSubscription.js, modelProxy.js, declarative.js</@depends>
 //#merge
 (function( $, via ) {
 	//#end_merge
@@ -114,7 +114,7 @@
 					},
 					handler.engineName );
 
-			if (isPromise(content)) {
+			if (isPromise( content )) {
 				return content;
 			}
 			if (isString( content )) {
@@ -151,24 +151,24 @@
 		render: buildTemplateHandler( "get", "replaceWith" )
 	} );
 
+	//this is for render everything but just once, after that it will not update itself
+	viaClasses.forOnce = "!init:.|*renderInside";
+
+	//this is for render a single object inside a container
+	viaClasses.forObject = "!init after*.:.|*renderInside";
+
 	//this is for render an array inside of container view
 	//data-sub="@class:foreach|path|templateId"
 	//or data-sub="`forArray:path|templateId"
-	viaClasses.forArray = "^init after*. after*.1:.|*renderInside";
-
-	//this is for render a single object inside a container
-	viaClasses.forObject = "^init after*.:.|*renderInside";
+	viaClasses.forArray = "!init after*. after*.1:.|*renderInside";
 
 	//this is for render everything, and update view on change of any decedent
-	viaClasses.forAll = "^init after*:.|*renderInside";
-
-	//this is for render everything but just once, after that it will not update itself
-	viaClasses.forOnce = "^init:.|*renderInside";
+	viaClasses.forAll = "!init after*:.|*renderInside";
 
 
 	//data-sub="@class:render|path|templateId"
 	//or data-sub="`render:path|templateId"
-	viaClasses.render = "^init:.|*render";
+	viaClasses.render = "!init:.|*render";
 
 	//$("div").renderInside(templateId, path)
 	//$("div").renderInside(templateId, path, fn)
@@ -235,9 +235,16 @@
 			return engine.render( templateId, dataSource, renderContext );
 
 		} else {
-			var defer = $.Deferred();
+			var defer = $.Deferred(),
+				cloneEvent = extend(true, {}, renderContext.e),
+				publisher = extend(true, {}, cloneEvent.publisher),
+				clonedContext = extend( true, {}, renderContext );
+
+			cloneEvent.publisher = publisher;
+			clonedContext.e = cloneEvent;
+
 			template.load( templateId ).done( function() {
-				var content = engine.render( templateId, dataSource, renderContext );
+				var content = engine.render( templateId, dataSource, clonedContext );
 				var rtn = $( content );
 				defer.resolve( rtn.selector || !rtn.length ? content : rtn );
 			} );

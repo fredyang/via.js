@@ -1,4 +1,4 @@
-module( "model.js" );
+module( "modelProxy.js" );
 var shadowNamespace = via.debug.shadowNamespace;
 var rootModel = via();
 via.options.autoImportSubs = false;

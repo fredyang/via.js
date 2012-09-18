@@ -1,5 +1,5 @@
 //
-//<@depends>eventSubscription.js, model.js</@depends>
+//<@depends>eventSubscription.js, modelProxy.js</@depends>
 //#merge
 (function( $, via ) {
 	//#end_merge
@@ -19,7 +19,7 @@
 		//a declaration is like @property:value or @property
 		//rDeclaration = /\s*([`@$\^])([#\w\. \*]+)(:([\*\.\w$\/][^`@$\^]*))*/g,
 		//rDeclaration = /\s*([`@$\^])([#\w\. \*]+):?/g,
-		rDeclaration = /\s*([`@\^])([#\w\. \*]+):?|\s*(\$)([#\w\. \*]+):/g,
+		rDeclaration = /\s*([`@!])([#\w\. \*]+):?|\s*(\$)([#\w\. \*]+):/g,
 
 
 		rSemicolonSeparator = /\s*;\s*/g,
@@ -87,8 +87,8 @@
 				propertyValue = propertyName + "|" + propertyValue;
 				propertyName = "pub";
 
-			} else if (seperator == "^") {
-				//^event:path|handler|options|delegate --> @sub:path|events|handler|options|delegate
+			} else if (seperator == "!") {
+				//!event:path|handler|options|delegate --> @sub:path|events|handler|options|delegate
 				//this.get().splice( index, 0, item );
 				propertyValue = propertyValue.split( rSubscriptionValueSeperator );
 				propertyValue.splice( 1, 0, propertyName );

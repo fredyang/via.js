@@ -1,5 +1,5 @@
 //
-//<@depends>eventSubscription.js, model.js, declarative.js, template.js</@depends>
+//<@depends>eventSubscription.js, modelProxy.js, declarative.js, template.js</@depends>
 //#merge
 (function( $, via ) {
 	//#end_merge
@@ -284,7 +284,7 @@
 		//handle the change of items*edit.mode
 		//if it is in create mode render content in container,
 		// otherwise empty container
-		//^init afterUpdate:.|*renderNewItem
+		//!init afterUpdate:.|*renderNewItem
 		renderNewItem: buildTemplateHandler(
 			//getFilter
 			function( e ) {
@@ -351,8 +351,8 @@
 		//publisher is items*edit model
 		//it render the view which is used to edit new item
 		//data-sub="@ns:*edit.item `newItemView:..,#contactRowInNewMode"
-		newItemView: "^enterNewMode*:*edit|*renderNewItem" +
-		             "^cancelNewMode:*edit.mode|hide"
+		newItemView: "!enterNewMode*:*edit|*renderNewItem" +
+		             "!cancelNewMode:*edit.mode|hide"
 
 	} );
 

@@ -11,7 +11,7 @@ node_engine ?= `which node nodejs`
 version = $(shell cat version.txt)
 date=$(shell git log -1 --pretty=format:%ad)
 
-core_files = ${src_dir}/model.js\
+core_files = ${src_dir}/modelProxy.js\
 			${src_dir}/eventSubscription.js\
 			${src_dir}/declarative.js\
 			${src_dir}/template.js\

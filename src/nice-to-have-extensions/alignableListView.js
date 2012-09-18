@@ -1,5 +1,5 @@
 //
-//<@depends>eventSubscription.js, model.js, declarative.js, template.js</@depends>
+//<@depends>eventSubscription.js, modelProxy.js, declarative.js, template.js</@depends>
 //#merge
 (function( $, via ) {
 	//#end_merge
@@ -159,7 +159,7 @@
 		);
 	} );
 
-	viaClasses.alignableListView = viaClasses.listView + "^afterDel.1:.|*alignAfterRemove";
+	viaClasses.alignableListView = viaClasses.listView + "!afterDel.1:.|*alignAfterRemove";
 
 	//#merge
 })( jQuery, via );

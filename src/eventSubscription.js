@@ -1,6 +1,6 @@
 //
 
-//<@depends>model.js</@depends>
+//<@depends>modelProxy.js</@depends>
 
 //#merge
 (function( $, via ) {
@@ -138,7 +138,7 @@
 	};
 
 	//#merge
-	//override the trigger defined in model.js module
+	//override the trigger defined in modelProxy.js module
 	via._setTrigger( trigger );
 	//#end_merge
 

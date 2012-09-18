@@ -1,5 +1,5 @@
 //
-//<@depends>eventSubscription.js, model.js, declarative.js, template.js</@depends>
+//<@depends>eventSubscription.js, modelProxy.js, declarative.js, template.js</@depends>
 //#merge
 (function( $, via ) {
 	//#end_merge
@@ -260,7 +260,7 @@
 		via.handlers( handlerKey, buildModelHandlerForValidation( validator ) );
 
 		//data-sub="`required:path" or data-sub="`required:path,options"
-		viaClasses[validatorName] = "^afterUpdate validate:.|*" + handlerKey;
+		viaClasses[validatorName] = "!afterUpdate validate:.|*" + handlerKey;
 
 	};
 
@@ -734,7 +734,7 @@
 		},
 
 		//a model handler, you should use it with model model*showError
-		// like ^after*:*errors|*showError
+		// like !after*:*errors|*showError
 		showError: function( e ) {
 			//e.publisher points to "model*errors"
 			if (e.publisher.isEmpty()) {
@@ -787,7 +787,7 @@
 
 	extend( viaClasses, {
 
-		showError: "^after*:*errors|*showError",
+		showError: "!after*:*errors|*showError",
 		//data-sub="`validate:path" or data-sub="`validate", add a click handler
 		//to a button so that on click will validate
 		validate: "@validate:.",

@@ -2,7 +2,7 @@
 /*
  <@depends>
  eventSubscription.js,
- model.js,
+ modelProxy.js,
  declarative.js,
  template.js,
  https://raw.github.com/cowboy/jquery-bbq/v1.2.1/jquery.ba-bbq.js

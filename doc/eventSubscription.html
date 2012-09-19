@@ -2,7 +2,7 @@
 	"http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-	<title>Hello world, via.js - Model</title>
+	<title>Event Subscription</title>
 	<link href="../demo/css/oocss.css" rel='stylesheet'/>
 	<link rel="stylesheet" type="text/css" href="introduction.css" media="all">
 	<link href='../demo/SyntaxHighlighter/styles/shCore.css' rel='stylesheet'/>
@@ -25,24 +25,25 @@
 
 <h2>Event Subscription</h2>
 
-
+<!--
 <p>
-	On the view side, DOM event model is already implemented by all browser, and jQuery normalizes
-	DOM event behavior cross-browser. On the model side, via.js implements similar event
-	behavior of view. In fact, the most important goal of using model proxy is to create model
-	event.
+
 </p>
+-->
 
 <h3>View event</h3>
 
-<p>via.js use existing DOM event and jQuery event binding implementation to implement view event
-	subscription with a very thin wrapper.
+<p>On the view side, DOM event model has been already implemented by all browser, and jQuery
+	abstract and normalizes DOM event behavior cross-browser. via.js wrap jQuery event
+	binding into view event subscription. Most of the event binding handler you use today
+	will work in view event subscription in via.js, or they just need little modification.
 </p>
 
 <h3>Model event</h3>
 
-<p>Model event works very similar to DOM event and jQuery events, it supports the following
-	features.</p>
+<p>On the model side, via.js also bring event to model, so that when model is accessed, some event
+	can be raised, this is made possible by model proxy. Model event works very similar to jQuery
+	events, it supports the following features.</p>
 
 <ol class="simpleList">
 	<li>Event bubbling
@@ -62,10 +63,11 @@
 	</li>
 </ol>
 
+<!--
 <p>
 	Below is a person model. Changing the person's property will raise event, and we subscribe the
 	events with null subscirber and print the events argument so that we can see how model event is
-	raised, bubbled up, and broadcasted.
+	raised, bubbled up, and cascaded.
 </p>
 
 <pre class="brush:javascript">
@@ -359,6 +361,7 @@
 	events. The idea is that all the model build-in proxy maninpulation method can trigger events,
 	and we can write our custom manipuation method which generate custom events as well.
 </p>
+-->
 
 <!--<h3>Debugging event</h3>-->
 
@@ -515,7 +518,7 @@
 <pre class="brush:javascript">
 	via( "helloApp.color" ).subscribe( "$.color", "click", "val set", null, "input[type='button']" );
 </pre>
-<h3>Wildcarded events</h3>
+<h3>Wildcarded event type for model event</h3>
 
 <p>
 	When you subscribe an model event, you can use wildcard "*" to subscribe events matched the
@@ -572,7 +575,7 @@
 	</table>
 </div>
 
-<h3>init event</h3>
+<h3>"init" event type for model event</h3>
 
 <p>"init" event is special event, it is triggered right after a subscription is created. And the
 	subscription handler will be invoked immediately. In the following example, "init" event is used
@@ -582,7 +585,7 @@
 	$("#divMessage").subscribe("helloApp.fullName", "init afterUpdate", "get html");
 </pre>
 
-<p>In fact, you can specify a number after as time (in minisecond) to trigger the event right after
+<p>You can also specify a number after as time (in minisecond) to trigger the event right after
 	the subscription is created. In the following example the "init" event is triggered 100
 	minisecond after the subscription is created.
 </p>
@@ -602,7 +605,7 @@
 
 <!--<h3>Debugging subscriptions</h3>-->
 
-
+<p>Next we will talk about <a href="handlerAndFilter.html">handler pipeline and filters</a></p>
 </div>
 </body>
 </html>

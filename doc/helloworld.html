@@ -24,30 +24,30 @@
 <div class="page oldSchool">
 <h1>Hello world, via.js</h1>
 
-<p>This article introduce via.js using the classic "Hello world" example. You are pre-warned that
-	it is very long introduction, feel free to see the <a href="../demo/index.html">sample list</a>
-	when you are
-	borned.
+<p>This article introduce via.js using the classic "Hello world" example. This is the first part
+	of introduction, after finished this part, feel free to see the <a href="../demo/index.html">sample
+		list</a>. And continue the remainging parts.
 </p>
 
 <h2>What is via.js?</h2>
 
-<p>via.js is a jQuery based library which can be used to build complex client-side driven web
+<p>via.js is a jQuery based library. It eanbles you to build complex client-side driven web
 	application with well-structured JavaScript. It uses well known publish-subscribe pattern to let
-	both models and views behave themself by raising event and subscribing event. Let's call it
-	a MVES(Model-View-Event-Subscrption) library. Below is a highlight of some of its features.
-
+	both models and views behave themself by raising event and subscribing event. Below is a
+	highlight of some of its features.
+</p>
 
 <ol class="simpleList">
 
 	<li>Deep integration with jQuery and heavily reuse its API</li>
 	<li>Lightweight proxy object instead of Observerable function</li>
 	<li>Unified event publishing and subscription for all objects(view and model)</li>
-	<li>Reusable and composable subscription handlers</li>
+	<li>Reusable, composable and pipelined subscription handlers</li>
 	<li>Support multiple template engines and simultaneously</li>
 	<li>Support different styles of using the library, declarative, programmatic or mixed.</li>
 	<li>Small in both source size and runtime memory.</li>
 	<li>Unit testable</li>
+	<li>Bundled with lots of extensions out of box</li>
 </ol>
 
 <h2>Background</h2>
@@ -63,32 +63,34 @@
 </blockquote>
 
 
-<p>Although jQuery is the most popular client side library nowadays, it does not suggest a patten to
-	write complex client side application. Today, we have so many MVC, MVVM or MV-Whateverjavascript
-	UI frameworks. To nam a few, there are AngularJS, Backbone, Batman, CanJs, Ember, knockout,
+<p>Although jQuery is the most popular client side library nowadays, it does not suggest a pattern
+	to
+	write complex client side application. Today, we have so many MVC, MVVM or MVWhatever javascript
+	UI frameworks. To name a few, there are AngularJS, Backbone, Batman, CanJs, Ember, knockout,
 	Meteor Spine and more. The common goal is to write large scale Single Page Application in a
 	maintainable, repeatable structure.
 </p>
 
-<p>Via.js is my adventure to do something different. via.js does not try to solve all the challenge
-	to build Single Page Application, instead it focus the area of view and model interaction.</p>
+<p>Via.js is my adventure to do something different. It does not try to solve all the challenge
+	to build Single Page Application, instead it focus on the area of view and model
+	interaction.</p>
 
 <h2>Hello World</h2>
 
-<p>Let's jump into the code and see what via.js can do. Instead of throwing you lots of code, this
-	article mainly focus on a very simple "Hello world" application, and discuss the idea behind the
-	library, which is bigger than the library itself. Basically, the app allows user input a name in
-	the text box, and when it changes, a greeting message will be displayed in a label. I will start
-	with tradtional implementation and gradually use the features of via.js, explaining how to use
-	these features.
+<p>Let's jump into the code and see what via.js can do. Instead of giving your complex example,
+	let's focus on a very simple "Hello world" application. Along the path, I will discuss the idea
+	behind the library, which is bigger than the library itself. Basically, the app allows user
+	input a name in the text box, and when it changes, a greeting message will be displayed in a
+	label.
 </p>
 
 <h3>Event binding</h3>
 
 <p>
 	<a href="http://en.wikipedia.org/wiki/Event-driven_programming">Event driven programming</a>
-	has been extremely popular in GUI developement. The following is a typical
-	<a href="../demo/helloworld/01-event-binding.html"> implementation</a> using event binding.
+	has been extremely popular in GUI developement. The traditional way of handling event is
+	event binding. The <a href="../demo/helloworld/01-event-binding.html">following
+	implemenation</a> use this techinque.
 </p>
 
 
@@ -104,15 +106,15 @@
 	</pre>
 
 <p>
-	For simple scenario like this, event binding works. In a slightly more complicated scerario, the
-	code can be excessively complex. So what is the problem. The problem
-	is the word "bind", which leads people to think like a computer. When I write the above code,
-	I will think, "I bind the text box to this handler so that when text
-	box is changed, the handler get executed." The first person, "I" is essentially equivalent of
-	the computer. To a computer , everything can be manipulatable, everything is resource and
-	lifeless. Applying this thinking, I as developer, is templated to do too many things,
-	although I shoudn't, in the handler. Why? Because I am the computer, because I can. We might
-	think that we get it right by modularize the code inside the handler. However, if the direction
+	For simple scenario like this, event binding works. In a slightly more complicated scerario like
+	<a href="../demo/todos/todos.html">Todos app</a>, the code can be excessively complex. So what
+	is the problem. The problem is the word "bind", which makes developers to think like a computer.
+	When I write the above code, I think, "I bind the text box to this handler so that when
+	text box is changed, the handler get executed." The first person, "I" is essentially, the
+	computer. To a computer , everything can be manipulatable, everything is resource and lifeless.
+	Applying this thinking, I am templated to do too many things in the handler, although I
+	shoudn't. Why? Because I am the computer, I can do anything I want. You might think that we get
+	it right by modularize the code inside the handler. However, if the direction
 	of first step is wrong, it is impossible make it correct down the road.
 </p>
 
@@ -122,12 +124,11 @@
 Instead of using
 	event binding directly, viajs wrap event binding into event subscriptions. Under the hood,
 	event binding is still there. However, we can think like object using event subscription.
-
 -->
-<p>No matter how far down the wrong road you've gone, turn back. This why I want to use a different
+<p>No matter how far down the wrong road you've gone, turn back. I want to use a different
 	way of thinking, <a
 		href="http://www.amazon.com/Object-Thinking-DV-Microsoft-Professional-David/dp/0735619654">
-		object thinking</a>, by using via.js. The following is the first <a
+		object thinking</a>. So I write via.js. The following is the first <a
 		href="../demo/helloworld/02-event-subscriptions-between-views-programatic.html">implementation</a>
 	using via.js.
 </p>
@@ -148,8 +149,8 @@ Instead of using
 <p>
 	When I write the above code, I think from the perspective of object "#divMessage".
 	Firstly, I subscribe the "change" event of textbox object. When the event happens, so I change
-	my content accordingly. The following is detailed comparison of event binding and event
-	subscription.
+	my content accordingly. The change of mindset is subtle, yet it has great impact the code
+	that I write. Here is the comparison event binding and event subscription.
 </p>
 
 <div class="simpleTable data">
@@ -230,8 +231,7 @@ Instead of using
 	subscription.
 </p>
 
-<p> From event binding to event subscription, it is a subtle yet fundamentally important change.
-	The benefit of the change is not obvious for now. We will talk about it for the rest of the
+<p>The benefit of the change is not obvious for now. We will talk about it for the rest of the
 	article.
 </p>
 
@@ -327,7 +327,7 @@ itself accordingly.
 </pre>
 
 <p>Another benefit of using model is that, we can easily persist the state of model or send it back
-	to server. If we don't have such requirements, we don't necessary to use model.</p>
+	to server.</p>
 
 <p>So far so good. But the logic of building the message is embedded in the event handler of
 	subscription to model "helloApp.message", this should be encapsulated in model. So let's
@@ -386,7 +386,14 @@ itself accordingly.
 	} );
 </pre>
 
-<p>Delarative subscription between views is also supported. If we don't use model at all, we can use
+<p>Declarative event subscription looks similar to data binding in knockoutjs. People
+	love data binding. But the concept used here is event subscription, but it achieves the same
+	result of data binding. Declarative subscription is just another form of subscriptions, it
+	produces the same code of programmatic subscription. Declarative subscription is very useful
+	when used with template, expecially in nested template rendering. We will talk about that
+	later.</p>
+
+<p>Delarative subscription between views is also supported. If we don't use model, we can use
 	the <a href="../demo/helloworld/03-event-subscriptions-between-views-declarative.html">following
 		code</a>.
 </p>
@@ -407,15 +414,9 @@ itself accordingly.
 	} );
 </pre>
 
-<p>Declarative event subscription looks similar to declarative binding in knockoutjs.
-	But the concept used here is event subscription but not binding, which is different from
-	knockoutjs. Declarative subscription is just another form of subscriptions, it produces the same
-	code of programmatic subscription. Declarative subscription is very useful when used with
-	template, expecially in nested template rendering. We will talk about that later.</p>
-
 <p>
 	In this simple scenario, both event binding and event subscription work. In fact, event binding
-	works more efficiently. However, they reflect different way of thinking, and has tramendous
+	works more efficiently. However, they reflect different way of thinking, and have tramendous
 	impact down the path of develepment. Below it is the thinking you use when writing in viajs.
 	They should be read in the context of an object.</p>
 
@@ -451,7 +452,6 @@ itself accordingly.
 </p>
 
 <p>Next, I will talk about <a href="modelProxy.html">model proxy</a></p>
-
 </div>
 
 </body>

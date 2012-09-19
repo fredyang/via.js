@@ -23,36 +23,34 @@
 <body>
 <div class="page oldSchool">
 
-<h2>Building large scale client side application.</h2>
 
-<p>A client side application is build from smaller modules, which are also applications
-	by themself. We can use the <strong><a
-		href="http://en.wikipedia.org/wiki/Composite_pattern">
+<h2>Template</h2>
+
+<p>A large scale client side application can be built from smaller application. We can use the
+	<strong><a href="http://en.wikipedia.org/wiki/Composite_pattern">
 		composite pattern </a></strong> to build arbitrary complex application by composing smaller
 	applications. To do that we need to solve two problems here.
 </p>
 
 <ol class="simpleList">
 	<li>How to package unit application</li>
-	<li>How to composing unit application into larger one</li>
+	<li>How to compose small application into larger one</li>
 </ol>
 <p>
 	Let's focus on the first problem. The hello world application is smaller enough to be called
 	unit application. From the perspective of via.js, an application consist of only view and model.
 	We have discussed how to build model, in the following we will talk about using template to
-	built
-	a view.
+	built a view.
 </p>
 
-<h2>Template</h2>
 
 <h3>Register template engines</h3>
 
 <p>There are plenty client side JavaScript template engines out there.
 	Instead of reinventing a new template engine, via.js let user plugin their favorite template
 	engines. However, different template engines have their own philosophy, and work
-	some more or less differently. Via.js tries to provide a common interface so that it does not
-	depends on the implementation of different engines. In order to use a template engine,
+	differently. Via.js tries to provide a common interface so that it does not
+	depends on the implementation of a template engine. In order to use a template engine,
 	we need to plug it in by implementing the interface like below.
 </p>
 
@@ -612,147 +610,6 @@ via.set( "helloApp", {
 	    }
 	} );
 </pre>
-
-<h2>Summary</h2>
-
-<p>
-	So far, we have covered a lot about via.js. If you use jQuery a lot, you may find that
-	via.js is just a library which mimic the programming experience of jQuery. Lots of designs of
-	via.js are directly
-	borrowed from jQuery. So what does does via.js offer?
-</p>
-
-<ol class="simpleList">
-	<li>A model which can raise event</li>
-	<li>A unified event subscriptions instead of event binding</li>
-	<li>A handler pipleine</li>
-	<li>A declarative way to use event subscriptions and other feature</li>
-</ol>
-
-<!--<div class="data simpleTable">
-	<table>
-		<col style="width:110px;">
-		<col>
-		<col>
-		<tr>
-			<td>Comparison</td>
-			<td>jQuery</td>
-			<td>via</td>
-		</tr>
-		<tr>
-			<td>Internal Data</td>
-			<td>DOM holds all nodes. It is tree of nodes</td>
-			<td>A internal plain old javascript object holds all model. It is a tree of
-				values
-			</td>
-		</tr>
-		<tr>
-			<td>
-				Proxy Creation
-			</td>
-			<td>
-		   <pre class="brush:javascript">
-			   $(selector);
-			   $("#txtFirstName");
-		   </pre>
-			</td>
-			<td>
-		   <pre class="brush:javascript">
-			   via(path);
-			   via("helloApp.firstName");
-		   </pre>
-			</td>
-		</tr>
-		<tr>
-			<td>Proxy Access</td>
-			<td>
-		   <pre class="brush:javascript">
-			   //get
-			   $div.html();
-			   //set
-			   $div.html("hello");
-			   //remove
-			   $div.remove();
-		   </pre>
-			</td>
-			<td>
-		   <pre class="brush:javascript">
-			   //get
-			   firstNameProxy.get();
-			   //set
-			   firstNameProxy.set("John");
-			   //remove
-			   firstNameProxy.del();
-			   //other access method
-			   contactsProxy.push({ name: "John" });
-		   </pre>
-			</td>
-		</tr>
-		<tr>
-			<td>Proxy Extension</td>
-			<td>
-		   <pre class="brush:javascript tableCode">
-			   $.fn.foo = function () {
-				   //implementation
-			   };
-			   $div.foo();
-		   </pre>
-			</td>
-			<td>
-		   <pre class="brush:javascript tableCode">
-			   via.fn.foo = function(path,value)
-			   {
-				   //implementation
-			   };
-			   via("firstName").foo(path, value);
-		   </pre>
-			</td>
-		</tr>
-		<tr>
-			<td>Event Subscriptions</td>
-			<td>
-		   <pre class="brush:javascript">
-			   //$.fn.subscribe is added
-			   //by via.js
-			   $div.subscribe("helloApp.firstName",
-				   "afterUpdate",
-				   function (e) {
-			   this.html(
-				   e.publisher.get()
-				   );
-			   });
-		   </pre>
-			</td>
-			<td>
-		   <pre class="brush:javascript">
-			   firstNameProxy.subscribe(
-			   "$#txtBox",
-			   "change",
-			   function (e) {
-				   this.set(
-					   e.publisher.val()
-				   );
-			   });
-		   </pre>
-			</td>
-		</tr>
-		<tr>
-			<td>Custom Event</td>
-			<td>Support</td>
-			<td>Support</td>
-		</tr>
-		<tr>
-			<td>Event bubbling</td>
-			<td>Support</td>
-			<td>Support</td>
-		</tr>
-		<tr>
-			<td>Stop event propogation</td>
-			<td>Support</td>
-			<td>Support</td>
-		</tr>
-	</table>
-</div>-->
 
 <h2>Beyond hello world</h2>
 

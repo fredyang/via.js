@@ -2,7 +2,7 @@
 	"http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-	<title>Hello world, via.js - Model</title>
+	<title>Model</title>
 	<link href="../demo/css/oocss.css" rel='stylesheet'/>
 	<link rel="stylesheet" type="text/css" href="introduction.css" media="all">
 	<link href='../demo/SyntaxHighlighter/styles/shCore.css' rel='stylesheet'/>
@@ -30,9 +30,9 @@
 <p>
 	In the "hello world" demo of previous article, we use a model proxy to import an Plain Old
 	Javascript Object into internal repository, and then we use it again to subscribe event, get
-	value from the repository and set value to the repostiory. The reason that we need a proxy
-	is that we want to intercept the access to value, so that we can inject code before value is
-	changed and after value is changed.
+	value from the repository and set value to the repostiory. <strong>The reason that we need a
+	proxy is that we want to intercept the access to value, so that we can inject code before value
+	is changed and after value is changed.</strong>
 </p>
 
 <h3>Observerable pattern</h3>
@@ -91,14 +91,18 @@
 	//print status, it is passed
 	console.log(status);
 </pre>
-<p>The Observerable works, but there are three problems. </p>
+
+<p>In the observerable object, a callback list is maintained. Other object can add a callback
+	to the list using obsererable.change method. After the value is changed, observerable object
+	invoke the callback list. The Observerable works, but there are three
+	problems. </p>
 
 <ol class="simpleList">
 	<li>If we want to intercept the access to a value, you need to an Observerable.</li>
-	<li>Every Observerable is a new function with a new closure. Although closure is the very best
-		feature in JavaScript, if we have 10 objects and each object has 10 fields, we will create
-		100 functions with 100 private closures. An advanced user knows how to avoide this gotcha,
-		naive user can abuse this.
+	<li>Every Observerable is a new function with a new closure which holds the callback list.
+		Although closure is the very best feature in JavaScript, if we have 10 objects and each
+		object has 10 fields, we will create 100 functions with 100 private closures. An advanced
+		user knows how to avoid this gotcha, naive user can abuse this.
 	</li>
 	<li>The Observerable only support get and set operations over an value.</li>
 </ol>
@@ -114,13 +118,17 @@
 	, and we don't need to create a function make model observerable(subscribable). Creating an
 	proxy is extremely cheap, and it can gargabe collected easily. s-->
 <ol class="simpleList">
-	<li>A repository is used internally to hold all models, all modles are subscribable.
-	</li>
-	<li>All proxies share a common closure of repository. Proxy extremely cheap to create, and
-		it can be garbage collected after it is out of scope.
+	<li>A repository is used internally to hold all models, all modles are subscribable.</li>
+	<li>All proxies share a common closure which holds shared data repository and other states.
+		Proxy extremely cheap to create, and it can be garbage collected after it is out
+		of scope.
 	</li>
 	<li>A proxy can support extensible access methods. The built-in method include get, set, remove,
 		push, pop and etc. But you can create your own access method.
+	</li>
+	<li>Most importantly, model proxy does not keep a callback list. What the proxy do before
+		and after value is accessed, is to raise event. It does not care who should be called back.
+		The event subscirption module will take care of it. I will talk about it later.
 	</li>
 </ol>
 
@@ -152,12 +160,11 @@
 	console.log(statusProxy.get());
 </pre>
 
-<h3>Accessing model properties model proxy method</h3>
+<h3>Accessing model properties with proxy method</h3>
 
-<!--Please note, <strong>proxy method is extensible</strong>, we will conver that later.
-	Below is some code on how to create proxy and invoke built-in proxy method.-->
-<p>via is the proxy factory. After a proxy is created, we can use proxy method to access the
-	model. We can also create new proxy method just like built methods are created.</p>
+<p>via is the proxy factory. After a proxy is created, we can use proxy method like "get", "set",
+	"push" to access the model. We can also create new proxy method just like built-in methods are
+	created.</p>
 
 <pre class="brush:javascript">
 	var rootPath = "";
@@ -239,7 +246,7 @@
 
 <h3>Accessing model functions using proxy.get() and proxy.set()</h3>
 
-<p>In side the model, we can also have functions. When these functions are assessed using proxy.get
+<p>Inside the model, we can also have functions. When these functions are assessed using proxy.get
 	and proxy.set, they are callled <strong>model methods</strong>, because the "this" variable
 	always refer to parent proxy of context model proxy. Here's a sample of using model methods.
 </p>
@@ -284,7 +291,7 @@
 
 <h3>Accessing model functions using model proxy.helper()</h3>
 
-<p>When a model function is accessed using proxy.helper, it is called <strong>model helper</strong>,
+<p>When a model function is accessed using proxy.helper(), it is called <strong>model helper</strong>,
 	the "this" variable refer to the global object.
 </p>
 

@@ -146,7 +146,7 @@
 	};
 
 	//add reusable event handler
-	via.handlers( {
+	via.pipeline( {
 		renderInside: renderInside,
 		render: buildTemplateHandler( "get", "replaceWith" )
 	} );
@@ -205,7 +205,7 @@
 
 		return this.initView(
 			path,
-			templateHandlerExtension ? extend( {}, via.handlers( "render" ), templateHandlerExtension ) : "*render",
+			templateHandlerExtension ? extend( {}, via.pipeline( "render" ), templateHandlerExtension ) : "*render",
 			templateOptions
 		);
 	};

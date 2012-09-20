@@ -16,8 +16,8 @@ via.filters.initializers.datepickerToModel = function( publisher, subscriber, ha
 	} );
 };
 /*"get set convert initialize finalize dispose"*/
-via.handlers( "modelToDatepicker", "get datepicker*setDate _ *modelToDatepicker" );
-via.handlers( "datepickerToModel", "datepicker*getDate set _ *datepickerToModel" );
+via.pipeline( "modelToDatepicker", "get datepicker*setDate _ *modelToDatepicker" );
+via.pipeline( "datepickerToModel", "datepicker*getDate set _ *datepickerToModel" );
 
 via.classes.datepicker = "!init afterUpdate:.|*modelToDatepicker" +
                          "$onDateChanged:.|*datepickerToModel";

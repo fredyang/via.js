@@ -4,6 +4,9 @@
 		<div data-sub="`hide:*edit.mode">
 			<div>
 				<input type="button" data-sub="$click:.|*newRow" value="New Entry"/>
+				<input type="button" value="Discard all change"
+				       data-sub="@confirm:Are you sure to discard all change?
+				                 $click:.|#..discardChange">
 			</div>
 			<div class="data simpleTable">
 				<table>
@@ -68,7 +71,8 @@
 
 
 	<div>
-		<label>Short Description:</label><input type="text" data-sub="`val:shortDesc"/>
+		<label>Description:</label><input type="text"
+		                                  data-sub="@ns:shortDesc `val `required `showError"/>
 	</div>
 
 	<div>
@@ -95,15 +99,15 @@
 <script type="jsrender" id="doc.edit.signatures">
 	<div class="data simpleTable" data-sub="@ns:signatures">
 		<table>
-			<col style="width: 100px;">
+			<col style="width: 150px;">
 			<col style="width: 70px;">
 			<col style="width: auto">
 			<col style="width: 150px;">
 			<!--data-sub="`hide:*edit.mode"-->
-			<tr data-sub="`hide:*edit.mode">
-				<th>Description</th>
+			<tr>
+				<th>Name</th>
 				<th>Priority</th>
-				<th>Detail Description</th>
+				<th>Short Description</th>
 				<th>Actions</th>
 			</tr>
 			<tbody data-sub="`listView:.|doc.edit.signatureReadRow
@@ -123,9 +127,9 @@
 
 <script type="jsrender" id="doc.edit.signatureReadRow">
 	<tr>
-		<td>{{:shortDesc}}</td>
+		<td>{{:name}}</td>
 		<td>{{:priority}}</td>
-		<td>{{:desc}}</td>
+		<td>{{:shortDesc}}</td>
 		<td>
 			<input type="button" value="edit" data-sub="`editButton"/>
 			<input type="button" value="remove" data-sub="`deleteButton"/>
@@ -135,27 +139,29 @@
 
 <script type="jsrender" id="doc.edit.signatureEditRow">
 	<!--@ns:{{:~modelPath}}.item-->
-	<td colspan="4" data-sub="@ns:*edit.item">
+	<td colspan="4" data-sub="@ns:*edit.item" class="editForm">
 
 		<div>
-			<label>shortDesc:</label> <input type="text" data-sub="@ns:shortDesc
+			<label>Signature Name:</label> <input type="text" data-sub="@ns:name
 																   `val
 																   `required
 																   `showError"/>
 		</div>
 
 		<div>
-			<label>desc:</label><input type="text" data-sub="`val:desc"/>
+			<label>Short Description:</label><textarea type="text" class="s"
+			                                           data-sub="`val:shortDesc"/>
 		</div>
 
 		<div>
-			<label>longDesc:</label><input type="text" data-sub="`val:longDesc"/>
+			<label>Description</label><textarea class="m" type="text" data-sub="`val:desc"/>
 		</div>
 
 
 		<div>
 			<label>priority:</label>
 			<select data-sub="`val:priority">
+				<option></option>
 				<option>1</option>
 				<option>2</option>
 				<option>3</option>
@@ -169,14 +175,18 @@
 		</div>
 
 		<div>
+			<label>Return:</label>
+			<input type="text" data-sub="@ns:returns `val"/>
+		</div>
 
-			<p>overloads:</p>
+		<div>
+			<div>Overload Signature:</div>
 
 			<div data-sub="`forObject:.|doc.edit.overloads"></div>
 		</div>
 
 		<div>
-			<p>examples:</p>
+			<div>Examples:</div>
 
 			<div data-sub="`forObject:.|doc.edit.examples"></div>
 			</p>
@@ -196,9 +206,8 @@
 	<div class="data simpleTable" data-sub="@ns:overloads">
 		<table>
 			<tr>
-				<th>Title</th>
+				<th>Name</th>
 				<th>Version Added</th>
-				<th>Parameters</th>
 				<th>Actions</th>
 			</tr>
 			<!--context path is overloads-->
@@ -207,7 +216,7 @@
 
 			<tfoot>
 			<tr>
-				<td colspan="4">
+				<td colspan="3">
 					<input type="button" value="New Overload" data-sub="`newItemButton"/>
 				</td>
 			</tr>
@@ -221,9 +230,8 @@
 
 <script type="jsrender" id="doc.edit.overloadReadRow">
 	<tr>
-		<td>{{:title}}</td>
+		<td>{{:name}}</td>
 		<td>{{:versionAdded}}</td>
-		<td>missing parameters</td>
 		<td>
 			<input type="button" value="edit" data-sub="`editButton"/>
 			<input type="button" value="remove" data-sub="`deleteButton"/>
@@ -232,36 +240,31 @@
 </script>
 
 <script type="jsrender" id="doc.edit.overloadEditRow">
-	<!--@ns:{{:~modelPath}}.item-->
-	<td colspan="4" data-sub="@ns:*edit.item">
+	<td colspan="3" data-sub="@ns:*edit.item" class="editForm">
 
-		<p>
-			<label>Title:</label> <input type="text" data-sub="`val:.title"/>
-		</p>
+		<div>
+			<label>Name:</label> <input type="text" data-sub="@ns:name `val `required `showError"/>
+		</div>
 
-		<p>
+		<div>
 			<label>Added Version:</label>
 
 			<select data-sub="`val:.versionAdded">
+				<option></option>
 				<option>0.1</option>
 				<option>0.2</option>
 				<option>0.3</option>
 				<option>0.4</option>
 			</select>
-		</p>
+		</div>
 
 
-		<p>
-
-		<p>Parameters:</p>
-
+		<div>Parameters:</div>
 		<div data-sub="`forObject:.|doc.edit.parameters"></div>
-		</p>
-
-		<p>
-			<input type="button" value="Save Overload" data-sub="$click:.|*saveEditItem">
+		<div>
+			<input type="button" value="Save Overload" data-sub="`validate $click:.|*saveEditItem">
 			<input type="button" value="Cancel" data-sub="$click:.|*cancelEditItem">
-		</p>
+		</div>
 	</td>
 </script>
 
@@ -307,23 +310,23 @@
 
 <script type="jsrender" id="doc.edit.parameterEditRow">
 	<!--@ns:{{:~modelPath}}.item-->
-	<td colspan="4" data-sub="@ns:*edit.item">
-		<p>
+	<td colspan="4" data-sub="@ns:*edit.item" class="editForm">
+		<div>
 			<label>Parameter Name:</label><input type="text" data-sub="`val:name"/>
-		</p>
+		</div>
 
-		<p>
+		<div>
 			<label>Type:</label> <input type="text" data-sub="`val:type"/>
-		</p>
+		</div>
 
-		<p>
+		<div>
 			<label>Description:</label> <input type="text" data-sub="`val:desc"/>
-		</p>
+		</div>
 
-		<p>
+		<div>
 			<input type="button" value="Save Parameter" data-sub="$click:.|*saveEditItem">
 			<input type="button" value="Cancel" data-sub="$click:.|*cancelEditItem">
-		</p>
+		</div>
 	</td>
 </script>
 
@@ -332,10 +335,7 @@
 	<div class="data simpleTable" data-sub="@ns:examples">
 		<table>
 			<tr>
-				<th>desc</th>
-				<th>code</th>
-				<th>html</th>
-				<th>css</th>
+				<th>Description</th>
 				<th>Actions</th>
 			</tr>
 
@@ -344,7 +344,7 @@
 
 			<tfoot>
 			<tr>
-				<td colspan="5">
+				<td colspan="2">
 					<input type="button" value="New Example" data-sub="`newItemButton"/>
 				</td>
 			</tr>
@@ -358,9 +358,6 @@
 <script type="jsrender" id="doc.edit.exampleReadRow">
 	<tr>
 		<td>{{>desc}}</td>
-		<td>{{>code}}</td>
-		<td>{{>html}}</td>
-		<td>{{>css}}</td>
 		<td>
 			<input type="button" value="edit" data-sub="`editButton"/>
 			<input type="button" value="remove" data-sub="`deleteButton"/>
@@ -370,31 +367,32 @@
 
 <script type="jsrender" id="doc.edit.exampleEditRow">
 	<!--{{:~modelPath}}.item-->
-	<td colspan="5" data-sub="@ns:*edit.item">
+	<td colspan="2" data-sub="@ns:*edit.item" class="editForm">
 
-		<p>
-			<label>desc:</label> <input type="text" data-sub="`val:desc"/>
-		</p>
+		<div>
+			<label>Description:</label> <textarea class="s" type="text"
+			                                      data-sub="@ns:desc `val `required `showError"/>
+		</div>
 
-		<p>
-			<label>code:</label>
-			<input type="text" data-sub="`val:code"/>
-		</p>
+		<div>
+			<label>Sample Code:</label>
+			<textarea class="l" type="text" data-sub="`val:code"/>
+		</div>
 
-		<p>
-			<label>html:</label>
-			<input type="text" data-sub="`val:html"/>
-		</p>
+		<div>
+			<label>Markup:</label>
+			<textarea class="s" type="text" data-sub="`val:html"/>
+		</div>
 
-		<p>
-			<label>css:</label>
-			<input type="text" data-sub="`val:css"/>
-		</p>
+		<div>
+			<label>CSS:</label>
+			<textarea class="s" type="text" data-sub="`val:css"/>
+		</div>
 
-		<p>
-			<input type="button" value="Save Example" data-sub="$click:.|*saveEditItem">
+		<div>
+			<input type="button" value="Save Example" data-sub="`validate $click:.|*saveEditItem">
 			<input type="button" value="Cancel" data-sub="$click:.|*cancelEditItem">
+		</div>
 
-		</p>
 	</td>
 </script>

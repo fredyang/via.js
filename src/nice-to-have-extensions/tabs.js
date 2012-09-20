@@ -24,7 +24,7 @@
 
 	//	----------- the following update tab itself ------------
 	//when model change, change view
-	via.handlers( {
+	via.pipeline( {
 		"updateTab": function( e ) {
 			var options = e.handler.options.split( "," );
 			var tabId = options[0];
@@ -70,7 +70,7 @@
 	                         "`tab";
 
 	//	----------- the following update tab holder ------------
-	via.handlers( "updateTabHolder", function( e ) {
+	via.pipeline( "updateTabHolder", function( e ) {
 		var selectedTabId = e.publisher.get(),
 			options = (e.handler.options || "").split( "," ),
 			tabIdAttribute = options[0] || defaultOptions.tabIdAttribute,

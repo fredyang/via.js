@@ -689,6 +689,27 @@
 
 		compare: function( expression ) {
 			return eval( "this.get()" + expression );
+		},
+
+		saveLocal: function() {
+			util.local( this.path, this.get() );
+			return this;
+		},
+
+		getLocal: function() {
+			return util.local( this.path);
+		},
+
+		restoreLocal: function( overwrite ) {
+			if (overwrite || isUndefined( this.get() )) {
+				this.set(this.getLocal());
+			}
+			return this;
+		},
+
+		purgeLocal: function () {
+			util.local(this.path, undefined);
+			return this;
 		}
 	};
 

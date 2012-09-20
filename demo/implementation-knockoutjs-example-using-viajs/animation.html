@@ -80,7 +80,7 @@
 
 	(function addReusableExtension() {
 		//register a common handler slideDown
-		via.handlers( "slideDown", function( e ) {
+		via.pipeline( "slideDown", function( e ) {
 			this[e.publisher.get() ? "slideDown" : "slideUp"]();
 		} );
 

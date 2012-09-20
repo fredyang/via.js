@@ -14,6 +14,7 @@
 	var isArray = $.isArray;
 	var isUndefined = via.util.isUndefined;
 	var rootModel = via();
+	var subscribe = via.subscribe;
 
 	function returnTrue () {
 		return true;
@@ -78,7 +79,7 @@
 		}
 	} );
 
-	via.handlers( {
+	via.pipeline( {
 
 		/*-------the following model handlers take care of view-----------*/
 
@@ -144,13 +145,13 @@
 				}
 			},
 
-			initialize: function( publisher, subscriber, handlerObj, options ) {
+			initialize: function( publisher, subscriber, pipeline, options ) {
 				if (options) {
 					var parts = options.split( "," );
 					var textColumn = parts[0];
 					var valueColumn = parts[1] || parts[0];
 
-					handlerObj.options = {
+					pipeline.options = {
 						name: function( item ) {
 							return item[textColumn];
 						},
@@ -161,7 +162,7 @@
 
 				} else {
 
-					handlerObj.options = {
+					pipeline.options = {
 						name: function( item ) {
 							return item.toString();
 						},
@@ -280,8 +281,8 @@
 		},
 
 		hardCode: {
-			initialize: function( publisher, subscriber, handlerObj, options ) {
-				handlerObj.hardCode = toTypedValue( options );
+			initialize: function( publisher, subscriber, pipeline, options ) {
+				pipeline.hardCode = toTypedValue( options );
 			},
 			get: function( e ) {
 				this.set( e.handler.hardCode );
@@ -316,15 +317,20 @@
 			console.log( isUndefined( e.handler.options ) ? this.get() : e.handler.options );
 		},
 		sort: {
-			initialize: function( publisher, subscriber, handlerObj, options ) {
+			initialize: function( publisher, subscriber, pipeline, options ) {
 				options = options.split( "," );
-				handlerObj.by = options[0];
-				handlerObj.asc = !!options[1];
+				pipeline.by = options[0];
+				pipeline.asc = !!options[1];
 			},
 			get: function( e ) {
 				var handler = e.handler;
 				this.sort( handler.by, handler.asc );
 				handler.asc = !handler.asc;
+			}
+		},
+		confirm: function( e ) {
+			if (!confirm( isUndefined( e.handler.options ) ? this.get() : e.handler.options )) {
+				e.stopImmediatePropagation();
 			}
 		}
 	} );
@@ -549,6 +555,10 @@
 			var methodName = options;
 			//var methodName = options.split( "," )[0];
 			rootModel.get( methodName, elem, parseContext, subscriptions, options );
+		},
+
+		confirm: function( elem, parseContext, subscriptions, options ) {
+			subscribe( parseContext.ns, elem, "click", "*confirm", options );
 		}
 
 
@@ -620,7 +630,7 @@
 
 		textCount: "!init after*:.|*textCount",
 
-		//data-sub"`alert:_,hello"
+		//data-sub"`alert:_|hello"
 		//"hello" will be passed as options
 		//and alert handler will alert it
 		alert: "$click:.|*alert",

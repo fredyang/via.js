@@ -8,6 +8,9 @@
 	}
 
 	$.views.helpers( {
+		htmlEncode: function( value ) {
+			return $( '<div/>' ).text( value ).html();
+		},
 		getFullName: getFullName,
 		getParentNamespaces: function( entry ) {
 			var rtn = [];
@@ -33,9 +36,7 @@
 
 		load: function( elem ) {
 
-			var url = "doc-json.js";
-
-			$.getJSON( url ).done( function( data ) {
+			function initializeApp ( data ) {
 
 				var rootModel = via(),
 
@@ -56,15 +57,16 @@
 							//each signature represent different return
 							signatures: [
 								{
-									signature: "",
+									name: "",
+									returns: "",
 									priority: "",
+									shortDesc: "",
 									desc: "",
-									longDesc: "",
 									//each overload return different parameters
 									overloads: [
 										{
 											versionAdded: "",
-											title: "",
+											name: "",
 											parameters: [
 												{
 													name: "",
@@ -82,10 +84,8 @@
 											css: ""
 										}
 									]
-
 								}
 							]
-
 						},
 
 						selectedEntryName: "",
@@ -148,6 +148,11 @@
 								.end()
 								.find( "head" )
 								.append( '<style type="text/css">' + cssSource + '</style>' );
+						},
+						discardChange: function (e) {
+							debugger;
+							via("doc.entries").purgeLocal();
+							location.reload();
 						}
 					};
 
@@ -205,8 +210,19 @@
 
 				$( elem ).renderInside( /*templateId*/"doc", /*modelPath*/"doc" );
 
-			} );
+				via( "doc.entries" ).saveLocalAfterUpdate();
 
+			}
+
+			var data = via( "doc.entries" ).getLocal();
+			if (data) {
+				initializeApp( data );
+			} else {
+				$.getJSON( "doc-json.js" ).done( initializeApp ).done(
+					function() {
+						via( "doc.entries" ).saveLocal();
+					} );
+			}
 		},
 
 		unload: function() {

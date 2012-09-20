@@ -130,9 +130,28 @@ p {
 }
 
 .editForm > div > label {
-	width: 150px;
+	width: 140px;
 	display: block;
 	float: left;
+}
+
+.editForm > div > input[type=text],
+.editForm > div > textarea {
+	float: left;
+	display: block;
+	width: 600px;
+}
+
+textarea.s {
+	height: 3em;
+}
+
+textarea.m {
+	height: 6em;
+}
+
+textarea.l {
+	height: 9em;
 }
 
 /*label {*/

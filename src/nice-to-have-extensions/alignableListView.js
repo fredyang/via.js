@@ -44,7 +44,7 @@
 		}
 	}
 
-	via.handlers( "alignAfterRemove", function( e ) {
+	via.pipeline( "alignAfterRemove", function( e ) {
 		var key,
 			paths,
 			newKey,

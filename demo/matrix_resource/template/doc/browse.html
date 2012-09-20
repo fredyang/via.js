@@ -136,20 +136,20 @@
 		<div class="inner">
 			<div class="hd section">
 				<h2>
-					<span class="shortDesc">{{:shortDesc}}</span>
+					<span class="shortDesc">{{:name}}</span>
 					<span class="returns fly_r">Returns:{{:returns}}</span>
 				</h2>
 			</div>
 			<div class="bd mam">
 				<p class="desc">
 					<strong>Description:</strong>
-					<span>{{:desc}}</span>
+					<span>{{:shortDesc}}</span>
 				</p>
 
 				{{for [overloads] tmpl="doc.browse.overload" /}}
 
 				<p class="longDesc">
-					{{:longDesc}}
+					{{:desc}}
 				</p>
 
 				{{for [examples] tmpl="doc.browse.examples" /}}
@@ -173,8 +173,8 @@
 				{{for #data}}
 				<div>
 					<h4 class="name underline">
-						<span>{{:title}}</span>
-						<span class="versionAdded fly_r">version added:{{:versionAdded}}</span>{{:name}}
+						<p class="clear_all">{{:name}}</p>
+						<p class="versionAdded fly_r">version added:{{:versionAdded}}</p>
 					</h4>
 
 					{{for parameters}}
@@ -198,7 +198,7 @@
 	{{for #data}}
 	<div>
 		<h4>Example: <span class="desc">{{:desc}}</span></h4>
-		<pre class="prettyprint">{{:code}}</pre>
+		<pre class="prettyprint">{{:~htmlEncode(code)}}</pre>
 
 		{{if html}}
 		<h4>Demo:</h4>

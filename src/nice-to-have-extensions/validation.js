@@ -92,7 +92,7 @@
 		var subscriptionByModel = via( path ).subsFromOthers();// subscriptions.getByPublisher( path );
 		for (var i = 0; i < subscriptionByModel.length; i++) {
 			var subscription = subscriptionByModel[i];
-			if (subscription.handler.get === via.handlers( "v_required" ).get) {
+			if (subscription.handler.get === via.pipeline( "v_required" ).get) {
 				return true;
 			}
 		}
@@ -246,7 +246,7 @@
 			throw "validator name '" + validatorName + "' collide with name in via.rules";
 		}
 
-		if (via.handlers( validatorName )) {
+		if (via.pipeline( validatorName )) {
 			throw "validator name '" + validatorName + "' collide with name in via.handlers";
 		}
 
@@ -257,7 +257,7 @@
 		}
 
 		var handlerKey = "v_" + validatorName;
-		via.handlers( handlerKey, buildModelHandlerForValidation( validator ) );
+		via.pipeline( handlerKey, buildModelHandlerForValidation( validator ) );
 
 		//data-sub="`required:path" or data-sub="`required:path,options"
 		viaClasses[validatorName] = "!afterUpdate validate:.|*" + handlerKey;
@@ -724,7 +724,7 @@
 		invalidPathesModel.removeItem( path );
 	} );
 
-	via.handlers( {
+	via.pipeline( {
 		validate: function( e ) {
 			if (!via.isValid( this.path )) {
 				//because it is the first handler, e.stopImmediatePropagation will

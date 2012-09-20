@@ -62,13 +62,13 @@
 		<col style="width:auto;">
 		<col style="width:220px">
 		<tr>
-			<td>Event argument members<br/>
+			<td>Event argument members(e.xx)<br/>
 			</td>
 			<td>model event argument</td>
 			<td>view event argument</td>
 		</tr>
 		<tr>
-			<td>instanceof</td>
+			<td>instance of</td>
 			<td>via.Event</td>
 			<td>jQuery.Event</td>
 		</tr>
@@ -87,12 +87,19 @@
 			<td>augmented by via.js $(e.target)</td>
 		</tr>
 		<tr class="commonFeature">
+			<td>handler</td>
+			<td>
+				supported by via.js <br/>(handler pipeline)
+			</td>
+			<td>augmented by via.js <br/>(handler pipeline)</td>
+		</tr>
+		<tr class="commonFeature">
 			<td>type</td>
 			<td>
-				support by via.js
+				supported by via.js
 			</td>
 			<td>
-				support by jQuery.Event
+				supported by jQuery.Event
 			</td>
 
 		</tr>
@@ -100,16 +107,16 @@
 		<tr class="commonFeature">
 			<td>stopPropagation()</td>
 			<td>
-				support by via.js
+				supported by via.js
 			</td>
-			<td>support by jQuery.Event</td>
+			<td>supported by jQuery.Event</td>
 		</tr>
 		<tr class="commonFeature">
 			<td>stopImmediatePropagation()</td>
 			<td>
-				support by via.js
+				supported by via.js
 			</td>
-			<td>support by jQuery.Event</td>
+			<td>supported by jQuery.Event</td>
 		</tr>
 		<tr>
 			<td>proposed</td>
@@ -128,21 +135,21 @@
 		<tr>
 			<td>level</td>
 			<td>
-				support, a number show the level from current model to the original model
+				supported, a number show the level from current model to the original model
 			</td>
 			<td>n/a</td>
 		</tr>
 		<tr>
 			<td>stopCascade()</td>
 			<td>
-				support, when called the event will not be broadCast to dependent property
+				supported, when called the event will not be broadCast to dependent property
 			</td>
 			<td>n/a</td>
 		</tr>
 		<tr>
 			<td>error()</td>
 			<td>
-				support, when called in beforeUpdate, beforeCreate event handler, will abort
+				supported, when called in beforeUpdate, beforeCreate event handler, will abort
 				update, create operations
 			</td>
 			<td>n/a</td>
@@ -150,7 +157,7 @@
 		<tr>
 			<td>isDependent()</td>
 			<td>
-				support, true if publisher model is not the ascendent of original publisher
+				supported, true if publisher model is not the ascendent of original publisher
 			</td>
 			<td>n/a</td>
 		</tr>
@@ -158,7 +165,7 @@
 			<td>Other jQuery Event propeteries such as target, related target, pageX, pageY, ...
 			</td>
 			<td>n/a</td>
-			<td>support by jQuery.Event</td>
+			<td>supported by jQuery.Event</td>
 		</tr>
 	</table>
 </div>
@@ -166,17 +173,16 @@
 
 <h3>Reusability</h3>
 
-<p>Previously, I have said that the change from event binding to event subscriptions make event
-	handler reusable. When there is no extenral dependencies in a function, the function is
-	stateless and reusable. If we can keep our handler stateless, they will be also usable.
-	In lots of case (not all the case), we can use stateless handler, just like the two handler
-	above. (There are two local varible, "this" and "e".)
+<p> When function does not have external dependencies, the function is stateless and reusable. When
+	we change event binding to event subscriptions, in lots of case (not all the case), we can keep
+	our handler stateless, just like the two handler above. (There are two local varible, "this" and
+	"e".) So the subscription handler tends to be more reusable than binding handler.
 </p>
 
 <h3>Composibility</h3>
 
 <p>
-	In viajs the work that an subscription handler need to finishe is very small and very
+	In viajs the work that an subscription handler need to finish is very small and very
 	predictable. Most of the work can be split into the following three tasks.
 </p>
 
@@ -187,31 +193,32 @@
 </ol>
 
 <p>We can build a handler by composing these tasks together. This is actually a pattern named<a
-	href="http://www.eaipatterns.com/PipesAndFilters.html">"Pipes and Filters"</a>. Because
-	publisher and subscriber are both local variable, and there is no other external dependencies,
-	this make the filter also very reusable. Now let's talk about filter first, and later
-	we will use filter to compose a handler.
+	href="http://www.eaipatterns.com/PipesAndFilters.html">"Pipes and Filters"</a>. If a filter
+	is stateless, it can be also resusable.
 </p>
 
-<h3>Handler Pipeline</h3>
+<h3>Handler is a pipeline</h3>
 
-<p>Besides the above three tasks, via.js add two additional tasks. Handler pipeline is made of four
-	filters(<strong>getter, setter, converter, finalizer</strong> ), the only required filter in
-	these 4 filters is <strong>getter</strong>. These four filter executed in the context of
-	subscriber, "this" is the subscriber.
+<p>The subscription handler in via.js is not a implemented as a function, instead, it is a pipeline
+	object which consist of 1 to 5 filter (<strong>getter, setter, converter, initializer,
+		finalizer</strong>), the only required filter is <strong>getter</strong>. The initializer
+	is executed when a subscription is created. This filter will be only called once. The other
+	four handler will executed when event is fired, below is how these four filters are executed.
+</p>
+
+<!--	These four filter
+	executed in the context of subscriber, "this" is the subscriber.
+
 
 	Another filter (<strong>initializer</strong>) are used during event subscription is created.
 	This filter is executed in the context of global object. "this" is the global object.
-
-	Here is how handler pipeline works.
-</p>
-
+-->
 <ol class="simpleList">
 	<li>
-		The handler pipleline start off with Getter. It use getter get the value from publisher and
-		save it
-		to current value. But you can also combine all the logic in a this filter, so that there is
-		not need in other filter. You should do if the logic can not be composed by existing filter.
+		The handler pipleline start off with getter. It use getter get the value from publisher and
+		save it to current value. But you can also combine all the logic in a this filter, so that
+		there is not need in other filter. You should do if the logic can not be composed by
+		existing filter.
 		Pipeline check whether a current value is a promise, if it is promise wait for the promise
 		to resolve a value and save back the current value, then continue the next step, otherwise
 		continue the next step.
@@ -234,8 +241,8 @@
 	</li>
 </ol>
 
-<p>Promise is object introduce in jQuery since 1.5, the support of promise in pipeline is a very
-	powerful feature. We will talk about its usage.</p>
+<p>Promise is introduced in jQuery since 1.5, the support of promise in pipeline is a very
+	powerful feature. We will talk about its usage later.</p>
 
 <h3>Filters</h3>
 
@@ -252,11 +259,12 @@
 
 <h4>Function filter</h4>
 
-<p>Function is the native form of filter, all forms of filter will be converted to filter
+<p>Function filter is the native form of filter, all forms of filter will be converted to filter
 	function.</p>
 
 <ol class="simpleList">
-	<li>getter (required, get the value of publisher or do all the work of a handler)
+	<li>getter (required, get the value of publisher or do all the work of a handler. The "this"
+		variable inside is the subscriber.)
 		<pre class="brush:javascript">
 			function get(e) {
 				//you can do all your work in the filter
@@ -267,7 +275,8 @@
 			}
 		</pre>
 	</li>
-	<li>converter (optional, convert the value returned from getter)
+	<li>converter (optional, convert the value returned from getter. The "this"
+		variable inside is the subscriber.)
 	<pre class="brush:javascript">
 		function convert(value, e) {
 			//return a new value by converting the value paramter
@@ -276,7 +285,8 @@
 	</pre>
 	</li>
 
-	<li>setter (optional, update subscriber with the value returned from converter)
+	<li>setter (optional, update subscriber with the value returned from converter. The "this"
+		variable inside is the subscriber.)
 	<pre class="brush:javascript">
 		function set(value, e) {
 			//set this
@@ -286,7 +296,8 @@
 			element.</p>
 	</li>
 	<li>
-		finalizer (optional, action will perform on the side effect that setter has created).
+		finalizer (optional, action will perform on the side effect that setter has created. The
+		"this" variable is the subscriber.).
 		<pre class="brush:javascript">
 			function finalize(value, e) {
 				//value is value which is passed into set filter
@@ -297,11 +308,12 @@
 			markup appended into DOM to build declarative subscriptions.
 		</p>
 	</li>
-	<li>initializer(optional, it is called during subscription is created)
+	<li>initializer(optional, it is called during subscription is created. The "this"
+		variable inside is the global object.)
 		<pre class="brush:javascript">
-			function initialize ( publisher, subscriber, handlerObject, options ) {
+			function initialize ( publisher, subscriber, pipeline, options ) {
 				//publisher, subscribe are either jQuery object or model proxy
-				//handlerObject is the handlerObject being build
+				//pipeline is the pipeline being build
 				//options is the options that passed into
 				//subscriber.subscribe(publisher, events, handler, options)
 			}
@@ -323,8 +335,12 @@
 	via.filters.converters.myconverter = function( value ) {};
 	via.filters.setters.mysetter = function (value, e) {};
 	via.filters.finalizers.myfinalizer = function (value, e) {};
-	via.filters.initializers.myinitializer = function (publisher, subscriber, handlerObject, options) {};
+	via.filters.initializers.myinitializer = function (publisher, subscriber, pipeline, options) {};
+
 	//use "*filterName" to reference the filter.
+	//e.g
+	$view.subscribe( "color", "init afterUpdate", "*mygetter *mysetter *myconverter *myfinalizer *myinitializer" );
+
 </pre>
 
 <p>
@@ -344,6 +360,10 @@
 </p>
 
 <pre class="brush:javascript">
+	//html is method of $view
+	$div.subscribe("message", "init afterUpdate", "html");
+
+	//css is method of $view, color is the property name
 	$view.subscribe( "color", "init afterUpdate", "css*color" );
 </pre>
 
@@ -353,13 +373,16 @@
 	model helper as model filter use "#pathOfModelHelper".
 </p>
 
+<pre class="brush:javascript">
+	$("#divSamples").subscribe("test.color", "init afterUpdate", "get #/test.setColor");
+</pre>
 
 <h3>Creating handler pipeline</h3>
 
-<p>Subscription handler is composed with different filters. A handler can be expressed in four
-	forms.</p>
+<p>Subscription handler is composed with different filters. A handler can be expressed in the
+	following five forms.</p>
 
-<h4>Handler in function form</h4>
+<h4>Function</h4>
 
 <p>This is the most simple form of handler, this is very similar to traditonal handler used
 	in event binding. This form will create a handler pipeline with only one getter, which is the
@@ -375,7 +398,7 @@
 	options);
 </pre>
 
-<h4>Handler in the form of pipeline object</h4>
+<h4>Pipeline object</h4>
 
 <p>All forms of handler will be convert to an pipeline object. But you can use a pipeline
 	object directly like the following. The filters can in one of the filter forms discussed
@@ -395,7 +418,7 @@
 </pre>
 
 
-<h4>Handler in form of string of filter keys</h4>
+<h4>String of filter keys</h4>
 
 <p>This is special form of pipeline object. If all filters of a pipeline object
 	are filter keys, we can use a string concatinating all filter keys. The keys should be
@@ -427,12 +450,12 @@
 	$("divMessage").subscribe("helloApp.message", "afterUpdate", "get html");
 </pre>
 
-<h4>Common handler</h4>
+<h4>String of common pipeline name</h4>
 
-<p>Before you can use common handler, you need to build a common handlers. The syntax is,</p>
+<p>Before you can use common pipeline, you need to build a common pipeline. The syntax is,</p>
 
 <pre class="brush:javascript">
-	via.handlers(commonHandlerName, handler);
+	via.pipeline(pipelineName, pipeline);
 </pre>
 
 <p>The handler can be in one of the handler forms discussed above, such as handler function, handler
@@ -440,10 +463,10 @@
 	in event subscriptions like the following.</p>
 
 <pre class="brush:javascript">
-	subscriber.subscribe(publisher, events, "*commonHandlerName", options);
+	subscriber.subscribe(publisher, events, "*commonPipelineName", options);
 </pre>
 
-<h4>Model helper as handler</h4>
+<h4>String of the path of model helper</h4>
 
 <p>As dicussed before model helper are just model function. You can put your handler function into
 	the model first, then reference it as a handler using string "#pathOfEmbeddedFunction".

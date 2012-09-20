@@ -7,13 +7,11 @@ var setters = filters.setters;
 var converters = filters.converters;
 var initializers = filters.initializers;
 var finalizers = filters.finalizers;
-var disposers = filters.disposers;
 getters.fakeGet = function() {};
 setters.fakeSet = function( value, e ) {
 	this.set( value );
 };
 converters.fakeConvert = function() {};
-disposers.fakeDispose = function() {};
 initializers.fakeInitialize = function() {};
 finalizers.fakeFinalize = function() {};
 
@@ -92,13 +90,13 @@ test( "build handler with filters", function() {
 	var isModel = true;
 	var isView = false;
 
-	var buildTestHandler = debug.buildHandlerObj;
+	var buildPipeline = debug.buildPipeline;
 	var handler;
 
 	via.fn.fakeSetModel = function() {};
 	via.fn.fakeGetModel = function() {};
 	$.fn.fakeGetView = function() {};
-	handler = buildTestHandler( "fakeGetView set" );
+	handler = buildPipeline( "fakeGetView set" );
 
 	deepEqual( handler,
 		{
@@ -110,7 +108,7 @@ test( "build handler with filters", function() {
 
 		"If a model subscribe a jQueryView and there is only one method in handler, handler.get is for get" +
 		" view, and handler.set is for set mode" );
-	handler = buildTestHandler( "fakeGetModel fakeSetView *fakeConvert *fakeInitialize *fakeFinalize *fakeDispose" );
+	handler = buildPipeline( "fakeGetModel fakeSetView *fakeConvert *fakeInitialize *fakeFinalize" );
 
 	deepEqual( handler, {
 		get: debug.defaultGet,
@@ -119,18 +117,16 @@ test( "build handler with filters", function() {
 		setMethod: "fakeSetView",
 		convert: converters.fakeConvert,
 		initialize: initializers.fakeInitialize,
-		dispose: disposers.fakeDispose,
 		finalize: finalizers.fakeFinalize
 	}, "you can totally setup up to six filter for the handler in a string" );
 
-	handler = buildTestHandler( "get set _ null _ *fakeDispose" );
+	handler = buildPipeline( "get set _ null" );
 
 	deepEqual( handler, {
 		get: debug.defaultGet,
 		getMethod: "get",
 		set: debug.defaultSet,
-		setMethod: "set",
-		dispose: disposers.fakeDispose
+		setMethod: "set"
 	}, "you can bypass certain method using null or _" );
 
 } );
@@ -722,8 +718,8 @@ test( "simple function as handler", function() {
 		this.set( e.publisher.get() );
 	};
 
-	var init = function( publisher, subscriber, handlerObj, options ) {
-		handlerObj.seed = "100";
+	var init = function( publisher, subscriber, pipeline, options ) {
+		pipeline.seed = "100";
 	};
 
 	simpleHandler.initialize = init;
@@ -734,16 +730,16 @@ test( "simple function as handler", function() {
 
 } );
 
-test( "handlerObj as handler", function() {
+test( "pipeline as handler", function() {
 	var name = "john"
 	via.set( "name", name );
 	via.set( "name2", "" );
-	var handlerObj = {
+	var pipeline = {
 		get: function( e ) {
-			ok( (arguments.callee == handlerObj.get) && (e.handler.get == handlerObj.get),
+			ok( (arguments.callee == pipeline.get) && (e.handler.get == pipeline.get),
 				"full handler's object's get function is used" );
 
-			equal( e.handler, handlerObj, "the execution context, is the same as handlerObj" );
+			equal( e.handler, pipeline, "the execution context, is the same as pipeline" );
 
 			ok( !this.init, "the context object does not have init function" );
 
@@ -755,20 +751,20 @@ test( "handlerObj as handler", function() {
 		convert: function( value, e ) {
 			return value + e.handler.seed;
 		},
-		initialize: function( publisher, subscriber, handlerObj2, options2 ) {
+		initialize: function( publisher, subscriber, pipeline2, options2 ) {
 			equal( publisher.path, "name", "publisher is passed into init" );
 			//equal( eventTypes, "afterUpdate", "'init' event is removed" )
 			equal( subscriber.path, "name2", "subcriber is passed into init" );
-			equal( handlerObj2, handlerObj, "handlerObj2 is same as handlerObj" );
+			equal( pipeline2, pipeline, "pipeline2 is same as pipeline" );
 			equal( options2, options, "options object is passed into init" );
-			handlerObj2.seed = options2.seed;
+			pipeline2.seed = options2.seed;
 		}
 	};
 	var options = {
 		seed: "x"
 	};
 
-	via( "name2" ).subscribe( "name", "init afterUpdate", handlerObj, options );
+	via( "name2" ).subscribe( "name", "init afterUpdate", pipeline, options );
 	equal( via.subscriptions().length, 1, "a subscription addd a entry to subscriptions" );
 	equal( via.subscriptions()[0].eventTypes, "afterUpdate", "the init event is discarded" );
 	//
@@ -784,11 +780,11 @@ test( "handlerObj as handler", function() {
 	assertEmptyDb();
 } );
 
-test( "common handler as handler", function() {
+test( "common pipeline as handler", function() {
 	var name = "john"
 	via.set( "name", name );
 	via.set( "name2", "" );
-	var handlerObj = {
+	var pipeline = {
 
 		get: function( e ) {
 			return e.publisher.get() + e.handler.seed;
@@ -799,15 +795,15 @@ test( "common handler as handler", function() {
 		convert: function( value, e ) {
 			return value + e.handler.seed;
 		},
-		initialize: function( publisher, subscriber, handlerObj2, options2 ) {
-			handlerObj2.seed = options2.seed;
+		initialize: function( publisher, subscriber, pipeline2, options2 ) {
+			pipeline2.seed = options2.seed;
 		}
 	};
 	var options = {
 		seed: "x"
 	};
 
-	via.handlers( "test", handlerObj );
+	via.pipeline( "test", pipeline );
 
 	via( "name2" ).subscribe( "name", "init afterUpdate", "*test", options );
 	equal( via.get( "name2" ), via.get( "name" ) + options.seed + options.seed,
@@ -816,12 +812,11 @@ test( "common handler as handler", function() {
 	assertEmptyDb();
 } );
 
-test( "use common getter/setter/converter/initializer/finalizer/disposer to build common handler", function() {
+test( "use common getter/setter/converter/initializer/finalizer to build common handler", function() {
 	var initCalled,
 		getCalled,
 		convertCalled,
 		setCalled,
-		disposeCalled,
 		finalizedCalled,
 		ageChanged,
 		finalizedValue;
@@ -840,7 +835,7 @@ test( "use common getter/setter/converter/initializer/finalizer/disposer to buil
 		return +value;
 	};
 
-	initializers.testInit = function( publisher, subscriber, handlerObj, options ) {
+	initializers.testInit = function( publisher, subscriber, pipeline, options ) {
 		initCalled = true;
 
 		var eventName = via.util.getUniqueViewEventTypes( "change", publisher, subscriber.path );
@@ -857,18 +852,14 @@ test( "use common getter/setter/converter/initializer/finalizer/disposer to buil
 		finalizedValue = value;
 	};
 
-	disposers.testDispose = function( publisher, subscriber ) {
-		disposeCalled = true;
-		var eventName = via.util.getUniqueViewEventTypes( "change", publisher, subscriber );
-		$( publisher ).unbind( eventName );
-	};
+
 
 	via.set( "age", null );
 
 	var age = 100;
 	var $text = $( "<input type='text' />" ).appendTo( testArea() );
 
-	via( "age" ).subscribe( $text, "ageChange", "*testGet *testSet *testConvert *testInit *testFinalize *testDispose" );
+	via( "age" ).subscribe( $text, "ageChange", "*testGet *testSet *testConvert *testInit *testFinalize" );
 	$text.val( age ).trigger( "change" );
 
 	ok( initCalled && getCalled && convertCalled && setCalled & finalizedCalled,
@@ -877,19 +868,16 @@ test( "use common getter/setter/converter/initializer/finalizer/disposer to buil
 	ok( via.get( "age" ) === age && finalizedValue === age, "getAccessor, setAccessor, valueConverters, initilizers works together" );
 
 	via( "age" ).unsubscribe();
-	ok( disposeCalled, "disposeCalled called!" )
 	$text.val( age ).trigger( "change" );
 
-	ok( ageChanged, "change event fired once, and it is unsubscribed in disposer" );
 
-	via.handlers( "testHandler", "*testGet *testSet *testConvert *testInit *testFinalize *testDispose" );
-	var testHandler = via.handlers( "testHandler" );
+	via.pipeline( "testHandler", "*testGet *testSet *testConvert *testInit *testFinalize" );
+	var testHandler = via.pipeline( "testHandler" );
 
 	ok( testHandler.get == getters.testGet &&
 	    testHandler.set == setters.testSet &&
 	    testHandler.convert == converters.testConvert &&
-	    testHandler.initialize == initializers.testInit &&
-	    testHandler.dispose == disposers.testDispose,
+	    testHandler.initialize == initializers.testInit,
 		"via.handlers common"
 	);
 
@@ -901,11 +889,10 @@ test( "use common getter/setter/converter/initializer/finalizer/disposer to buil
 	assertEmptyDb();
 } );
 
-test( "use embedded getter/setter/converter/initializer/finalizer/disposer to build handler", function() {
+test( "use embedded getter/setter/converter/initializer/finalizer to build handler", function() {
 	var initCalled,
 		setCalled,
 		convertCalled,
-		disposeCalled,
 		finalizedCalled,
 		ageChanged,
 		finalizedValue;
@@ -922,7 +909,7 @@ test( "use embedded getter/setter/converter/initializer/finalizer/disposer to bu
 			return +value;
 		},
 
-		testInit: function( publisher, subscriber, handlerObj, options ) {
+		testInit: function( publisher, subscriber, pipeline, options ) {
 			initCalled = true;
 
 			var eventName = via.util.getUniqueViewEventTypes( "change", publisher, subscriber );
@@ -937,12 +924,6 @@ test( "use embedded getter/setter/converter/initializer/finalizer/disposer to bu
 		testFinalize: function( value ) {
 			finalizedCalled = true;
 			finalizedValue = value;
-		},
-
-		testDispose: function( publisher, subscriber ) {
-			disposeCalled = true;
-			var eventName = via.util.getUniqueViewEventTypes( "change", publisher, subscriber );
-			$( publisher ).unbind( eventName );
 		}
 	} );
 
@@ -951,7 +932,7 @@ test( "use embedded getter/setter/converter/initializer/finalizer/disposer to bu
 	var age = 100;
 	var $text = $( "<input type='text' />" ).appendTo( testArea() );
 
-	via( "testSet" ).subscribe( $text, "ageChange", "val set testConvert testInit testFinalize testDispose" );
+	via( "testSet" ).subscribe( $text, "ageChange", "val set testConvert testInit testFinalize" );
 
 	$text.val( age ).trigger( "change" );
 
@@ -960,7 +941,6 @@ test( "use embedded getter/setter/converter/initializer/finalizer/disposer to bu
 
 	via( "testSet" ).unsubscribe();
 
-	ok( disposeCalled, "embedded disposer is called!" )
 
 	assertEmptyDb();
 

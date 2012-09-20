@@ -228,7 +228,7 @@
 		}
 	} );
 
-	via.handlers( {
+	via.pipeline( {
 
 		//------view handler------
 		//handle user's action to create a new item for an array model(subscriber)

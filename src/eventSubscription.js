@@ -26,7 +26,7 @@
 	//#end_merge
 
 	var dummy = {},
-		handlerObjStore,
+		pipelineStore,
 		rEventSeparator = / /,
 		rEndWithStarDot = /\*\.$/,
 		rDotOrStar = /\.|\*/g,
@@ -35,7 +35,6 @@
 		setters,
 		converters,
 		initializers,
-		disposers,
 		finalizers,
 		$fn = $.fn,
 		accessSubs,
@@ -44,7 +43,7 @@
 		subscribe,
 		unsubscribe,
 		rInit = /init(\d*)/,
-		standardFilterKeys = "get,set,convert,initialize,finalize,dispose".split( "," );
+		standardFilterKeys = "get,set,convert,initialize,finalize".split( "," );
 
 	function returnFalse () {
 		return false;
@@ -312,9 +311,6 @@
 						}
 					}
 
-					handler.dispose &&
-					handler.dispose( subscription.publisher, subscription.subscriber );
-
 					subscriptionStore.splice( i, 1 );
 				}
 
@@ -351,7 +347,7 @@
 		//      ...
 		//  });
 
-		//a handler can be a string like "get set convert initialize finalize dispose"
+		//a handler can be a string like "get set convert initialize finalize"
 		// or it can be an object
 		/*
 		 {
@@ -359,30 +355,29 @@
 		 set: "xx" or function () {},
 		 convert: "xx" or function () {},
 		 initialize: "xx" or function () {},
-		 finalize: "xx" or function () {},
-		 dispose: "xx" or function () {}
+		 finalize: "xx" or function () {}
 		 }
 		 */
-		handlers: function( name, handler, overridingHandler ) {
+		pipeline: function( name, handler, overridingHandler ) {
 			var key;
 			if (isObject( name )) {
 				for (key in name) {
-					handlerObjStore[key] = buildHandlerObj( name[key] );
+					pipelineStore[key] = buildPipeline( name[key] );
 				}
 				return;
 			}
 
 			if (isUndefined( name )) {
-				return handlerObjStore;
+				return pipelineStore;
 			}
 
 			if (isUndefined( handler )) {
-				return handlerObjStore[name];
+				return pipelineStore[name];
 			}
 
-			return (handlerObjStore[name] = overridingHandler ?
-				extend( buildHandlerObj( handler ), overridingHandler ) :
-				buildHandlerObj( handler ));
+			return (pipelineStore[name] = overridingHandler ?
+				extend( buildPipeline( handler ), overridingHandler ) :
+				buildPipeline( handler ));
 
 		},
 
@@ -431,11 +426,11 @@
 
 	function defaultGet ( e ) {
 
-		var handler = e.handler,
-			getMethod = handler.getMethod,
+		var pipeline = e.handler,
+			getMethod = pipeline.getMethod,
 			//getProp is used for method like css, attr, prop
 			//check code in via.$comboMethods.contains( getOrSetMethod )
-			getProp = handler.getProp,
+			getProp = pipeline.getProp,
 			publisher = e.publisher;
 
 		//"this" in the getMethod is model or jQuery
@@ -445,10 +440,10 @@
 	}
 
 	function defaultSet ( value, e ) {
-		var handler = e.handler,
-			setMethod = handler.setMethod,
+		var pipeline = e.handler,
+			setMethod = pipeline.setMethod,
 			//setProp is used for method like css, attr, prop
-			setProp = handler.setProp,
+			setProp = pipeline.setProp,
 			subscriber = this;
 
 		setProp ? subscriber[setMethod]( setProp, value ) :
@@ -472,16 +467,16 @@
 
 	}
 
-	function addSubscription ( publisher, eventTypes, subscriber, handlerObj ) {
+	function addSubscription ( publisher, eventTypes, subscriber, pipeline ) {
 		subscriptionStore.push( {
 			publisher: publisher,
 			subscriber: subscriber,
 			eventTypes: eventTypes,
-			handler: handlerObj
+			handler: pipeline
 		} );
 	}
 
-	handlerObjStore = {
+	pipelineStore = {
 
 		triggerChange: {
 			get: function( e ) {
@@ -490,7 +485,7 @@
 		},
 		saveLocal: {
 			get: function( e ) {
-				util.local( e.publisher.path, e.publisher.get() );
+				e.publisher.saveLocal();
 			}
 		}
 	};
@@ -619,7 +614,7 @@
 
 				e.subscribedEvent = findMatchedEvents( subscription.eventTypes, e.type );
 				if (e.subscribedEvent) {
-					executeHandlerObj( tryWrapPublisherSubscriber( subscription.subscriber ), subscription.handler, e );
+					executePipeline( tryWrapPublisherSubscriber( subscription.subscriber ), subscription.handler, e );
 				}
 
 				if (e.isImmediatePropagationStopped()) {
@@ -675,13 +670,13 @@
 
 	//#end_debug
 
-	function executeHandlerObj ( subscriber, handlerObj, e, triggerData ) {
+	function executePipeline ( subscriber, pipeline, e, triggerData ) {
 
 		//#debug
 		log( unwrapObject( e.publisher ),
 			e.type,
 			unwrapObject( subscriber ),
-			handlerObj,
+			pipeline,
 			unwrapObject( e.originalPublisher )
 		);
 		//#end_debug
@@ -689,40 +684,40 @@
 		var value,
 			clonedEventArg;
 
-		e.handler = handlerObj;
+		e.handler = pipeline;
 
 		if (!isUndefined( triggerData )) {
 			//in the get method "this" refer to the handler
-			value = handlerObj.get.apply( subscriber, [e].concat( triggerData ) );
+			value = pipeline.get.apply( subscriber, [e].concat( triggerData ) );
 		} else {
 			//in the get method "this" refer to the handler
-			value = handlerObj.get.call( subscriber, e );
+			value = pipeline.get.call( subscriber, e );
 		}
 
 		if (isPromise( value )) {
 			clonedEventArg = extend( true, {}, e );
 			value.done( function( value ) {
-				if (handlerObj.convert) {
+				if (pipeline.convert) {
 					//in the convert method "this" refer to the handler
-					value = handlerObj.convert.call( subscriber, value, e );
+					value = pipeline.convert.call( subscriber, value, e );
 				}
 
 				if (!isUndefined( value )) {
 					//make sure it is a real promise object
 					if (isPromise( value )) {
 						value.done( function( value ) {
-							setAndFinalize( subscriber, handlerObj, value, clonedEventArg );
+							setAndFinalize( subscriber, pipeline, value, clonedEventArg );
 						} );
 
 					} else {
-						return setAndFinalize( subscriber, handlerObj, value, e );
+						return setAndFinalize( subscriber, pipeline, value, e );
 					}
 				}
 			} );
 		} else {
-			if (handlerObj.convert) {
+			if (pipeline.convert) {
 				//in the convert method "this" refer to the handler
-				value = handlerObj.convert.call( subscriber, value, e );
+				value = pipeline.convert.call( subscriber, value, e );
 			}
 
 			if (!isUndefined( value )) {
@@ -730,23 +725,23 @@
 				if (isPromise( value )) {
 					clonedEventArg = extend( true, {}, e );
 					value.done( function( value ) {
-						setAndFinalize( subscriber, handlerObj, value, clonedEventArg );
+						setAndFinalize( subscriber, pipeline, value, clonedEventArg );
 					} );
 
 				} else {
-					return setAndFinalize( subscriber, handlerObj, value, e );
+					return setAndFinalize( subscriber, pipeline, value, e );
 				}
 			}
 		}
 
 	}
 
-	function setAndFinalize ( subscriber, handler, value, e ) {
+	function setAndFinalize ( subscriber, pipeline, value, e ) {
 		if (!isUndefined( value )) {
-			handler.set && handler.set.call( subscriber, value, e );
+			pipeline.set && pipeline.set.call( subscriber, value, e );
 
-			if (!isUndefined( value ) && handler.finalize) {
-				return handler.finalize.call( subscriber, value, e );
+			if (!isUndefined( value ) && pipeline.finalize) {
+				return pipeline.finalize.call( subscriber, value, e );
 			}
 		}
 	}
@@ -756,7 +751,7 @@
 		var match,
 			delayMiniSecond,
 			initEvent,
-			handlerObj,
+			pipeline,
 			events;
 
 		events = eventTypes.split( " " );
@@ -772,16 +767,16 @@
 			}
 		}
 
-		handlerObj = buildHandlerObj( handler, publisherPath, subscriber, options );
+		pipeline = buildPipeline( handler, publisherPath, subscriber, options );
 
 		if (eventTypes) {
-			addSubscription( publisherPath, eventTypes, subscriber, handlerObj );
+			addSubscription( publisherPath, eventTypes, subscriber, pipeline );
 		}
 
 		if (initEvent) {
 			var init = function() {
 				var e = new Event( publisherPath, publisherPath, initEvent );
-				executeHandlerObj( tryWrapPublisherSubscriber( subscriber ), handlerObj, e );
+				executePipeline( tryWrapPublisherSubscriber( subscriber ), pipeline, e );
 			};
 
 			if (delayMiniSecond) {
@@ -798,7 +793,7 @@
 		//get/set/convert/[init]/[options]
 		var needInit,
 			eventSeedData,
-			handlerObj,
+			pipeline,
 			temp;
 
 		temp = eventTypes.split( " " );
@@ -808,10 +803,10 @@
 			eventTypes = temp.remove( "init" ).join( " " );
 		}
 
-		handlerObj = buildHandlerObj( handler, viewPublisher, subscriber, options );
+		pipeline = buildPipeline( handler, viewPublisher, subscriber, options );
 
 		eventSeedData = {
-			handler: handlerObj,
+			handler: pipeline,
 			subscriber: subscriber
 		};
 
@@ -819,7 +814,7 @@
 			eventTypes = buildUniqueViewEventTypes( eventTypes, viewPublisher, subscriber );
 
 			if (delegateSelctor) {
-				handlerObj.delegateSelector = delegateSelctor;
+				pipeline.delegateSelector = delegateSelctor;
 				$( viewPublisher ).delegate( delegateSelctor, eventTypes, eventSeedData, viewHandlerGateway );
 
 			} else {
@@ -830,7 +825,7 @@
 			//we have passed handler, subscriber, options as jQuery eventSeedData,
 			//we still need to add them to subscriptions so that
 			//the view event handler can be unbind or undelegate
-			addSubscription( viewPublisher, eventTypes, subscriber, handlerObj );
+			addSubscription( viewPublisher, eventTypes, subscriber, pipeline );
 
 			if (needInit) {
 				if (delegateSelctor) {
@@ -855,38 +850,38 @@
 		e.originalPublisher = tryWrapPublisherSubscriber( e.target );
 		var subscriber = tryWrapPublisherSubscriber( e.data.subscriber );
 
-		var handlerObj = e.data.handler;
+		var pipeline = e.data.handler;
 		delete e.data;
 
 		if (arguments.length > 1) {
-			executeHandlerObj( subscriber, handlerObj, e, slice.call( arguments, 1 ) );
+			executePipeline( subscriber, pipeline, e, slice.call( arguments, 1 ) );
 
 		} else {
-			executeHandlerObj( subscriber, handlerObj, e );
+			executePipeline( subscriber, pipeline, e );
 		}
 	}
 
-	function buildHandlerObj ( handler, publisher, subscriber, options ) {
+	function buildPipeline ( handler, publisher, subscriber, options ) {
 
-		var handlerObject;
+		var pipeline;
 
 		handler = handler || "";
 
 		if (isString( handler )) {
 
-			// handler is like "*handlerKey" or "get set convert initialize finalize dispose"
-			handlerObject = buildHandlerObjFromString( handler, publisher, subscriber );
+			// handler is like "*handlerKey" or "get set convert initialize finalize"
+			pipeline = buildPipelineFromString( handler, publisher, subscriber );
 
 		} else if (isFunction( handler ) || (isObject( handler ) && handler.get)) {
 
-			handlerObject = handler;
+			pipeline = handler;
 			if (isFunction( handler )) {
-				handlerObject.get = handler;
+				pipeline.get = handler;
 			}
 
 			//if subscriber is a model and set is missing, use model set
-			if (!handlerObject.set && !isUndefined( subscriber ) && isString( subscriber )) {
-				handlerObject.set = "set";
+			if (!pipeline.set && !isUndefined( subscriber ) && isString( subscriber )) {
+				pipeline.set = "set";
 			}
 
 		} else {
@@ -894,17 +889,17 @@
 		}
 
 		if (!isUndefined( publisher ) && !isUndefined( subscriber )) {
-			initializeHandlerObject( handlerObject, publisher, subscriber, options );
+			initializePipeline( pipeline, publisher, subscriber, options );
 		}
 
-		decorateHandlerObjWithFilter( handlerObject, publisher, subscriber );
+		addFilterToPipeline( pipeline, publisher, subscriber );
 
-		return handlerObject;
+		return pipeline;
 	}
 
-	function initializeHandlerObject ( handlerObject, publisher, subscriber, options ) {
+	function initializePipeline ( pipeline, publisher, subscriber, options ) {
 
-		var initialize = handlerObject.initialize;
+		var initialize = pipeline.initialize;
 
 		if (isString( initialize )) {
 			if (initialize.startsWith( "*" )) {
@@ -917,16 +912,16 @@
 				if (!rootModel.helper( path )) {
 					throw "initializer does not exist at path " + path;
 				}
-				initialize = function( publisher, subscriber, handlerObject, options ) {
-					rootModel.set( path, publisher, subscriber, handlerObject, options );
+				initialize = function( publisher, subscriber, pipeline, options ) {
+					rootModel.set( path, publisher, subscriber, pipeline, options );
 				};
 			}
 		}
 		if (initialize) {
-			initialize( tryWrapPublisherSubscriber( publisher ), tryWrapPublisherSubscriber( subscriber ), handlerObject, options );
-			delete handlerObject.initialize;
+			initialize( tryWrapPublisherSubscriber( publisher ), tryWrapPublisherSubscriber( subscriber ), pipeline, options );
+			delete pipeline.initialize;
 		} else if (!isUndefined( options )) {
-			handlerObject.options = options;
+			pipeline.options = options;
 		}
 
 	}
@@ -966,10 +961,10 @@
 		}
 	}
 
-	function buildHandlerObjFromString ( handlerString, publisher, subscriber ) {
+	function buildPipelineFromString ( handlerString, publisher, subscriber ) {
 
-		//get set convert initialize finalize dispose
-		var handlerObject,
+		//get set convert initialize finalize
+		var pipeline,
 			modelMethod,
 			filterKey,
 			filterKeys = handlerString.split( rEventSeparator ),
@@ -978,16 +973,16 @@
 
 		if (filterKeys.length == 1) {
 			if (handlerString.startsWith( "*" )) {
-				handlerObject = handlerObjStore[handlerString.substr( 1 )];
-				if (!handlerObject) {
+				pipeline = pipelineStore[handlerString.substr( 1 )];
+				if (!pipeline) {
 					throw "common handler " + handlerString + " does not exist";
 				}
 
-				handlerObject = extend( {}, handlerObject );
+				pipeline = extend( {}, pipeline );
 
 			} else if ((modelMethod = getModelHelperAsFilter( handlerString, publisher, subscriber ))) {
 
-				handlerObject = {
+				pipeline = {
 					get: modelMethod
 				};
 
@@ -998,7 +993,7 @@
 					//When model change, handler
 					//will get model's value using default get filter,
 					//and update the view using default "set" filter or handler
-					handlerObject = {
+					pipeline = {
 						get: "get",
 						//if handlerString is null, then it should be the case when model subscribe model
 						set: handlerString || "set"
@@ -1007,14 +1002,14 @@
 				} else if (isSubscriberModel) {
 					// model subscribe view's change
 					if (handlerString) {
-						handlerObject = {
+						pipeline = {
 							get: handlerString,
 							set: "set"
 						};
 					} else {
 						//when model subscribe view without handler
 						//the model is the handler by itself
-						handlerObject = {
+						pipeline = {
 							get: rootModel.helper( subscriber )
 						};
 					}
@@ -1023,7 +1018,7 @@
 					//view subscribe view's event
 					//this is rarely the case, but it is still supported
 					//for example, a textBox subscribe the change of another textBox
-					handlerObject = {
+					pipeline = {
 						get: handlerString,
 						set: handlerString
 					};
@@ -1034,38 +1029,37 @@
 		} else {
 
 			//the handler string has multiple filters
-			handlerObject = { };
+			pipeline = { };
 
 			for (var i = 0; i < standardFilterKeys.length; i++) {
 				filterKey = filterKeys[i];
 				if (filterKey && (filterKey !== "_" && filterKey != "null")) {
 					if ((modelMethod = getModelHelperAsFilter( filterKey, publisher, subscriber ))) {
-						handlerObject[standardFilterKeys[i]] = modelMethod;
+						pipeline[standardFilterKeys[i]] = modelMethod;
 					} else {
-						handlerObject[standardFilterKeys[i]] = filterKey;
+						pipeline[standardFilterKeys[i]] = filterKey;
 					}
 				}
 			}
 		}
-		return handlerObject;
+		return pipeline;
 
 	}
 
-	function decorateHandlerObjWithFilter ( handlerObject, publisher, subscriber ) {
-		attachFilter( handlerObject, "initialize", initializers );
+	function addFilterToPipeline ( pipeline, publisher, subscriber ) {
+		attachFilter( pipeline, "initialize", initializers );
 		//
-		attachAccessor( "get", handlerObject, publisher, subscriber );
-		attachAccessor( "set", handlerObject, publisher, subscriber );
+		attachAccessor( "get", pipeline, publisher, subscriber );
+		attachAccessor( "set", pipeline, publisher, subscriber );
 		//
-		attachFilter( handlerObject, "convert", converters );
-		attachFilter( handlerObject, "finalize", finalizers );
-		attachFilter( handlerObject, "dispose", disposers );
+		attachFilter( pipeline, "convert", converters );
+		attachFilter( pipeline, "finalize", finalizers );
 	}
 
-	function attachAccessor ( accessorType, handlerObj, publisher, subscriber ) {
+	function attachAccessor ( accessorType, pipeline, publisher, subscriber ) {
 
-		//by default handlerObj.get == "get", handlerObj.set = "set"
-		var accessorKey = handlerObj[accessorType];
+		//by default pipeline.get == "get", pipeline.set = "set"
+		var accessorKey = pipeline[accessorType];
 
 		//if handler's get/set filter is non-empty string, continue next
 		//otherwise return
@@ -1078,9 +1072,9 @@
 		if (accessorKey.startsWith( "*" )) {
 
 			accessorKey = accessorKey.substr( 1 );
-			handlerObj[accessorType] = accessors[accessorKey];
+			pipeline[accessorType] = accessors[accessorKey];
 
-			if (!handlerObj[accessorType]) {
+			if (!pipeline[accessorType]) {
 				throw accessorKey + " does not exists common " + accessorType + " filter";
 			}
 
@@ -1091,12 +1085,12 @@
 			//use defaultGet or defaultSet and decorate, if accessorKey does not begin with "*"
 			// handler.setMethod = accessorKey or
 			// handler.getMethod = accessorKey
-			handlerObj[accessorType] = accessorType == "get" ? defaultGet : defaultSet;
-			handlerObj[accessorType + "Method"] = keys[0];
+			pipeline[accessorType] = accessorType == "get" ? defaultGet : defaultSet;
+			pipeline[accessorType + "Method"] = keys[0];
 
 			if (keys[1]) {
 				//accessorKey = "css*color"
-				handlerObj[accessorType + "Prop"] = keys[1];
+				pipeline[accessorType + "Prop"] = keys[1];
 			}
 
 			if (!isUndefined( publisher ) && !isUndefined( subscriber )) {
@@ -1107,7 +1101,7 @@
 		}
 	}
 
-	//filterType is like initialize, convert, finalize, dispose
+	//filterType is like initialize, convert, finalize
 	function attachFilter ( handler, filterType, filters ) {
 		//because it is optional, we need make sure handler want to have this method
 		var filterName = handler[filterType];
@@ -1282,7 +1276,7 @@
 
 	//#merge
 	via.debug.findMatchedEvents = findMatchedEvents;
-	via.debug.buildHandlerObj = buildHandlerObj;
+	via.debug.buildPipeline = buildPipeline;
 	via.debug.defaultGet = defaultGet;
 	via.debug.defaultSet = defaultSet;
 	//#end_merge

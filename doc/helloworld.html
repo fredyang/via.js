@@ -24,9 +24,11 @@
 <div class="page oldSchool">
 <h1>Hello world, via.js</h1>
 
-<p>This article introduce via.js using the classic "Hello world" example. This is the first part
-	of introduction, after finished this part, feel free to see the <a href="../demo/index.html">sample
-		list</a>. And continue the remainging parts.
+<p>This article introduce via.js using the classic "Hello world" example. If want to skip the
+	introduction, feel free to check the <a href="../demo/index.html">sample list</a>, there are
+	some very complicated demos here, such as the <a href="../demo/app-demo/doc/doc.html">API
+		app</a>. All these samples are client side driven, and there is no single line of server
+	code.
 </p>
 
 <h2>What is via.js?</h2>
@@ -42,7 +44,7 @@
 	<li>Deep integration with jQuery and heavily reuse its API</li>
 	<li>Lightweight proxy object instead of Observerable function</li>
 	<li>Unified event publishing and subscription for all objects(view and model)</li>
-	<li>Reusable, composable and pipelined subscription handlers</li>
+	<li>Reusable, composable filters and pipelines to build subscription handlers</li>
 	<li>Support multiple template engines and simultaneously</li>
 	<li>Support different styles of using the library, declarative, programmatic or mixed.</li>
 	<li>Small in both source size and runtime memory.</li>
@@ -107,15 +109,23 @@
 
 <p>
 	For simple scenario like this, event binding works. In a slightly more complicated scerario like
-	<a href="../demo/todos/todos.html">Todos app</a>, the code can be excessively complex. So what
-	is the problem. The problem is the word "bind", which makes developers to think like a computer.
-	When I write the above code, I think, "I bind the text box to this handler so that when
-	text box is changed, the handler get executed." The first person, "I" is essentially, the
-	computer. To a computer , everything can be manipulatable, everything is resource and lifeless.
-	Applying this thinking, I am templated to do too many things in the handler, although I
-	shoudn't. Why? Because I am the computer, I can do anything I want. You might think that we get
-	it right by modularize the code inside the handler. However, if the direction
-	of first step is wrong, it is impossible make it correct down the road.
+	<a href="../demo/todos/todos.html">Todos app</a>, the code can be excessively complex. I have
+	implemented the Todos app without using any UI library except jQuery, I find that my solution
+	ends up with lots handler, each handler do lots of stuff. Here is one of the <a
+	href="http://todomvc.com/architecture-examples/jquery/js/app.js">solution</a>
+	which use jQuery only. The solution is actually quite clean and minimun, but it is not
+	quite unmaintainable.</p>
+
+<p>
+	So what is the problem. The problem is the way to handle event, event
+	binding, which makes developers to think like a computer. When I write the above code, I think,
+	"I bind the text box to this handler so that when text box is changed, I get the value from
+	event source, then build a message, then change text in the label." The first person, "I", is
+	essentially the computer. To a computer , everything can be manipulatable, everything is
+	resource and lifeless. Applying this thinking, I am templated to do too many things in the
+	handler, although I shoudn't. Why? Because I am the computer, I can do anything I want. You
+	might think that we get it right by modularize the code inside the handler. However, if the
+	direction of first step is wrong, it is impossible make it correct down the road.
 </p>
 
 <h3>Event subscriptions between views</h3>
@@ -128,9 +138,10 @@ Instead of using
 <p>No matter how far down the wrong road you've gone, turn back. I want to use a different
 	way of thinking, <a
 		href="http://www.amazon.com/Object-Thinking-DV-Microsoft-Professional-David/dp/0735619654">
-		object thinking</a>. So I write via.js. The following is the first <a
+		object thinking</a>. Event is a wonderful feature, but why my code ends up so messy. There
+	has to be an better way to handle event. So I write via.js. The following is the first <a
 		href="../demo/helloworld/02-event-subscriptions-between-views-programatic.html">implementation</a>
-	using via.js.
+	using event subscription.
 </p>
 
 <pre class="brush:html">
@@ -148,9 +159,10 @@ Instead of using
 </pre>
 <p>
 	When I write the above code, I think from the perspective of object "#divMessage".
-	Firstly, I subscribe the "change" event of textbox object. When the event happens, so I change
-	my content accordingly. The change of mindset is subtle, yet it has great impact the code
-	that I write. Here is the comparison event binding and event subscription.
+	Firstly, I subscribe the "change" event of textbox object. When the event happens, so I get the
+	value of event source, build a message, and change my content with the message. The change of
+	thinking is very subtle, yet it has great impact on the code that I write. Here is the
+	comparison event binding and event subscription.
 </p>
 
 <div class="simpleTable data">
@@ -182,6 +194,25 @@ Instead of using
 			<td>Subscription and its handler belong to object ("#divMessage)</td>
 		</tr>
 		<tr>
+			<td>Handler</td>
+			<td>
+				<pre class="brush:javascript">
+					function() {
+						var name = $( this ).val();
+						$( "#divMessage" ).html( name ? "Hello," + name : "" );
+					}
+				</pre>
+			</td>
+			<td>
+				<pre class="brush:javascript">
+					function( e ) {
+						var name = e.publisher.val();
+						this.html( name ? "Hello," + name : "" );
+					}
+				</pre>
+			</td>
+		</tr>
+		<tr>
 			<td>what is read inside the handler</td>
 			<td>
 				can be anything
@@ -205,7 +236,7 @@ Instead of using
 				Hard coded dependencies ("#divMessage") , they can be anything
 			</td>
 			<td>
-				Local dependencies e, this (subscriber)
+				None, it is stateless
 			</td>
 		</tr>
 		<tr>
@@ -216,7 +247,7 @@ Instead of using
 		<tr>
 			<td>Reusability of handler</td>
 			<td>Hard to reuse because of hard dependencies</td>
-			<td>Easy to reuse because of only local dependencies</td>
+			<td>Easy to reuse because of statelessness (only local variable)</td>
 		</tr>
 		<tr>
 			<td>Mindset of developer</td>
@@ -238,11 +269,10 @@ Instead of using
 <h3>Event subscription between models and views</h3>
 
 <p>In the previous example, we have views only. For simple scenario like this, there is no need
-	to use model at all, but I will use it anyway to show the benefit of using it, which is
-	decoupling views. In the following, the view "divMessage" does not subscribe the event of
-	the view "txtName" any more. Instead, a model "helloApp.message" is created, the model is
-	similar
-	to the concept of <a
+	to use model at all, but I will use it anyway to show the benefits of using it. One of the
+	benefits is decoupling views. In the following, the view "divMessage" does not subscribe the
+	event of the view "txtName" any more. Instead, a model "helloApp.message" is created, the model
+	is similar to the concept of <a
 		href="http://knockoutjs.com/documentation/observables.html">observerable</a>
 	in knockoutjs, however you don't need to mark it observerable explicitly. Then let the view
 	"divMessage" subscribe the event of the model "helloApp.message", and the model
@@ -270,27 +300,16 @@ Instead of using
 			this.set( name ? "hello, " + name : "" );
 		} );
 	</pre>
-<!--
-<p>
-In this example, we build a model using viajs, the model has two members, name and message.
-The name property is similar the concept of observerable, the message funtion is similar the
-concept "computed observerable" in other framework. We will talk about it more later, what we
-care about right now is that they can raise event when they are changed. The internal event
-cascading from "helloApp.name" to "helloApp.message" is automatic, no coding is required.
-Then the model "helloApp.name" subscribe the change of view "#txtName" so that it update itself
-accordingly, and view "#divMessage" subscribe the change of model "helloApp.message" to update
-itself accordingly.
-</p>
--->
 
 <p>
 	So why we want to decouple views, what is wrong that a view subscribe event of another view?
-	There is nothing wrong at all. However, view are the most dynamic parts of a application.
+	There is nothing wrong. However, view are the most dynamic parts of a application.
 	while models reflect the business logic and they are relative stable compared to view.
-	Let's say originally, we have two view (b, c) subscribe the change of view (a). If we replace
-	view a with view d, we need to update these two subscriptions. However, if we create a model A,
-	and let view (b, c) subscribe model A, and let model A subscribe event of view a. When view a,
-	change, we only need to update the subscription of model A but not view (b, c). In the <a
+	Let's say originally, we have two view (v1, v2) subscribe the change of view (v3). If we replace
+	view v3 with view v4, we need to update these subscription (v1, v3) and (v2, v3)) to (v1, v4),
+	(v2, v4). However, if we create a model m, and let view (b, c) subscribe m, and let model m
+	subscribe event of view v3. When view v3 change v4, we only need to update the subscription (m,
+	v3) to (m, v4). In the <a
 	href="../demo/helloworld/04.0.1-event-subsriptions-between-model-view-programatic.html">
 	following.</a>, we may change text box into dropdownlist without affecting the view
 	"#divMessage".
@@ -326,8 +345,8 @@ itself accordingly.
 	} );
 </pre>
 
-<p>Another benefit of using model is that, we can easily persist the state of model or send it back
-	to server.</p>
+<p>Another benefit of using model is that, we can easily move it back and forth between server and
+	client.</p>
 
 <p>So far so good. But the logic of building the message is embedded in the event handler of
 	subscription to model "helloApp.message", this should be encapsulated in model. So let's
@@ -417,8 +436,8 @@ itself accordingly.
 <p>
 	In this simple scenario, both event binding and event subscription work. In fact, event binding
 	works more efficiently. However, they reflect different way of thinking, and have tramendous
-	impact down the path of develepment. Below it is the thinking you use when writing in viajs.
-	They should be read in the context of an object.</p>
+	impact down the path of develepment. Below it is the thinking viajs want to support.
+	They should be read in the context of an object, the object can be model or view.</p>
 
 <strong>
 	<ul class="simpleList">
@@ -436,22 +455,28 @@ itself accordingly.
 	href="http://www.amazon.com/Object-Thinking-DV-Microsoft-Professional-David/dp/0735619654">Object
 	thinking</a>. Having said that, it doesn't mean that we should abandon computer thinking.
 	Actually I use computer thinking all the time when I write statement "if/else", "for/while", and
-	I can't leave without it. However, object thinking just scales better.</p>
+	I can't live without it. However, object thinking just scales better. I try to use it whenever
+	possible.
+</p>
 
 <h3>
 	Where is my controller?
 </h3>
 
 <p>The answer is, there is no controller, because there is no need for one. In viajs, all
-	objects regardless if they are view or model, they are the master of their own domain. Everybody
-	behave themself, why we need a controller or manager? If you are really obsessed with
-	controller, you can think of viajs as the ultimate controller, so that you don't need a
-	controller here. We have Model (model proxy), View (jQuery object), Event (jQuery event or model
-	event), Subscription, now we have <a href="http://www.mves.org/">MVES</a> ? Another funny
-	acronym.
+	objects regardless whether they are view or model, they are the master of their own domain.
+	Since everybody can behave themself, why we need a controller or manager? If you want to run a
+	broadway show, you can not use the same skill of running puppet show. In client side UI, the
+	controller concept does not scale well. If you feel like something is missied,
+	you can think viajs is ultimate controller, so that you don't need to write your controller.</p>
+
+<p>
+	We have Model (model proxy), View
+	(jQuery object), Event (jQuery event or model event), Subscription, now we have <a
+	href="http://www.mves.org/">MVES</a> ? Another funny acronym.Next, I will talk about <a
+	href="modelProxy.html">model proxy</a>
 </p>
 
-<p>Next, I will talk about <a href="modelProxy.html">model proxy</a></p>
 </div>
 
 </body>

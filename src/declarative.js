@@ -32,7 +32,7 @@
 		klass = "class",
 		reservedPropNames = "sub,pub,class,theme,ns,options".split( "," ),
 		allClassDefinitions = {},
-		customSubsProps,
+		userSubsProps,
 		viaClasses;
 
 	defaultOptions.theme = "via";
@@ -380,7 +380,7 @@
 
 			if (hasOwn.call( parseContext, propName ) && !reservedPropNames.contains( propName )) {
 
-				if (customSubsProps[propName]) {
+				if (userSubsProps[propName]) {
 					//if a rule is defined, call the rule
 
 					//let's say rule name is "foo"
@@ -395,7 +395,7 @@
 						// is saved in rules.foo
 						parseContext[propName];
 
-					customSubsProps[propName]( elem, parseContext, subscriptions, options );
+					userSubsProps[propName]( elem, parseContext, subscriptions, options );
 				} else {
 
 					//if rule is not defined, simply save it to element parseContext
@@ -500,7 +500,7 @@
 		//propName: function( elem, parseContext, subscriptions, options ) {
 		//		 subscriptions.push("...");
 		//}
-		customSubsProps: customSubsProps = {},
+		userSubsProps: userSubsProps = {},
 
 		importSubs: function() {
 			importSubs( document.documentElement );

@@ -90,7 +90,7 @@
 	} );
 
 	//when user click on a tab selector, update the model with tab attribute value
-	via.customSubsProps.tabSelectorHolder = function( elem, parseContext, subscriptions, options ) {
+	via.userSubsProps.tabSelectorHolder = function( elem, parseContext, subscriptions, options ) {
 		options = (options || "").split( "," );
 		var path = parseContext.ns,
 			tabIdAttribute = options[0] || defaultOptions.tabIdAttribute,

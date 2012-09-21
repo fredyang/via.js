@@ -8,7 +8,7 @@
 	//#end_merge
 
 	//#merge
-	var customSubsProps = via.customSubsProps;
+	var userSubsProps = via.userSubsProps;
 	var isUndefined = via.util.isUndefined;
 	//#end_merge
 
@@ -65,7 +65,7 @@
 
 	}
 
-	customSubsProps.loadapp = function( elem, parseContext, subscriptions, options ) {
+	userSubsProps.loadapp = function( elem, parseContext, subscriptions, options ) {
 
 		var optionParts = rAppOptions.exec( $.trim( options ) ),
 			appName = optionParts[1],

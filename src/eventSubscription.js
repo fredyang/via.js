@@ -1122,13 +1122,13 @@
 	//subscription shortcut method for model
 	extend( viaFn, {
 
-		subscribe: function( publisher, events, handler, options, delegate ) {
-			subscribe( this.path, publisher, events, handler, options, delegate );
+		subscribe: function( publisher, events, handler, options, delegateSelector ) {
+			subscribe( this.path, publisher, events, handler, options, delegateSelector );
 			return this;
 		},
 
-		subscribedBy: function( subscriber, events, handler, options, delegate ) {
-			subscribe( subscriber, this.path, events, handler, options, delegate );
+		subscribedBy: function( subscriber, events, handler, options, delegateSelector ) {
+			subscribe( subscriber, this.path, events, handler, options, delegateSelector );
 			return this;
 		},
 

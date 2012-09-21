@@ -25,18 +25,10 @@
 
 <h2>Event Subscription</h2>
 
-<!--
-<p>
-
-</p>
--->
-
 <h3>View event</h3>
 
 <p>On the view side, DOM event model has been already implemented by all browser, and jQuery
-	abstract and normalizes DOM event behavior cross-browser. via.js wrap jQuery event
-	binding into view event subscription. Most of the event binding handler you use today
-	will work in view event subscription in via.js, or they just need little modification.
+	abstract and normalizes DOM event behavior cross-browser. via.js reuse jQuery event.
 </p>
 
 <h3>Model event</h3>
@@ -375,7 +367,7 @@
 </p>
 
 <pre class="brush:javascript">
-	subscriber.subscribe ( publisher, events, handler, [options], [delegate] );
+	subscriber.subscribe ( publisher, events, handler, [options], [delegateSelector] );
 </pre>
 
 <p>
@@ -451,16 +443,16 @@
 			</td>
 		</tr>
 	</table>
-
 </div>
+
+
 <p>We can see that both model and view can subscribe events of model and view. If the publisher is
 	a jQuery object(view), we use <strong>"$selector"</strong> to differentiate model path.
 </p>
 
-<p>A subscription always has one and only publisher, and any number of subcriber (from zero to
-	many). Normally, a subscription should have at least one. If a subscrptio does not have a
-	subscriber, it becomes event binding. But this is necessary in some case, but use it sparingly.
-	Below is how it can be done.
+<p>A subscription always has one and only publisher, and any number of subscriber (from zero to
+	many).If a subscrptio does not have a subscriber, it becomes event binding. But this is
+	necessary in some case, but use it sparingly. Below is how it can be done.
 </p>
 
 <div class="simpleTable data">
@@ -502,10 +494,12 @@
 	</table>
 </div>
 
-<p>The delegate parameter is useful only when publisher is DOM element. It is the same concept of
-	jQuery delegate. In the following example, there is only one subscriptions is created.
+<p><strong>The delegateSelector parameter is useful only when publisher is DOM element.</strong> It
+	is the same concept of jQuery delegateSelector. In the <a
+		href="../demo/filters/test-delegate.html">
+		following example</a> , there is only one subscriptions is
+	created.
 </p>
-
 
 <pre class="brush:html">
 
@@ -605,7 +599,7 @@
 
 <!--<h3>Debugging subscriptions</h3>-->
 
-<p>Next we will talk about <a href="handlerAndFilter.html">handler pipeline and filters</a></p>
+<p>Next we will talk about <a href="handlerAndFilter.html">handler pipelines and filters</a></p>
 </div>
 </body>
 </html>

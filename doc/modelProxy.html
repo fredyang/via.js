@@ -23,13 +23,21 @@
 <body>
 <div class="page oldSchool">
 
+<h2>View</h2>
+
+<p>In via.js, anything which is not accessed using model proxy is considered as view, but normally,
+	a view is a jQuery object, but it can be an any object. In the following, we use view and jQuery
+	object interchangeably.
+</p>
+
 <h2>
 	Model
 </h2>
 
 <p>
-	In the "hello world" demo of previous article, we use a model proxy to import an Plain Old
-	Javascript Object into internal repository, and then we use it again to subscribe event, get
+	In the "hello world" demo of previous article, we use a model proxy to import a JavaScript
+	object
+	into internal repository, and then we use it again to subscribe event, get
 	value from the repository and set value to the repostiory. <strong>The reason that we need a
 	proxy is that we want to intercept the access to value, so that we can inject code before value
 	is changed and after value is changed.</strong>
@@ -102,7 +110,7 @@
 	<li>Every Observerable is a new function with a new closure which holds the callback list.
 		Although closure is the very best feature in JavaScript, if we have 10 objects and each
 		object has 10 fields, we will create 100 functions with 100 private closures. An advanced
-		user knows how to avoid this gotcha, naive user can abuse this.
+		user knows how to avoid this gotcha, but naive user can abuse this.
 	</li>
 	<li>The Observerable only support get and set operations over an value.</li>
 </ol>
@@ -120,15 +128,16 @@
 <ol class="simpleList">
 	<li>A repository is used internally to hold all models, all modles are subscribable.</li>
 	<li>All proxies share a common closure which holds shared data repository and other states.
-		Proxy extremely cheap to create, and it can be garbage collected after it is out
-		of scope.
+		Proxy extremely cheap to create, and it can be garbage collected after it is out of scope.
 	</li>
 	<li>A proxy can support extensible access methods. The built-in method include get, set, remove,
 		push, pop and etc. But you can create your own access method.
 	</li>
-	<li>Most importantly, model proxy does not keep a callback list. What the proxy do before
+	<li>Last but not least, model proxy does not keep a callback list. What the proxy do before
 		and after value is accessed, is to raise event. It does not care who should be called back.
-		The event subscirption module will take care of it. I will talk about it later.
+		The event subscirption module will take care of it. <strong>Actually, event subscription is
+			the most
+			important reason that we need a model proxy.</strong> I will talk about it later.
 	</li>
 </ol>
 
@@ -291,7 +300,8 @@
 
 <h3>Accessing model functions using model proxy.helper()</h3>
 
-<p>When a model function is accessed using proxy.helper(), it is called <strong>model helper</strong>,
+<p>When a model function is accessed using proxy.helper(), it is called <strong>model
+	helper</strong>,
 	the "this" variable refer to the global object.
 </p>
 
@@ -309,11 +319,6 @@
 <p><strong>There is no technical difference between model method and model helper. They are
 	classified as such depending one the way they are invoked not the way they are.</strong></p>
 
-<h2>View</h2>
-
-<p>In via.js, anything which is not accessed using model proxy is considered as view, but normally,
-	a view is a jQuery object. In the following, we use view and jQuery object interchangeably.
-</p>
 
 <p>Next I will talk about <a href="eventSubscription.html">event subscription</a></p>
 </div>

@@ -37,21 +37,8 @@
 </ol>
 
 
-<p>The following example is verbose version of declatative subscriptions</p>
-
-<pre class="brush:html">
-	&lt;div data-sub="@ns:test"&gt;
-		&lt;label&gt;Please input your name:
-		&lt;input type="text" data-sub="@pub:change|name|val"/&gt;
-		&lt;/label&gt;
-		&lt;div data-sub="@sub:message|afterUpdate|html"/&gt;
-	&lt;/div&gt;
-</pre>
-
-
 <p>
-	When designing syntax of declarative subscriptions, I have the following goals to make
-	it easier to use.
+	When designing syntax of declarative subscriptions, I have the following goals.
 </p>
 <ol class="simpleList">
 	<li>We can embed all programatic subscriptions into the markup</li>
@@ -61,13 +48,22 @@
 	<li>The syntax used in the delcarative subscriptions must be extensible.</li>
 </ol>
 
+<p>To achieve these goals, via.js borrow some css synatax.</p>
+
 <h3>Subscription rule</h3>
 
-<p>The subscription rule is saved in a "data-sub" attribute of DOM element.
-	Like css rule, subscription rule consist of multiple declarations. Each
-	declaration has a propety and a vlaue. There are 5 reserved properties, <strong>@ns,@sub,
-		@pub, @options, @class</strong>. User can create customs properties.
+<p>The subscription rule is saved in a "data-sub" attribute of DOM element. Like css rule, a
+	subscription rule consist of multiple declarations. Each declaration has a
+	propety and a vlaue, a property begin with "@". the following subscrition rule define two
+	declarations
 </p>
+
+<pre class="brush:javascript">
+	@propertyOne:valueOne
+	@propertyTwo:valueTwo
+</pre>
+
+<h3>Whitespace</h3>
 
 <p>Generally whitespaces (such as tab, line-feed) between declarations are ignored, so feel free to
 	use them to make your code more readable like below. However, the space within a declaration
@@ -82,7 +78,17 @@
 </pre>
 
 
-<h3>Reserved properties</h3>
+<h3>System subscription properties</h3>
+
+<p>There are 4 system subscription properties, they are as following.</p>
+
+<ol class="simpleList">
+	<li>@ns</li>
+	<li>@sub or !events</li>
+	<li>@pub or events</li>
+	<li>@class or `className</li>
+</ol>
+
 
 <h4>@ns</h4>
 
@@ -95,19 +101,19 @@
 <pre class="brush:javascript">
 	data-sub="@ns:myNamespace"
 </pre>
-<h4>@sub or !event</h4>
+<h4>@sub or !events</h4>
 
 <p>The "@sub" property means the current element subscribe to the events of another object
 	(view or model). Here is the syntax and some example</p>
 
 <pre class="brush:javascript">
 	//handler, options, delegate are all optional, you can have multiple @sub declaration
-	data-sub="@sub:selector1|events1|handler1|options1|delegate1
-	@sub:selector2|events2|handler2|options2|delegate2"
+	data-sub="@sub:publisher1|events1|handler1|options1|delegateSelector1
+			  @sub:publisher2|events2|handler2|options2|delegateSelector2"
 
 	//or combine mulitple @sub declarations into one using seperator ";"
-	data-sub="@sub:selector1|events1|handler1|options1|delegate1;
-		 selector2|events2|handler2|options2|delegate2"
+	data-sub="@sub:publisher1|events1|handler1|options1|delegateSelector1;
+				   publisher2|events2|handler2|options2|delegateSelector2"
 
 
 	//view subscribe model
@@ -117,42 +123,48 @@
 	//view subscribe view event
 	//current element subscribe view "#txtName", event:change, handler:val html
 	data-sub="@sub:$#txtName|change|val html"
+
+	//options has not value, but delegateSelector has value
+	data-sub="@sub:$div|click|*alert||input[type='button']
 </pre>
 
-<p>The selector is either a jQuery selector like the "#txtName" or model path that relative to the
-	namespace such as "message" (If @ns is "myapp", then the full path is "maapp.message")
+<p>The value of @sub property is a string seperated by "|". The publisher can be a model path
+	relative
+	to the namespace or it can be a jQuery selector(prefix with $, e.g $#txtName). The second part
+	is events. It can be model event or jQuery event. Handler, options, and delegateSelector are all
+	optional.
 </p>
 
-<p>Besides the "@sub" notation, we can also use "!evnetName" to do the same thing, but it is
-	shorter, which is recommended, but the "!eventName" will be converted to "@sub" eventually.</p>
+<p>Besides the "@sub" notation, we can also use "!events" to do the same thing, but it is
+	shorter, which is recommended, but the "!events" will be converted to "@sub" eventually.</p>
 
 <pre class="brush:javascript">
-	data-sub="!eventName:path|handler|option|delegate"
-	//E.g
+	data-sub="!events:publisher|handler|option|delegate"
+	//
 	data-sub="!afterUpdate:message|html"
 </pre>
 
-<h4>@pub or $event</h4>
+<h4>@pub or $events</h4>
 
 <p>The "@pub" property means current element publishing jQuery events to another object (view or
-	model). Here is the syntax and some example.
+	model). Another way to understand it is the current element's event is subscribed by an other
+	publisher. Here is the syntax and some example.
 </p>
 
 <pre class="brush:javascript">
 	//handler, options, delegate are all optional, you can have multiple @pub declaration
-	data-sub="@pub:viewEvents1,modelPath1,handler1,options1|delegate1
-	@pub:viewEvents2,modelPath2,handler2,options2|delegate2"
+	data-sub="@pub:jQueryEvents1,subscriber1,handler1,options1|delegate1
+			  @pub:jQueryEvents2,subscriber2,handler2,options2|delegate2"
 
 	//or combine multiple @pub declarations into one using seperator ";"
-	data-sub="@pub:viewEvents1|modelPath1|handler1|options1|delegate1;
-	     viewEvents2|modelPath2|handler2|options2|delegate2"
+	data-sub="@pub:jQueryEvents1,subscriber1,handler1,options1|delegate1;
+				   jQueryEvents2,subscriber2,handler2,options2|delegate2"
 
 	//current view publishes "change" event to model "name", with handler "val"
 	data-sub="@pub:change|name|val"
 </pre>
 
-<p>We can aslo use "$event" to do the same thing that "@pub" can do, which is shorter and
-	recommended.</p>
+<p>We can aslo use "$events" to replace "@pub", so that the syntax is shorter.</p>
 
 <pre class="brush:javascript">
 	data-sub="$event:selector|handler|option|delegate"
@@ -165,57 +177,33 @@
 
 <p>These property is a special property for extentions, we will talk about this later.</p>
 
-<h4>@options</h4>
+<h3>User subscription properties</h3>
 
-<p>This property is not used at the moment.</p>
-
-
-<h3>Custom properties</h3>
-
-<p>Propertes other than reserved properties <strong>@ns,@sub, @pub, @options,
-	@class</strong> are custom properties. You use the same token "@" to reference these properties
-	like <strong>@prop1, @prop2</strong>. Custom properties can be used to build subscriptions
-	dynamically which can be not achieved by using reserved properties. It can be also used to
-	inject some logic such as initialization during subscriptions is built. In the following, we
-	define a custom property @val.
+<p>Besides the four system subscription properties, we can create our user subscriptions property.
+	The following the code in via.js which create user subscription property @confirm.
 </p>
 
-<pre class="brush:javascript">
-//@val:keyup,updateModel
-//the part "updateModel,keyup" will be passed in as options
-via.customSubsProps.val = function( elem, parseContext, subscriptions, options ) {
-	//..
-	subscriptions.push( {
-		publisher: path,
-	    eventTypes: "after*",
-	    subscriber: elem,
-	    handler: "*updateViewValue"
-    } );
-	//..
-};
-</pre>
-<p>After the @val property is defined, we can reference it in a declaration like the following.</p>
 
 <pre class="brush:javascript">
-	@val:path
+	via.userSubsProps.confirm = function( elem, parseContext, subscriptions, options ) {
+		subscribe( parseContext.ns, elem, "click", "*confirm", options );
+	};
 </pre>
 
-<p>The <strong>@val</strong> property can be used for all input control such textbox, checkbox,
-	radio button, select (dropdown list or list box), textArea and more. In the following, it define
-	a subscription declaration, that message subscribe the keyup event of textbox, when keyup
-	happens, update the message itself with the value in text box.
-</p>
 <pre class="brush:html">
-	&lt;input type="text" data-sub="@ns:message @val:."/&gt;
+	&lt;input type="button" data-sub="@confirm:Go ahead?" value="Ok" /&gt;
 </pre>
 
-<h3>Simplify subscription rule with @class property</h3>
+<p>User subscription properties is good extension point to allow us dynamically
+	create subscriptions when can be not achieved by using system subscription properties.
+	It can be also used to inject some logic such as initialization during subscriptions is built.
+	We will talk about this advanced topic later.
+</p>
 
-<p>Declarative subscption is criticized because too much code is jamed into markup, that makes the
-	markup look like untestable, unmaintainable spaghetti code. First the data-sub is not code by
-	itself, but some configuration information, which can be used to generate code for
-	subscriptions,
-	initialization. But we really don't want too much data filled in the data-sub attribute.
+<h3>Package subscription rules with @class property</h3>
+
+<p>Subscription rule is not code by itself, its just some configuration information. However,
+	if we have many declarations in data-sub attribute, it is error prone.
 	To solve this problem, via.js can borrow the CSS practise. One way to apply CSS is to
 	to use inline style which put lots style properties into the style attribute. A better
 	practise is to apply a class to the element, and create a class rule with a set of css
@@ -230,17 +218,23 @@ via.customSubsProps.val = function( elem, parseContext, subscriptions, options )
 </p>
 
 <pre class="brush:javascript">
+	via.classes.class1 = "..subscription declarations..";
+	data-sub="@class:class1|namespace|options|delegate";
+
+
 	via.classes.myClass = "@ns:x @pub:change|firstName|val" +
 						        "@sub:firstName|init|val";
 	// "@class" declaration
 	data-sub="@class:myClass|modelPath|options|delegate"
 
 	//you can have multiple @class for an element
-	data-sub="@class:class1|modelPath1|options1|delegate1 @class:class2|modelPath2|options2|delegate2"
+	data-sub="@class:class1|modelPath1|options1|delegate1
+	          @class:class2|modelPath2|options2|delegate2"
 
 	//or you can group multiple @class rule into one using seperator ";"
 	data-sub="@class:class1|modelPath1|options1|delegate1;
-	class2|modelPath2|options2|delegate2"
+	                 class2|modelPath2|options2|delegate2"
+
 </pre>
 
 <p>Another way to reference to a class is to use <strong>`className:.</strong>, instead of
@@ -267,8 +261,53 @@ via.customSubsProps.val = function( elem, parseContext, subscriptions, options )
 	&lt;input type="text" data-sub="`dateVal:meetingDate"/&gt;
 </pre>
 
-<p>Combining custom rules and class rules, we can make our subscription data shorter, more
-	readable.</p>
+<p>Combining user subscription property and class property, we can make our subscription data
+	shorter, more readable, and more reusable. via.js actually use this both of them to deploy
+	lots of subscription declarations.
+</p>
+
+<p>Let's revisit the hello world, and see how to the declarative subscription can be simplified with
+	what we cover above. The <a
+		href="../demo/helloworld/08-event-subscriptions-between-model-view-declarative0.html">following</a>
+	use the original @pub and @sub property.</p>
+
+<pre class="brush:html">
+	&lt;div data-sub="@ns:test"&gt;
+		&lt;label&gt;Please input your name:
+		&lt;input type="text" data-sub="@pub:change|name|val"/&gt;
+		&lt;/label&gt;
+		&lt;div data-sub="@sub:message|afterUpdate|html"/&gt;
+	&lt;/div&gt;
+</pre>
+
+<p>The <a href="../demo/helloworld/08-event-subscriptions-between-model-view-declarative1.html">following</a>
+	use the !events and $events shortcut.</p>
+
+<pre class="brush:html">
+&lt;div data-sub="@ns:helloApp"&gt;
+	&lt;label&gt;Please input your name: &lt;input type="text" data-sub="$change:name|val"/&gt;
+	&lt;/label&gt;
+
+	&lt;div id="divMessage" data-sub="!afterUpdate:message|html"/&gt;
+&lt;/div&gt;
+</pre>
+
+<p>The <a href="../demo/helloworld/08-event-subscriptions-between-model-view-declarative1.html">following</a>
+	use class property and custom property.</p>
+
+
+<pre class="brush:html">
+	&lt;div data-sub="@ns:helloApp"&gt;
+		&lt;label&gt;Please input your name: &lt;input type="text" data-sub="`val:name"/&gt;
+		&lt;/label&gt;
+
+		&lt;div id="divMessage" data-sub="`html:message"/&gt;
+	&lt;/div&gt;
+</pre>
+
+<p>The syntax of declarative subscription may not be as simple as the declarative binding of
+	knockoutjs, but it has lots machanism to extend yet main compact.
+</p>
 
 <p>Next I will talk about <a href="template.html">template</a></p>
 

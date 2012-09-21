@@ -202,17 +202,11 @@
 <p>The subscription handler in via.js is not a implemented as a function, instead, it is a pipeline
 	object which consist of 1 to 5 filter (<strong>getter, setter, converter, initializer,
 		finalizer</strong>), the only required filter is <strong>getter</strong>. The initializer
-	is executed when a subscription is created. This filter will be only called once. The other
-	four handler will executed when event is fired, below is how these four filters are executed.
+	is executed when a subscription is created so it will be called only once. The other
+	four filters will be executed when subscribed event is fired, below is how these four filters
+	are executed.
 </p>
 
-<!--	These four filter
-	executed in the context of subscriber, "this" is the subscriber.
-
-
-	Another filter (<strong>initializer</strong>) are used during event subscription is created.
-	This filter is executed in the context of global object. "this" is the global object.
--->
 <ol class="simpleList">
 	<li>
 		The handler pipleline start off with getter. It use getter get the value from publisher and
@@ -377,10 +371,20 @@
 	$("#divSamples").subscribe("test.color", "init afterUpdate", "get #/test.setColor");
 </pre>
 
-<h3>Creating handler pipeline</h3>
+<h3>Composing handler pipeline</h3>
 
 <p>Subscription handler is composed with different filters. A handler can be expressed in the
-	following five forms.</p>
+	following five forms. The string forms will be mainly used for declarative subscriptions.
+	I will talk about that later.
+</p>
+
+<ol class="simpleList">
+	<li>Function</li>
+	<li>Pipeline object</li>
+	<li>String of filter keys</li>
+	<li>String of common pipeline name</li>
+	<li>String of the path of model helper</li>
+</ol>
 
 <h4>Function</h4>
 
@@ -485,8 +489,9 @@
 	$("#divSamples").subscribe("helloApp.color", "init afterUpdate", "#helloApp.updateViewColor");
 </pre>
 
-<p>A special form of using model helper as handler is as follow. In this case, the handler
-	is the subscriber itself, so that you can leave the handler empty.</p>
+<p>A special form of using model helper is that the model helper is the subscriber.
+	If this is the case, we can leave out the handler in subscription. The following
+	is an example.</p>
 
 <pre class="brush:javascript">
 	via.extend({
@@ -501,7 +506,7 @@
 
 	via("handleViewChange").subscribe("$#txtName", "change", "#handleViewChange");
 
-	//Because the handler is same as subscriber, we can leave the handler empty, like this
+	//Because the handler is subscriber itself, we can leave out the handler in subscription, like the following
 	via("handleViewChange").subscribe("$#txtName", "change");
 </pre>
 

@@ -30,7 +30,7 @@ test( "create editable shadow", function() {
 	] );
 
 	personTemplate = via.util.clone( person, true );
-	via.customSubsProps.editableListView( null, {ns: "persons"}, null, null );
+	via.userSubsProps.editableListView( null, {ns: "persons"}, null, null );
 	deepEqual( via.get( "persons*edit.itemTemplate" ), via.util.clearObj( person ),
 		"if there is no template for new item of an array, it will clone the first item as " +
 		"template" );
@@ -41,7 +41,7 @@ test( "create editable shadow", function() {
 	via.del( "persons*edit" );
 
 	via.set( "persons_newItem", personTemplate );
-	via.customSubsProps.editableListView( null, {ns: "persons"}, null, null );
+	via.userSubsProps.editableListView( null, {ns: "persons"}, null, null );
 
 	ok( via.get( "persons*edit.itemTemplate" ) === personTemplate,
 		"if there is a template for new item, it will be used" );
@@ -53,7 +53,7 @@ test( "create editable shadow", function() {
 	ok( via.get( "persons*edit.item" ).firstName == personTemplate.firstName,
 		"*newRow handler can create a copy of itemTemplate to *edit.item" );
 
-	via.customSubsProps.editableListView( null,
+	via.userSubsProps.editableListView( null,
 		{ns: "persons*edit.item.others.addresses"},
 		null, null );
 

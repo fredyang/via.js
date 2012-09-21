@@ -9,18 +9,21 @@
 	var viaClasses = via.classes;
 	var isBoolean = via.util.isBoolean;
 	var toTypedValue = via.util.toTypedValue;
-	var customSubsProps = via.customSubsProps;
+	var userSubsProps = via.userSubsProps;
 	var buildTemplateHandler = via.template.buildTemplateHandler;
 	var isArray = $.isArray;
 	var isUndefined = via.util.isUndefined;
 	var rootModel = via();
 	var subscribe = via.subscribe;
+	var defaultOptions = via.options;
 
 	function returnTrue () {
 		return true;
 	}
 
 	//#end_merge
+
+	defaultOptions.confirmMessage = "Are you sure?";
 
 	var viewValueAdapters,
 		toString = function( value ) {
@@ -329,7 +332,11 @@
 			}
 		},
 		confirm: function( e ) {
-			if (!confirm( isUndefined( e.handler.options ) ? this.get() : e.handler.options )) {
+
+			var message = isUndefined( e.handler.options ) ? this.get() :
+				(e.handler.options || defaultOptions.confirmMessage);
+
+			if (!confirm( message )) {
 				e.stopImmediatePropagation();
 			}
 		}
@@ -474,7 +481,7 @@
 		viewValueAdapters.push( viewValueAdapter );
 	};
 
-	extend( customSubsProps, {
+	extend( userSubsProps, {
 
 		caption: function( elem, parseContext, subscriptions, options ) {
 			$( elem ).prepend( "<option value=''>" + options + "</option>" );

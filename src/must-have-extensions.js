@@ -23,7 +23,7 @@
 
 	//#end_merge
 
-	defaultOptions.confirmMessage = "Are you sure?"
+	defaultOptions.confirmMessage = "Are you sure?";
 
 	var viewValueAdapters,
 		toString = function( value ) {
@@ -332,8 +332,10 @@
 			}
 		},
 		confirm: function( e ) {
-			var message = isUndefined( e.handler.options ) ? this.get() : e.handler.options
-				|| defaultOptions.confirmMessage;
+
+			var message = isUndefined( e.handler.options ) ? this.get() :
+				(e.handler.options || defaultOptions.confirmMessage);
+
 			if (!confirm( message )) {
 				e.stopImmediatePropagation();
 			}

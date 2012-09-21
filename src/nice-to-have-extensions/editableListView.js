@@ -5,7 +5,7 @@
 	//#end_merge
 
 	//#merge
-	var customSubsProps = via.customSubsProps;
+	var userSubsProps = via.userSubsProps;
 	var rootModel = new via();
 	var util = via.util;
 	var isUndefined = util.isUndefined;
@@ -33,7 +33,7 @@
 	//editableListView should be used for an array model
 	//this create shadow objects to support editable listview
 	//if array path is items, we try to create an items*edit to support the editable feature
-	customSubsProps.editableListView = function( elem, parseContext, subscriptions, options ) {
+	userSubsProps.editableListView = function( elem, parseContext, subscriptions, options ) {
 		//it is a convention that, if the path of list data is items
 		//we take items_newItem as template from new item for the list data
 		var newItem,
@@ -113,7 +113,7 @@
 	};
 
 	//this change the view of row based on the edit mode
-	customSubsProps.switchUpdateMode = function( elem, parseContext, subscriptions, options ) {
+	userSubsProps.switchUpdateMode = function( elem, parseContext, subscriptions, options ) {
 
 		subscriptions.push( {
 			publisher: parseContext.ns + "*edit.item",

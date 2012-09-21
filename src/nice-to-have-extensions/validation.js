@@ -16,7 +16,7 @@
 	var viaFn = via.fn;
 	var isObject = via.util.isObject;
 	var slice = [].slice;
-	var customSubsProps = via.customSubsProps;
+	var userSubsProps = via.userSubsProps;
 	var isFunction = $.isFunction;
 	var viaClasses = via.classes;
 	var isUndefined = via.util.isUndefined;
@@ -242,7 +242,7 @@
 
 		var validatorName = validator.name;
 
-		if (customSubsProps[validatorName]) {
+		if (userSubsProps[validatorName]) {
 			throw "validator name '" + validatorName + "' collide with name in via.rules";
 		}
 
@@ -756,7 +756,7 @@
 		}
 	} );
 
-	extend( customSubsProps, {
+	extend( userSubsProps, {
 
 		check: function( elem, parseContext, subscriptions, options ) {
 			if (!options) {

@@ -3,11 +3,12 @@
 **via.js** is a jQuery based library which can be used to build complex client-side driven web
 application with well-structured JavaScript. It uses well known [publish-subscribe pattern](http://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) to let
 both models and views behave themself by raising event and subscribing event.
- Controller is not required in via.js because the models and views are staged actor but not puppet.
+Controller is not required in via.js because the models and views are staged actor but not puppet.
 
-Subscription handler is a pipeline object, which is composed of highly reusable and testable
-and lightweight filters. Out of box, via.js comes lots of reusable pipelines and filters,
-and you can create your own using the via.js. This allow you to write less and do more.
+via.js implements subscription handler as a pipeline object, which can be composed of
+highly reusable, testable and lightweight filters. Out of box, via.js comes lots of
+reusable pipelines and filters, and you can create your own using the via.js.
+This allow you to write less and do more.
 
 
 Get started

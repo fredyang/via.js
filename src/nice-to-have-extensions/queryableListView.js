@@ -8,14 +8,14 @@
 	var viaClasses = via.classes;
 	var extend = $.extend;
 	var rootModel = via();
-	var customSubsProps = via.customSubsProps;
+	var userSubsProps = via.userSubsProps;
 	var trigger = via.trigger;
 	var isObject = via.util.isObject;
 	var rDigit = /^\d+$/;
 	var viaFn = via.fn;
 	//#end_merge
 
-	customSubsProps.queryableListView = function( elem, parseContext, subscriptions, options ) {
+	userSubsProps.queryableListView = function( elem, parseContext, subscriptions, options ) {
 		via( parseContext.ns ).queryable( !!options );
 	};
 

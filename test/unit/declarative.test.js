@@ -234,7 +234,7 @@ test( "class rule and options inheritence", function() {
 
 test( "custom rule value and options", function() {
 
-	via.customSubsProps.rule1 = function( elem, parseContext, subscriptions, options ) {
+	via.userSubsProps.rule1 = function( elem, parseContext, subscriptions, options ) {
 		equal( options, "options",
 			"If you use @rule1:options, you can assess options" );
 	};
@@ -245,7 +245,7 @@ test( "custom rule value and options", function() {
 
 	$div.buildSubscriptionObjects();
 
-	via.customSubsProps.rule2 = function( elem, parseContext, subscriptions, options ) {
+	via.userSubsProps.rule2 = function( elem, parseContext, subscriptions, options ) {
 		ok( parseContext.options = "options" && options === "options",
 			"If you use `rule2:.|options or class binding '@class:rule2|.|options' " +
 			"indirectly, you can assess options using rules.options or options" );
@@ -259,8 +259,8 @@ test( "custom rule value and options", function() {
 	var $div2 = $( "<div data-sub='`rule2:.|options'></div>" );
 	$div2.buildSubscriptionObjects();
 
-	delete via.customSubsProps.dummy;
-	delete via.customSubsProps.dummy2;
+	delete via.userSubsProps.dummy;
+	delete via.userSubsProps.dummy2;
 	delete via.classes.dummy2;
 	assertEmptyDb();
 } );

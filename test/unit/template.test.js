@@ -1,7 +1,7 @@
 module( "template test" );
 
 test( "render template with data", function() {
-	via.template.engines( "jsrender", {
+	via.template.engineProxies( "jsrender", {
 		render: function( templateId, dataSource, options ) {
 
 			return templateId.startsWith( "#" ) ?
@@ -25,7 +25,7 @@ test( "render template with data", function() {
 	equal( $view.html(), "abc",
 		"template converter convert data into markup" );
 
-	via.template.engines( "jsrender" ).isTemplateLoaded = function() {
+	via.template.engineProxies( "jsrender" ).isTemplateLoaded = function() {
 		return false;
 	};
 

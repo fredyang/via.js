@@ -10,7 +10,7 @@
 	var $fn = $.fn;
 	var hasOwn = {}.hasOwnProperty;
 	var toTypedValue = via.util.toTypedValue;
-	var mergeLogicalPath = via.mergeLogicalPath;
+	var mergePath = via.util.mergePath;
 	var isUndefined = via.util.isUndefined;
 	var subscribe = via.subscribe;
 	//#end_merge
@@ -215,8 +215,8 @@
 				//
 				//we need to recalculate the parseContextDefinedInClassRule.ns here
 				//based on parseContext.ns, classNs and parseContextDefinedInClass.ns
-				dataSubDefinedInClass.ns = mergeLogicalPath(
-					mergeLogicalPath( parseContext.ns, classNs ),
+				dataSubDefinedInClass.ns = mergePath(
+					mergePath( parseContext.ns, classNs ),
 					dataSubDefinedInClass.ns
 				);
 
@@ -342,7 +342,7 @@
 						publisher = subscriptionParts[0];
 						publisher = publisher.startsWith( "$" ) ?
 							publisher :
-							mergeLogicalPath( parseContext.ns, publisher );
+							mergePath( parseContext.ns, publisher );
 
 						eventTypes = subscriptionParts[1];
 						subscriber = elem;
@@ -354,7 +354,7 @@
 						subscriber = subscriptionParts[1];
 						subscriber = subscriber.startsWith( "$" ) ?
 							subscriber :
-							mergeLogicalPath( parseContext.ns, subscriber );
+							mergePath( parseContext.ns, subscriber );
 					}
 
 					options = subscriptionParts[3];
@@ -431,10 +431,10 @@
 			//			if (rBeginDotOrStar.exec( elementDataSub.ns )) {
 			//				//this is the case when path begin with . or *
 			//				// like .firstName or *.index,
-			//				elementDataSub.ns = mergeLogicalPath( inheritParentProp( elem, "ns" ), elementDataSub.ns );
+			//				elementDataSub.ns = mergePath( inheritParentProp( elem, "ns" ), elementDataSub.ns );
 			//			}
 
-			elementDataSub.ns = mergeLogicalPath( inheritParentProp( elem, "ns" ), ns );
+			elementDataSub.ns = mergePath( inheritParentProp( elem, "ns" ), ns );
 
 		} else {
 

@@ -91,14 +91,16 @@
 
 	//when user click on a tab selector, update the model with tab attribute value
 	via.userSubsProps.tabSelectorHolder = function( elem, parseContext, subscriptions, options ) {
+
 		options = (options || "").split( "," );
+
 		var path = parseContext.ns,
 			tabIdAttribute = options[0] || defaultOptions.tabIdAttribute,
-			childSelector = "[" + tabIdAttribute + "]";
+			handler = "attr*" + tabIdAttribute,
+			delegateSelector = "[" + tabIdAttribute + "]";
+		//using delegate subscription will create one subscription
+		via( path ).subscribe( elem, "click", handler, null, delegateSelector );
 
-		$( elem ).delegate( childSelector, "click", function() {
-			via.set( path, $( this ).attr( tabIdAttribute ) );
-		} );
 	};
 
 	//apply this class the holder of tab

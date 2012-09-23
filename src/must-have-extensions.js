@@ -10,7 +10,7 @@
 	var isBoolean = via.util.isBoolean;
 	var toTypedValue = via.util.toTypedValue;
 	var userSubsProps = via.userSubsProps;
-	var buildTemplateHandler = via.template.buildTemplateHandler;
+	var buildTemplatePipeline = via.template.buildTemplatePipeline;
 	var isArray = $.isArray;
 	var isUndefined = via.util.isUndefined;
 	var rootModel = via();
@@ -231,13 +231,13 @@
 		//
 		//the reason to use getOriginalModel is that
 		//the handler may be attached to the items array
-		appendTmplItem: buildTemplateHandler(
+		appendTmplItem: buildTemplatePipeline(
 			"*getOriginalModel", //getFilter
 			"append"  //setFilter
 		),
 		//handle when an item is updated in an array,
 		//an event afterUpdate.x (x is number) will be raised
-		updateTmplItem: buildTemplateHandler(
+		updateTmplItem: buildTemplatePipeline(
 			//getFilter
 			function( e ) {
 				return e.publisher.get( childIndex( e ) );

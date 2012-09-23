@@ -553,37 +553,40 @@ test( "array method of model", function() {
 
 } );
 
-test( "via.mergeLogicalPath", function() {
+test( "via.mergePath", function() {
 
-	var mergeLogicalPath = via.mergeLogicalPath;
+	var mergePath = via.util.mergePath;
+	var tologicalPath = via.util.toLogicalPath;
 
-	equal( mergeLogicalPath( "a.b", undefined ), "a.b", "if index is not defined, use context as path" );
+	equal( mergePath( "a.b", undefined ), "a.b", "if index is not defined, use context as path" );
 
-	equal( mergeLogicalPath( "a.b", "." ), "a.b", "if index is '.', use context as path" );
+	equal( mergePath( "a.b", "." ), "a.b", "if index is '.', use context as path" );
 
-	equal( mergeLogicalPath( "a.b", ".c" ), "a.b.c", "if index is '.x', combine context and index as mergePath" );
+	equal( mergePath( "a.b", ".c" ), "a.b.c", "if index is '.x', combine context and index as mergePath" );
 
-	equal( mergeLogicalPath( "a.b", "*c" ), "a.b*c", "if index is '*x', combine context and index as mergePath" );
+	equal( mergePath( "a.b", "*c" ), "a.b*c", "if index is '*x', combine context and index as mergePath" );
 
-	equal( mergeLogicalPath( "a*b", "*c" ), "a*b*c", "if context is a*b,  index is *c, mergePath is a*b*c" );
+	//equal( mergePath( "a*b", "<c" ), "a.c", "you can use '<' to traverse back to main model of the current shardow" );
 
-	equal( mergeLogicalPath( "a", "..c" ), "c", "if index is '..x', combine context's context and index as mergePath" );
+	equal( tologicalPath(mergePath( "a*b", "*c" )), "a*b*c", "if context is a*b,  index is *c, mergePath is a*b*c" );
 
-	equal( mergeLogicalPath( "a.b", "..c" ), "a.c", "if index is '..x', combine context's context and index as mergePath" );
+	equal( mergePath( "a", "..c" ), "c", "if index is '..x', combine context's context and index as mergePath" );
 
-	equal( mergeLogicalPath( "a.b.c", "...d" ), "a.d", "if index is '...x', combine context's context and index as mergePath" );
+	equal( mergePath( "a.b", "..c" ), "a.c", "if index is '..x', combine context's context and index as mergePath" );
 
-	equal( mergeLogicalPath( "a.b.c.d", "....e" ), "a.e", "if index is '....x', combine context's context and index as mergePath" );
+	equal( mergePath( "a.b.c", "...d" ), "a.d", "if index is '...x', combine context's context and index as mergePath" );
 
-	equal( mergeLogicalPath( "a.b", ".*c" ), "a*c", "if index is '.*c', combine context's context and index as mergePath" );
+	equal( mergePath( "a.b.c.d", "....e" ), "a.e", "if index is '....x', combine context's context and index as mergePath" );
 
-	equal( mergeLogicalPath( "a.b.c", "..*d" ), "a*d", "if index is '..*d', combine context's context and index as mergePath" );
+	equal( mergePath( "a.b", ".*c" ), "a*c", "if index is '.*c', combine context's context and index as mergePath" );
 
-	equal( mergeLogicalPath( "a.b.c.d", "...*e" ), "a*e", "if index is '...*x', combine context's context and index as mergePath" );
+	equal( mergePath( "a.b.c", "..*d" ), "a*d", "if index is '..*d', combine context's context and index as mergePath" );
 
-	equal( mergeLogicalPath( "a.b", "/d" ), "d", "you can use '/d' to get top level child d" );
+	equal( mergePath( "a.b.c.d", "...*e" ), "a*e", "if index is '...*x', combine context's context and index as mergePath" );
 
-	equal( mergeLogicalPath( "a.b", "/" ), "", "you can use '/' to get root" );
+	equal( mergePath( "a.b", "/d" ), "d", "you can use '/d' to get top level child d" );
+
+	equal( mergePath( "a.b", "/" ), "", "you can use '/' to get root" );
 
 } );
 

@@ -262,22 +262,23 @@ Instead of using
 	subscription.
 </p>
 
-<p>The benefit of the change is not obvious for now. We will talk about it for the rest of the
-	article.
+<p>The benefit of the change may be not obvious for now, but we will talk about it for the rest of
+	the article.
 </p>
 
 <h3>Event subscription between models and views</h3>
 
 <p>In the previous example, we have views only. For simple scenario like this, there is no need
 	to use model at all, but I will use it anyway to show the benefits of using it. One of the
-	benefits is decoupling views. In the following, the view "divMessage" does not subscribe the
+	benefits is decoupling views. In the <a
+		href="../demo/helloworld/04.0-event-subsriptions-between-model-view-programatic.html">following</a>,
+	the view "divMessage" does not subscribe the
 	event of the view "txtName" any more. Instead, a model "helloApp.message" is created, the model
 	is similar to the concept of <a
 		href="http://knockoutjs.com/documentation/observables.html">observerable</a>
 	in knockoutjs, however you don't need to mark it observerable explicitly. Then let the view
 	"divMessage" subscribe the event of the model "helloApp.message", and the model
-	"helloApp.message" subscribe the event of view "txtName". The following is the <a
-		href="../demo/helloworld/04.0-event-subsriptions-between-model-view-programatic.html">code</a>.
+	"helloApp.message" subscribe the event of view "txtName".
 </p>
 	<pre class="brush:html">
 		&lt;label&gt;Please input your name: &lt;input type="text" id="txtName"/&gt;&lt;/label&gt;
@@ -303,16 +304,17 @@ Instead of using
 
 <p>
 	So why we want to decouple views, what is wrong that a view subscribe event of another view?
-	There is nothing wrong. However, view are the most dynamic parts of a application.
+	There is nothing wrong. However, view are the most dynamic parts of a application,
 	while models reflect the business logic and they are relative stable compared to view.
-	Let's say originally, we have two view (v1, v2) subscribe the change of view (v3). If we replace
-	view v3 with view v4, we need to update these subscription (v1, v3) and (v2, v3)) to (v1, v4),
-	(v2, v4). However, if we create a model m, and let view (b, c) subscribe m, and let model m
-	subscribe event of view v3. When view v3 change v4, we only need to update the subscription (m,
-	v3) to (m, v4). In the <a
+	Let's say originally, we have two view (v1, v2) subscribe the change of view (v3). For some
+	reason, if we need swtich view v3 with view v4, we need to update these subscription (v1, v3)
+	and (v2, v3)) to (v1, v4), (v2, v4). However, if we create a model m, and we have subscription
+	view (v1, m) and (v2, m), (m, v3). When view v3 is swapped with v4, we only need to update the
+	subscription (m, v3) to (m, v4), and original subscriptions (v1, m) and (v2, m) is are affected.
+	In the <a
 	href="../demo/helloworld/04.0.1-event-subsriptions-between-model-view-programatic.html">
-	following.</a>, we may change text box into dropdownlist without affecting the view
-	"#divMessage".
+	following</a>, we may change text box into dropdownlist without affecting the subscription of
+	view "#divMessage".
 	</a>
 </p>
 
@@ -375,7 +377,7 @@ Instead of using
 	} );
 </pre>
 
-<p>In the code, the model "helloApp.message" become a function, which depends on the model
+<p>Now the model "helloApp.message" become a function, which depends on the model
 	"helloApp.name". This function is simliar <a
 		href="http://knockoutjs.com/documentation/computedObservables.html">computedObserverable
 		concept</a> in knockoutjs. However you don't need to explicitly create it, viajs just
@@ -406,10 +408,11 @@ Instead of using
 </pre>
 
 <p>Declarative event subscription looks similar to data binding in knockoutjs. People
-	love data binding. But the concept used here is event subscription, but it achieves the same
+	love data binding. But the concept used here is event subscription, it achieves the same
 	result of data binding. Declarative subscription is just another form of subscriptions, it
-	produces the same code of programmatic subscription. Declarative subscription is very useful
-	when used with template, expecially in nested template rendering. We will talk about that
+	produces the same code of programmatic subscription. Because declartative subscription directly
+	attach to an element, the element does not need a id anymore. Declarative subscription is very
+	useful when used with template, expecially in nested template rendering. We will talk about that
 	later.</p>
 
 <p>Delarative subscription between views is also supported. If we don't use model, we can use

@@ -14,11 +14,11 @@
 	<script src="../../src/template-engines/template-engine-jsrender.js"></script>
 </head>
 <body>
-	<div data-sub="`forObject:helloApp|hello">
+	<div data-sub="`for:helloApp|hello">
 	</div>
 </body>
 
-<script type="tmpl" id="hello">
+<script type="jsrender" id="hello">
 	<div data-sub="@ns:helloApp">
 		<label>{{:prompt}} <input type="text" data-sub="`val:name"/></label>
 		<div data-sub="`html:message"/>

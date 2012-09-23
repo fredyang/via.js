@@ -29,7 +29,7 @@
 			finalize: "*importSubs"
 		};
 
-	function buildTemplateHandler ( getter, setter, finalizer ) {
+	function buildTemplatePipeline ( getter, setter, finalizer ) {
 		return extend( {}, renderInside,
 			isObject( getter ) ? getter : {
 				get: getter,
@@ -76,7 +76,7 @@
 	};
 
 	//this converter is used in handlers which can want to convert data
-	// to markup, these handler includes foreach, and buildTemplateHandler
+	// to markup, these handler includes foreach, and buildTemplatePipeline
 	//which is the core of all templateHandler
 	converters.template = function( dataSource, e ) {
 
@@ -148,19 +148,19 @@
 	//add reusable event handler
 	via.pipeline( {
 		renderInside: renderInside,
-		render: buildTemplateHandler( "get", "replaceWith" )
+		render: buildTemplatePipeline( "get", "replaceWith" )
 	} );
 
 	//this is for render everything but just once, after that it will not update itself
-	viaClasses.forOnce = "!init:.|*renderInside";
+	viaClasses["for"] = "!init:.|*renderInside";
 
 	//this is for render a single object inside a container
-	viaClasses.forObject = "!init after*.:.|*renderInside";
+	viaClasses.forSelf = "!init after*.:.|*renderInside";
 
 	//this is for render an array inside of container view
 	//data-sub="@class:foreach|path|templateId"
-	//or data-sub="`forArray:path|templateId"
-	viaClasses.forArray = "!init after*. after*.1:.|*renderInside";
+	//or data-sub="`forChildren:path|templateId"
+	viaClasses.forChildren = "!init after*. after*.1:.|*renderInside";
 
 	//this is for render everything, and update view on change of any decedent
 	viaClasses.forAll = "!init after*:.|*renderInside";
@@ -215,24 +215,24 @@
 		if (!engineName) {
 			throw "engine name is not specified or default engine name is null";
 		}
-		var engine = templateEngines[engineName];
-		if (!engine) {
-			throw "engine '" + engine + "' can not be found.";
+		var engineProxy = templateEngines[engineName];
+		if (!engineProxy) {
+			throw "engine '" + engineProxy + "' can not be found.";
 		}
-		return engine;
+		return engineProxy;
 
 	}
 
 	//this is called by converters.renderTemplate
 	function renderTemplate ( templateId, dataSource, renderContext, engineName ) {
 
-		var engine = getTemplateEngine( engineName, templateId );
+		var engineProxy = getTemplateEngine( engineName, templateId );
 
 		templateId = $.trim( templateId );
 
-		if (!engine.isTemplateLoaded || engine.isTemplateLoaded( templateId )) {
+		if (!engineProxy.isTemplateLoaded || engineProxy.isTemplateLoaded( templateId )) {
 
-			return engine.render( templateId, dataSource, renderContext );
+			return engineProxy.render( templateId, dataSource, renderContext );
 
 		} else {
 			var defer = $.Deferred(),
@@ -244,7 +244,7 @@
 			clonedContext.e = cloneEvent;
 
 			template.load( templateId ).done( function() {
-				var content = engine.render( templateId, dataSource, clonedContext );
+				var content = engineProxy.render( templateId, dataSource, clonedContext );
 				var rtn = $( content );
 				defer.resolve( rtn.selector || !rtn.length ? content : rtn );
 			} );
@@ -264,15 +264,15 @@
 		 isTemplateLoaded: function( templateId ) {}
 		 };
 		 */
-		engines: function( name, engine, notDefaultEngine ) {
+		engineProxies: function( name, engineProxy, notDefaultEngine ) {
 			if (!name) {
 				return templateEngines;
 			}
-			if (!engine) {
+			if (!engineProxy) {
 				return templateEngines[name];
 			}
 
-			templateEngines[name] = engine;
+			templateEngines[name] = engineProxy;
 			if (!notDefaultEngine) {
 				template.defaultEngine = name;
 			}
@@ -306,7 +306,7 @@
 		//
 		//setFitler is "html" which is to change the content of the view
 		//it can be a string or function (e, value)
-		buildTemplateHandler: buildTemplateHandler
+		buildTemplatePipeline: buildTemplatePipeline
 	};
 
 	//#merge

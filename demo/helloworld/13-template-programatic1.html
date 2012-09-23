@@ -37,7 +37,7 @@
 	} );
 
 	var templateId = "hello";
-	$( "#appContainer" ).subscribe( "helloApp", "init", via.template.buildTemplateHandler( {
+	$( "#appContainer" ).subscribe( "helloApp", "init", via.template.buildTemplatePipeline( {
 		finalize: function( value, e ) {
 			e.publisher.cd( "name" ).subscribe( value.findAll( ".name" ), "change", "val" );
 			value.findAll( ".divMessage" ).subscribe( e.publisher.cd( "message" ).path, "afterUpdate", "html" );

@@ -15,7 +15,7 @@
 					</div>
 					<div class="bd">
 						<!--getSubEntries(entry) entry is optional-->
-						<div class="namespace" data-sub="`forArray:getSubEntries|doc.browse.categoryTree
+						<div class="namespace" data-sub="`forChildren:getSubEntries|doc.browse.categoryTree
 														 $afterExpandCollapseApi:/doc.expandCollapseApi
 														`tabSelectorHolder:selectedEntryName">
 						</div>
@@ -30,7 +30,7 @@
 		</div>
 
 		<div class="main">
-			<div data-sub="`forObject:selectedEntry|doc.browse.selectedEntry">
+			<div data-sub="`forSelf:selectedEntry|doc.browse.selectedEntry">
 			</div>
 		</div>
 	</div>

@@ -11,7 +11,7 @@
 	var isUndefined = util.isUndefined;
 	var clone = util.clone;
 	var isFunction = $.isFunction;
-	var buildTemplateHandler = via.template.buildTemplateHandler;
+	var buildTemplatePipeline = via.template.buildTemplatePipeline;
 	var viaClasses = via.classes;
 	var extend = $.extend;
 	var clearObj = util.clearObj;
@@ -285,7 +285,7 @@
 		//if it is in create mode render content in container,
 		// otherwise empty container
 		//!init afterUpdate:.|*renderNewItem
-		renderNewItem: buildTemplateHandler(
+		renderNewItem: buildTemplatePipeline(
 			//getFilter
 			function( e ) {
 				return e.publisher.get( ".mode" ) === editMode.create ?
@@ -298,7 +298,7 @@
 
 		//publiser is items
 		//handle event enterUpdateMode
-		renderEditItem: buildTemplateHandler(
+		renderEditItem: buildTemplatePipeline(
 			//getFilter
 			"get",
 			//setFilter

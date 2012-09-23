@@ -4,7 +4,7 @@
 	//#end_merge
 
 	var engine;
-	via.template.engines( "jsrender", engine = {
+	via.template.engineProxies( "jsrender", engine = {
 
 		render: function( templateId, data, context ) {
 			if (!$.render[templateId]) {

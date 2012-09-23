@@ -3,7 +3,7 @@
 (function( $, via ) {
 	//#end_merge
 
-	via.template.engines( "tmpl", {
+	via.template.engineProxies( "tmpl", {
 
 		//must implement
 		render: function( templateId, dataSource, context ) {

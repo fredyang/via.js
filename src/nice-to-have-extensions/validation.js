@@ -22,7 +22,7 @@
 	var isUndefined = via.util.isUndefined;
 	var subscribe = via.subscribe;
 	var toTypedValue = via.util.toTypedValue;
-	var mergeLogicalPath = via.mergeLogicalPath;
+	var mergePath = via.util.mergePath;
 	var isPrimitive = via.util.isPrimitive;
 	//#end_merge
 

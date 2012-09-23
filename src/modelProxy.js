@@ -45,13 +45,14 @@
 		afterCreate = "afterCreate",
 		rJSON = /^(?:\{.*\}|\[.*\])$/,
 		rUseParseContextAsContext = /^\.(\.*)([\.\*])/,
+		rMainPath = /^\.<(.*)/,
 		rBeginDotOrStar = /^[\.\*]/,
 		rDotStar = /[\.\*]/,
 		rHashOrDot = /#+|\./g,
 		rHash = /#+/g,
 		RegExp = window.RegExp,
 		rParentKey = /^(.+)[\.\*]\w+$/,
-		mergeLogicalPath,
+		mergePath,
 		rIndex = /^.+\.(\w+)$|\w+/,
 		util,
 		isUndefined,
@@ -482,7 +483,7 @@
 		//path methods
 		fullPath: function( subPath ) {
 			//join the context and subPath together, but it is still a logical path
-			return mergeLogicalPath( this.path, subPath );
+			return mergePath( this.path, subPath );
 		},
 
 		//to get the logicalPath of current model, leave subPath empty
@@ -697,18 +698,18 @@
 		},
 
 		getLocal: function() {
-			return util.local( this.path);
+			return util.local( this.path );
 		},
 
 		restoreLocal: function( overwrite ) {
 			if (overwrite || isUndefined( this.get() )) {
-				this.set(this.getLocal());
+				this.set( this.getLocal() );
 			}
 			return this;
 		},
 
-		purgeLocal: function () {
-			util.local(this.path, undefined);
+		purgeLocal: function() {
+			util.local( this.path, undefined );
 			return this;
 		}
 	};
@@ -786,7 +787,7 @@
 			watchedPaths = parseWatchedPaths( functionBody );
 
 		for (var i = 0; i < watchedPaths.length; i++) {
-			watchPath( path, context ? mergeLogicalPath( context, watchedPaths[i] ) : watchedPaths[i] );
+			watchPath( path, context ? mergePath( context, watchedPaths[i] ) : watchedPaths[i] );
 		}
 	}
 
@@ -908,7 +909,6 @@
 			toPhysicalPath: toPhysicalPath = function( logicalPath, createShadowIfNecessary /* internal use*/ ) {
 
 				var match, rtn = "", leftContext = "", mainValue, shadowKey, mainPath;
-				//logicalPath = toLogicalPath(logicalPath);
 
 				while ((match = rDotStar.exec( logicalPath ))) {
 					//reset logical Path to the remaining of the search text
@@ -1063,6 +1063,66 @@
 				}
 			},
 
+			/*join the context and subPath together, if path is not necessary the same as logical path
+			 *convertSubPathToRelativePath by default is true, so that if you spedify subPath as "b"
+			 * and  context is "a", it will be merged to "a.b" . If explicitly specify
+			 * converttSubPathToRelativePath to false, they will not be merged, so the "b" will be
+			 * returned as merge path*/
+			mergePath: mergePath = function( context, subPath, convertSubPathToRelativePath
+			                                 /*used internally*/ ) {
+
+				context = toPhysicalPath( context );
+
+				var match;
+				if (!isUndefined( subPath )) {
+					subPath = subPath + "";
+					if (subPath.startsWith( "/" )) {
+						return subPath.substr( 1 );
+					}
+				}
+				if (isUndefined( convertSubPathToRelativePath )) {
+					convertSubPathToRelativePath = true;
+				}
+
+				if (convertSubPathToRelativePath && subPath && context && !rBeginDotOrStar.test( subPath )) {
+					subPath = "." + subPath;
+				}
+
+				if (!subPath || subPath == ".") {
+
+					return context;
+
+				} else if (!rBeginDotOrStar.test( subPath )) {
+
+					return subPath;
+
+				} else if ((match = rUseParseContextAsContext.exec( subPath ))) {
+					//if subPath is like ..xyz or .*xyz
+					var stepsToGoUp = 1 + (match[1] ? match[1].length : 0),
+						remaining = RegExp.rightContext,
+						mergedContext = context;
+
+					while (stepsToGoUp) {
+						mergedContext = contextOfPath( mergedContext );
+						stepsToGoUp--;
+					}
+
+					//use rule's context as context
+					//.. or .*
+					//$2 is either "." or "*"
+					return remaining ?
+						(mergedContext ? mergedContext + match[2] + remaining : remaining) :
+						(match[2] === "*" ? mergedContext + "*" : mergedContext);
+
+					//if subPath is like .ab or *ab
+				} else if ((match = rMainPath.exec( subPath ))) {
+
+					return mergePath( getMainPathFromShadow( context ), match[1] );
+
+				}
+				return context + subPath;
+			},
+
 			_modelLinks: modelLinks
 
 		},
@@ -1075,61 +1135,7 @@
 		},
 
 		//use this for configure options
-		options: defaultOptions,
-
-		/*join the context and subPath together, but it is still a logical path*/
-		/*convertSubPathToRelativePath by default is true, so that if you spedify subPath as "b"
-		 * and  context is "a", it will be merged to "a.b" . If explicitly specify
-		 * converttSubPathToRelativePath to false, they will not be merged, so the "b" will be
-		 * returned as merge path*/
-		mergeLogicalPath: mergeLogicalPath = function( context, subPath, convertSubPathToRelativePath
-		                                               /*used internally*/ ) {
-
-			if (!isUndefined( subPath )) {
-				subPath = subPath + "";
-				if (subPath.startsWith( "/" )) {
-					return subPath.substr( 1 );
-				}
-			}
-			if (isUndefined( convertSubPathToRelativePath )) {
-				convertSubPathToRelativePath = true;
-			}
-
-			if (convertSubPathToRelativePath && subPath && context && !rBeginDotOrStar.test( subPath )) {
-				subPath = "." + subPath;
-			}
-
-			if (!subPath || subPath == ".") {
-
-				return context;
-
-			} else if (!rBeginDotOrStar.test( subPath )) {
-
-				return subPath;
-
-			} else if (rUseParseContextAsContext.test( subPath )) {
-				//if subPath is like ..xyz or .*xyz
-				var match = rUseParseContextAsContext.exec( subPath ),
-					stepsToGoUp = 1 + (match[1] ? match[1].length : 0),
-					remaining = RegExp.rightContext,
-					mergedContext = context;
-
-				while (stepsToGoUp) {
-					mergedContext = contextOfPath( mergedContext );
-					stepsToGoUp--;
-				}
-
-				//use rule's context as context
-				//.. or .*
-				//$2 is either "." or "*"
-				return remaining ?
-					(mergedContext ? mergedContext + match[2] + remaining : remaining) :
-					(match[2] === "*" ? mergedContext + "*" : mergedContext);
-
-				//if subPath is like .ab or *ab
-			}
-			return context + subPath;
-		}
+		options: defaultOptions
 	} );
 
 	$( "get,set,del,extend".split( "," ) ).each( function( index, value ) {
@@ -1153,5 +1159,6 @@
 	//#end_merge
 
 	//#merge
-})( jQuery, window );
+})
+	( jQuery, window );
 //#end_merge

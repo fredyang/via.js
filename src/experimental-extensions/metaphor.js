@@ -4,7 +4,7 @@
 	//#end_merge
 
 	//#merge
-	var mergeLogicalPath = via.mergeLogicalPath;
+	var mergePath = via.util.mergePath;
 	var subscribe = via.subscribe;
 	var isString = via.util.isString;
 	var isArray = $.isArray;
@@ -33,7 +33,7 @@
 
 			} else if (target !== "_") {
 
-				target = mergeLogicalPath( contextModel, target );
+				target = mergePath( contextModel, target );
 			}
 		}
 

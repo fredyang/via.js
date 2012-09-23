@@ -2,7 +2,7 @@
 	<div data-sub="@ns:gmail">
 		<input type="button" value="unload" data-sub="$click:.unloadGmail">
 
-		<div data-sub="`forArray:folders|gmail.folderList"></div>
+		<div data-sub="`forChildren:folders|gmail.folderList"></div>
 		<div data-sub="`listView:selectedEmails|gmail.emailList"></div>
 	</div>
 </script>

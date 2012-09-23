@@ -21,8 +21,10 @@
 	var slice = [].slice;
 	var util = via.util;
 	var rootModel = via();
-	var mergeLogicalPath = via.mergeLogicalPath;
-	var isPromise = via.util.isPromise;
+	var mergePath = util.mergePath;
+	var isPromise = util.isPromise;
+	var defaultOptions = via.options;
+
 	//#end_merge
 
 	var dummy = {},
@@ -656,6 +658,11 @@
 	}
 
 	//#debug
+
+	if (location.search.contains( "debugvia" )) {
+		defaultOptions.debug = true;
+	}
+
 	function unwrapObject ( object ) {
 		if (object) {
 			if (!isUndefined( object.path )) {
@@ -673,12 +680,14 @@
 	function executePipeline ( subscriber, pipeline, e, triggerData ) {
 
 		//#debug
-		log( unwrapObject( e.publisher ),
-			e.type,
-			unwrapObject( subscriber ),
-			pipeline,
-			unwrapObject( e.originalPublisher )
-		);
+		if (defaultOptions.debug) {
+			log( unwrapObject( e.publisher ),
+				e.type,
+				unwrapObject( subscriber ),
+				pipeline,
+				unwrapObject( e.originalPublisher )
+			);
+		}
 		//#end_debug
 
 		var value,
@@ -955,8 +964,8 @@
 	function getModelHelperAsFilter ( handlerString, publisher, subscriber ) {
 		if (handlerString.startsWith( "#" )) {
 			handlerString = handlerString.substr( 1 );
-			return isString( subscriber ) ? rootModel.helper( mergeLogicalPath( subscriber, handlerString ) ) :
-				isString( publisher ) ? rootModel.helper( mergeLogicalPath( publisher, handlerString ) ) :
+			return isString( subscriber ) ? rootModel.helper( mergePath( subscriber, handlerString ) ) :
+				isString( publisher ) ? rootModel.helper( mergePath( publisher, handlerString ) ) :
 					rootModel.helper( handlerString );
 		}
 	}

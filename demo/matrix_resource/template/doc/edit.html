@@ -28,7 +28,7 @@
 
 
 		<div class="editForm" data-sub="@ns:*edit.item
-						   `forObject:.|doc.edit.entryForm
+						   `forSelf:.|doc.edit.entryForm
 						   `show:..mode">
 
 		</div>
@@ -78,7 +78,7 @@
 	<div>
 		<label class="fly_n">Signatures:</label>
 
-		<div data-sub="`forObject:.|doc.edit.signatures"></div>
+		<div data-sub="`forSelf:.|doc.edit.signatures"></div>
 	</div>
 
 	<div>
@@ -182,13 +182,13 @@
 		<div>
 			<div>Overload Signature:</div>
 
-			<div data-sub="`forObject:.|doc.edit.overloads"></div>
+			<div data-sub="`forSelf:.|doc.edit.overloads"></div>
 		</div>
 
 		<div>
 			<div>Examples:</div>
 
-			<div data-sub="`forObject:.|doc.edit.examples"></div>
+			<div data-sub="`forSelf:.|doc.edit.examples"></div>
 			</p>
 		</div>
 
@@ -260,7 +260,7 @@
 
 
 		<div>Parameters:</div>
-		<div data-sub="`forObject:.|doc.edit.parameters"></div>
+		<div data-sub="`forSelf:.|doc.edit.parameters"></div>
 		<div>
 			<input type="button" value="Save Overload" data-sub="`validate $click:.|*saveEditItem">
 			<input type="button" value="Cancel" data-sub="$click:.|*cancelEditItem">

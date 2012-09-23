@@ -10,7 +10,7 @@
 	var mu = Mustache;
 	var mustacheTemplates = {};
 
-	via.template.engines( "mustache", {
+	via.template.engineProxies( "mustache", {
 
 		render: function( templateId, data, context ) {
 			return mu.render(

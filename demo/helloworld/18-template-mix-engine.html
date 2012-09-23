@@ -5,8 +5,8 @@
 	<title></title>
 </head>
 <body>
-<div data-sub="`forArray:greeting|greetingTemplate,,mustache"></div>
-<div data-sub="`forArray:person|personTemplate"></div>
+<div data-sub="`for:greeting|greetingTemplate,,mustache"></div>
+<div data-sub="`for:person|personTemplate"></div>
 <script id="greetingTemplate" type="mustache">
 	<h2>{{message}} render by mustash template engine</h2>
 </script>

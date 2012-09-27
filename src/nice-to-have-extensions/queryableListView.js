@@ -97,7 +97,7 @@
 
 			queryResult: function( disablePaging ) {
 				"this.get('query')";
-				log( "queryResult is called" );
+				//log( "queryResult is called" );
 
 				//"this" refers to the Shadow object
 				//wrap array into a jQuery object

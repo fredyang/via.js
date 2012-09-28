@@ -15,11 +15,11 @@
 	var viaFn = via.fn;
 	//#end_merge
 
-	userSubsProps.queryableListView = function( elem, parseContext, subscriptions, options ) {
-		via( parseContext.ns ).queryable( !!options );
+	userSubsProps.createQueryable = function( elem, parseContext, subscriptions, options ) {
+		via( parseContext.ns ).createQueryable( !!options );
 	};
 
-	viaFn.queryable = function( autoQuery ) {
+	viaFn.createQueryable = function( autoQuery ) {
 		var path = this.path;
 
 		if (this.get( "*query" )) {
@@ -240,16 +240,12 @@
 
 		//	<tbody data-sub="`queryableListView:.|#contactRow">
 		//instead using listView whose parse context is raw items
-		//queryableListView create view which bind to items*queryableResult
-		//
-		//@rowContainer is completely optional if you don't use
-		// editable view, it is used here to save the options which is the template id
-		// into rules.itemTemplate for editableListView use
-		queryableListView: "@rowContainer" +
-			                   //create queryable shadow objects to support query
-			               "@queryableListView" +
-			//render the whole list of items
-			               "!init after*:*queryResult|*renderInside",
+		//queryableListView create view which subscribe items*queryableResult
+		queryableListView:  //create queryable shadow objects to support query
+			               "@createQueryable" +
+							//render the whole list of items
+			               "`forAll:*queryResult",
+
 
 		//data-sub="`sort:.,firstName" //context path is items
 		//set *query.sort.by to a preset value of a column
@@ -266,7 +262,7 @@
 
 		//data-sub="`pager:.,#pagerTemplate"
 		//render pager using the data under items*query.page
-		pager: "!init after*:*query.page|*renderInside" +
+		pager: "`forAll:*query.page" +
 		       "!init after*:*hasResult|*show|_" +
 		       "`changePage" +
 		       "`preventDefault",

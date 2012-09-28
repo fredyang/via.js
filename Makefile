@@ -20,7 +20,7 @@ core_files = ${src_dir}/modelProxy.js\
 extensions = ${nice_to_have}/validation.js\
 			${nice_to_have}/queryableListView.js\
 			${nice_to_have}/alignableListView.js\
-			${nice_to_have}/editableListView.js\
+			${nice_to_have}/editableRow.js\
 			${nice_to_have}/history.js\
 			${nice_to_have}/tabs.js\
 			${nice_to_have}/loadapp.js\

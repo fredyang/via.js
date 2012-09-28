@@ -30,10 +30,10 @@
 
 	util.editMode = editMode;
 
-	//editableListView should be used for an array model
+	//editableRow should be used for an array model
 	//this create shadow objects to support editable listview
 	//if array path is items, we try to create an items*edit to support the editable feature
-	userSubsProps.editableListView = function( elem, parseContext, subscriptions, options ) {
+	userSubsProps.editableRow = function( elem, parseContext, subscriptions, options ) {
 		//it is a convention that, if the path of list data is items
 		//we take items_newItem as template from new item for the list data
 		var newItem,
@@ -213,19 +213,8 @@
 
 			}
 
-		},
-
-		removeRowItemByIndex: function( index ) {
-			this.resetEditItem();
-			var items = this.helper();
-			if (isFunction( items )) {
-				//this is case when items is model*queryResult
-				items = this.get();
-				this.mainModel().removeItem( items[index] );
-			} else {
-				this.removeAt( index );
-			}
 		}
+
 	} );
 
 	via.pipeline( {
@@ -256,14 +245,6 @@
 		//but it is "items.edit.item"
 		saveEditItem: function( e ) {
 			this.mainModel().saveEditItem();
-			e.stopPropagation();
-		},
-
-		//handle user's action remove an item in listview
-		//subscriber is items or items*queryResult
-		removeRow: function( e ) {
-			var selectedRowIndex = e.selectedRowIndex();
-			this.removeRowItemByIndex( selectedRowIndex );
 			e.stopPropagation();
 		},
 
@@ -308,16 +289,26 @@
 
 	} );
 
+	var originalRemoveRowPipeline = via.pipeline( "removeRow" );
+
+	//overwrite the removeRow pipeline defined in
+	//must-have-extensions.js
+	//
+	//handle user's action remove an item in listview
+	//subscriber is items or items*queryResult
+	via.pipeline( "removeRow", function( e ) {
+		this.resetEditItem();
+		originalRemoveRowPipeline.get.call( this, e );
+	} );
+
 	extend( viaClasses, {
 
-		//handle the delete button evnet in the list view
-		deletableRow: "$delete:.|*removeRow",
 
 		//on top of deletableRow
 		// create the infrastructure to enable inline edit
-		editableDeletableRow: "`deletableRow" +
-		                      "@editableListView" +
-		                      "$edit:.|*editRow",
+		editableRow: "`deletableRow" +
+		             "@editableRow" +
+		             "$edit:.|*editRow",
 
 		//on top of editableDeletableRow, handle update/cancel event which is required
 		//in in-row edit view
@@ -327,17 +318,17 @@
 		// inside a rows, these event are custom events, you should convert
 		// actual events to them, here is an example
 		//<input type="button" value="edit" data-sub="`editButton"/>
-		//@editableListView create shadow objects
+		//@editableRow create shadow objects
 		//@switchUpdateMode let view subscribe model change to refresh the row view
 		//
 		//context path should be an array, such as items or items.queryableResult
 		//data-sub="`listView:.,contacts.contactRow
-		//          `editableListView:.,contacts.editContactRow"
+		//          `inlineEditableRow:.,contacts.editContactRow"
 		//
 		//context path is items*queryableResult
 		//data-sub="`queryableListView:.,contacts.contactRow
-		//          `editableListView:*queryResult,contacts.editContactRow"
-		editableListView: "`editableDeletableRow" +
+		//          `inlineEditableRow:*queryResult,contacts.editContactRow"
+		inlineEditableRow: "`editableRow" +
 		                  "$update:.|*saveEditRow" +
 		                  "$cancel:.|*cancelEditRow" +
 		                  "@switchUpdateMode:.",

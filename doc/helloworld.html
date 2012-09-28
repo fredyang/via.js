@@ -12,7 +12,6 @@
 	<script src='../demo/SyntaxHighlighter/scripts/shBrushJScript.js'></script>
 	<script src='../demo/SyntaxHighlighter/scripts/shBrushXml.js'></script>
 	<script src='../demo/SyntaxHighlighter/scripts/shBrushCss.js'></script>
-	<script src='analytic.js'></script>
 	<script language="javascript" type="text/javascript">
 		SyntaxHighlighter.defaults.gutter = false;
 		SyntaxHighlighter.defaults.toolbar = false;
@@ -24,9 +23,9 @@
 <div class="page oldSchool">
 <h1>Hello world, via.js</h1>
 
-<p>This article introduce via.js using the classic "Hello world" example. If want to skip the
-	introduction, feel free to check the <a href="../demo/index.html">sample list</a>, there are
-	some very complicated demos here, such as the <a href="../demo/app-demo/doc/doc.html">API
+<p>This article introduce via.js using the classic "Helloworld" example. If you think "Helloworld"
+	is too simple, feel free to check the <a href="../demo/index.html">sample list</a>, there are
+	some fairy complicated demos here, such as the <a href="../demo/app-demo/doc/doc.html">API
 		app</a>. All these samples are client side driven, and there is no single line of server
 	code.
 </p>
@@ -73,9 +72,11 @@
 	maintainable, repeatable structure.
 </p>
 
-<p>Via.js is my adventure to do something different. It does not try to solve all the challenge
-	to build Single Page Application, instead it focus on the area of view and model
-	interaction.</p>
+<p>Via.js is my adventure to achieve the same goal in a different way. It does not try to solve all
+	the challenge to build Single Page Application, instead it focus on the area of view and model
+	interaction. However via.js use <a href="http://github.com/fredyang/matrix.js">matrix.js</a> for
+	on-demand module loading which is important to build single page application.
+</p>
 
 <h2>Hello World</h2>
 
@@ -258,12 +259,12 @@ Instead of using
 </div>
 
 <p>*Techinically, you can still do whatever you want in handler of event subscription, and
-	sometimes it is also necessary for whatever reason, but this defeat the purpose of event
-	subscription.
+	sometimes it is also necessary for performance or other reasons, but do this only absolutely
+	necessary, it can be a techinical debt.
 </p>
 
-<p>The benefit of the change may be not obvious for now, but we will talk about it for the rest of
-	the article.
+<p>The benefit of the change may be not obvious for now, but event subscription is the backbone
+	of the library, and I will talk about it for the rest of the article.
 </p>
 
 <h3>Event subscription between models and views</h3>
@@ -307,7 +308,8 @@ Instead of using
 	There is nothing wrong. However, view are the most dynamic parts of a application,
 	while models reflect the business logic and they are relative stable compared to view.
 	Let's say originally, we have two view (v1, v2) subscribe the change of view (v3). For some
-	reason, if we need swtich view v3 with view v4, we need to update these subscription (v1, v3)
+	reason, if we need swtich view v3 with view v4, now we need to update these subscription (v1,
+	v3)
 	and (v2, v3)) to (v1, v4), (v2, v4). However, if we create a model m, and we have subscription
 	view (v1, m) and (v2, m), (m, v3). When view v3 is swapped with v4, we only need to update the
 	subscription (m, v3) to (m, v4), and original subscriptions (v1, m) and (v2, m) is are affected.
@@ -439,7 +441,7 @@ Instead of using
 <p>
 	In this simple scenario, both event binding and event subscription work. In fact, event binding
 	works more efficiently. However, they reflect different way of thinking, and have tramendous
-	impact down the path of develepment. Below it is the thinking viajs want to support.
+	impact down the path of develepment. Below are the ideas viajs want to support.
 	They should be read in the context of an object, the object can be model or view.</p>
 
 <strong>
@@ -458,29 +460,35 @@ Instead of using
 	href="http://www.amazon.com/Object-Thinking-DV-Microsoft-Professional-David/dp/0735619654">Object
 	thinking</a>. Having said that, it doesn't mean that we should abandon computer thinking.
 	Actually I use computer thinking all the time when I write statement "if/else", "for/while", and
-	I can't live without it. However, object thinking just scales better. I try to use it whenever
-	possible.
+	I can't not be a programmer without computer thinking. However, object thinking just scales
+	better in solving complex problems. I try to use it whenever possible.
 </p>
 
 <h3>
 	Where is my controller?
 </h3>
 
-<p>The answer is, there is no controller, because there is no need for one. In viajs, all
+<p>The answer is, there is no controller, because there is no need for one here. In viajs, all
 	objects regardless whether they are view or model, they are the master of their own domain.
-	Since everybody can behave themself, why we need a controller or manager? If you want to run a
-	broadway show, you can not use the same skill of running puppet show. In client side UI, the
-	controller concept does not scale well. If you feel like something is missied,
-	you can think viajs is ultimate controller, so that you don't need to write your controller.</p>
+	If everybody can behave themself, why we need a controller or manager? If you want to run a
+	broadway show, you can not use the same skill of running puppet show. If you feel like something
+	is missied, you can think viajs is ultimate controller. What the ultimate controller does to
+	provide a stage to actors (views and models) to act. Here is a <a
+		href="http://emberjs.com/images/ember_mvc/embermvc.png">diagram</a> of
+	<a href="http://emberjs.com">emberjs</a>. In the diagram, there are complex relations
+	between models, controllers, statemanager, views, browser events. This is just beyond the
+	my understanding. Here is the <a
+		href="http://blog.oregonlive.com/o_impact/2009/06/rent.group.jpg">diagram</a> of via.js.
+	We can run the show, there is no need to control.
+</p>
 
 <p>
-	We have Model (model proxy), View
-	(jQuery object), Event (jQuery event or model event), Subscription, now we have <a
-	href="http://www.mves.org/">MVES</a> ? Another funny acronym.Next, I will talk about <a
-	href="modelProxy.html">model proxy</a>
+	We have Model (model proxy), View (jQuery object), Event (jQuery event or model event),
+	Subscription. Maybe we can call it MVES library? Another funny acronym. Next, I will talk about
+	<a href="modelProxy.html">model proxy</a>
 </p>
 
 </div>
-
+<script src='analytic.js'></script>
 </body>
 </html>

@@ -27,5 +27,5 @@ via.set( "contactsApp", {
 	]
 } );
 
-via( "contactsApp.contacts" ).queryable();
+via( "contactsApp.contacts" ).createQueryable();
 

@@ -11,11 +11,11 @@
 	<script src="../../src/template.js"></script>
 	<script src="../../src/must-have-extensions.js"></script>
 	<script src="../../src/nice-to-have-extensions/queryableListView.js"></script>
-	<script src="../../src/nice-to-have-extensions/editableListView.js"></script>
+	<script src="../../src/nice-to-have-extensions/editableRow.js"></script>
 	<script src="../../src/template-engines/template-engine-jqueryTmpl.js"></script>
 	<script src="data.js"></script>
 	<script type="text/javascript">
-		via( "contacts" ).queryable();
+		via( "contacts" ).createQueryable();
 	</script>
 	<script src='../../doc/analytic.js'></script>
 </head>
@@ -31,7 +31,7 @@
 	</tr>
 	</thead>
 	<tbody data-sub="`listView:.|contactRow
-					`editableListView:.|contactRowInEditMode">
+					`inlineEditableRow:.|contactRowInEditMode">
 	</tbody>
 </table>
 
@@ -66,7 +66,7 @@
 	</thead>
 
 	<tbody data-sub="`queryableListView:.|contactRow
-					 `editableListView:*queryResult|contactRowInEditMode">
+					 `inlineEditableRow:*queryResult|contactRowInEditMode">
 	</tbody>
 
 	<tfoot data-sub="`pager:.|pagerTemplate">

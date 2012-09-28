@@ -10,15 +10,19 @@
 			</div>
 			<div class="data simpleTable">
 				<table>
+					<col width="100px;">
+					<col width="100px;">
+					<col width="330px;">
 					<tr>
 						<th>Category</th>
 						<th>Name</th>
 						<th>Description</th>
 						<th>Action</th>
 					</tr>
-					<tbody data-sub="`queryableListView:.|doc.edit.entryRow
-								 `editableDeletableRow
-								 $review:.|#/doc.review">
+					<tbody data-sub="`listView:.|doc.edit.entryRow
+									 `editableRow
+									 $review:.|#/doc.review
+									 @initSubs:doc.overrideDeleteHandler">
 
 					</tbody>
 				</table>
@@ -44,6 +48,8 @@
 			<input type="button" value="edit" data-sub="`editButton">
 			<input type="button" value="remove" data-sub="`deleteButton">
 			<input type="button" value="review" data-sub="@aliasEvent:click,review">
+			<input type="button" value="move up" data-sub="@aliasEvent:click,moveUp">
+			<input type="button" value="move down" data-sub="@aliasEvent:click,moveDown">
 		</td>
 	</tr>
 </script>
@@ -99,22 +105,20 @@
 <script type="jsrender" id="doc.edit.signatures">
 	<div class="data simpleTable" data-sub="@ns:signatures">
 		<table>
-			<col style="width: 150px;">
-			<col style="width: 70px;">
+			<col style="width: 200px;">
 			<col style="width: auto">
-			<col style="width: 150px;">
+			<col style="width: 340px;">
 			<!--data-sub="`hide:*edit.mode"-->
 			<tr>
 				<th>Name</th>
-				<th>Priority</th>
 				<th>Short Description</th>
 				<th>Actions</th>
 			</tr>
 			<tbody data-sub="`listView:.|doc.edit.signatureReadRow
-							 `editableListView:.|doc.edit.signatureEditRow"/>
+							 `inlineEditableRow:.|doc.edit.signatureEditRow"/>
 			<tfoot>
 			<tr data-sub="`hide:*edit.mode">
-				<td colspan="4">
+				<td colspan="3">
 					<input type="button" value="New Signature" data-sub="`newItemButton"/>
 				</td>
 			</tr>
@@ -128,18 +132,19 @@
 <script type="jsrender" id="doc.edit.signatureReadRow">
 	<tr>
 		<td>{{:name}}</td>
-		<td>{{:priority}}</td>
 		<td>{{:shortDesc}}</td>
 		<td>
 			<input type="button" value="edit" data-sub="`editButton"/>
 			<input type="button" value="remove" data-sub="`deleteButton"/>
+			<input type="button" value="move up" data-sub="`moveDownButton"/>
+			<input type="button" value="move down" data-sub="`moveDownButton"/>
 		</td>
 	</tr>
 </script>
 
 <script type="jsrender" id="doc.edit.signatureEditRow">
 	<!--@ns:{{:~modelPath}}.item-->
-	<td colspan="4" data-sub="@ns:*edit.item" class="editForm">
+	<td colspan="3" data-sub="@ns:*edit.item" class="editForm">
 
 		<div>
 			<label>Signature Name:</label> <input type="text" data-sub="@ns:name
@@ -158,21 +163,7 @@
 		</div>
 
 
-		<div>
-			<label>priority:</label>
-			<select data-sub="`val:priority">
-				<option></option>
-				<option>1</option>
-				<option>2</option>
-				<option>3</option>
-				<option>4</option>
-				<option>5</option>
-				<option>6</option>
-				<option>7</option>
-				<option>8</option>
-				<option>9</option>
-			</select>
-		</div>
+
 
 		<div>
 			<label>Return:</label>
@@ -205,6 +196,8 @@
 
 	<div class="data simpleTable" data-sub="@ns:overloads">
 		<table>
+			<col width="300px">
+			<col width="200px">
 			<tr>
 				<th>Name</th>
 				<th>Version Added</th>
@@ -212,7 +205,7 @@
 			</tr>
 			<!--context path is overloads-->
 			<tbody data-sub="`listView:.|doc.edit.overloadReadRow
-						     `editableListView:.|doc.edit.overloadEditRow"/>
+						     `inlineEditableRow:.|doc.edit.overloadEditRow"/>
 
 			<tfoot>
 			<tr>
@@ -235,6 +228,8 @@
 		<td>
 			<input type="button" value="edit" data-sub="`editButton"/>
 			<input type="button" value="remove" data-sub="`deleteButton"/>
+			<input type="button" value="move up" data-sub="`moveUpButton"/>
+			<input type="button" value="move down" data-sub="`moveDownButton"/>
 		</td>
 	</tr>
 </script>
@@ -271,6 +266,9 @@
 <script type="jsrender" id="doc.edit.parameters">
 	<div class="data simpleTable" data-sub="@ns:parameters">
 		<table>
+			<col width="100px">
+			<col width="100px">
+			<col width="320px">
 			<tr>
 				<th>Name</th>
 				<th>Type</th>
@@ -279,7 +277,7 @@
 			</tr>
 
 			<tbody data-sub="`listView:.|doc.edit.parameterReadRow
-							 `editableListView:.|doc.edit.parameterEditRow"/>
+							 `inlineEditableRow:.|doc.edit.parameterEditRow"/>
 
 
 			<tfoot>
@@ -304,6 +302,8 @@
 		<td>
 			<input type="button" value="edit" data-sub="`editButton"/>
 			<input type="button" value="remove" data-sub="`deleteButton"/>
+			<input type="button" value="move up" data-sub="`moveUpButton"/>
+			<input type="button" value="move down" data-sub="`moveDownButton"/>
 		</td>
 	</tr>
 </script>
@@ -340,7 +340,7 @@
 			</tr>
 
 			<tbody data-sub="`listView:.|doc.edit.exampleReadRow
-						     `editableListView:.|doc.edit.exampleEditRow"/>
+						     `inlineEditableRow:.|doc.edit.exampleEditRow"/>
 
 			<tfoot>
 			<tr>
@@ -361,6 +361,8 @@
 		<td>
 			<input type="button" value="edit" data-sub="`editButton"/>
 			<input type="button" value="remove" data-sub="`deleteButton"/>
+			<input type="button" value="move up" data-sub="`moveUpButton"/>
+			<input type="button" value="move down" data-sub="`moveDownButton"/>
 		</td>
 	</tr>
 </script>

@@ -25,8 +25,9 @@
 <h2>Handler pipleline and filters</h2>
 
 <p>Handler is where the work is done. As we have changed event binding to event subscription,
-	we also need the way we write handler. The good news is that you old handlers probabaly continue
-	to work without change or with a very small change. Let's revisit the handler in "hello world"
+	we also need change the way we write handler. The good news is that you old handlers for jQuery
+	event binding probabaly continue to work without change or with a very small change. Let's
+	revisit the handler in "hello world"
 	example.
 </p>
 
@@ -42,8 +43,7 @@
 </pre>
 
 <p>In jQuery event handler, "this" variable refer to e.target. In via.js handler, "this" is
-	subscriber. If the event is subscribed by a model, then the subscriber is a proxy. If the event
-	is subscribed by a view, then the subscriber is a jQuery object of the view.
+	subscriber (a jQuery object or a model proxy or global object when subscriber is null.)
 </p>
 
 <h3>Event arguement of model event and view event</h3>
@@ -51,7 +51,7 @@
 <p>
 	Although the subscriptions of of model event and view event are both supported in via.js, but
 	the underlining implementations are still different. via.js try to normalize the behavior of
-	these two event implementation by making the event arguement the same. The following chart list
+	these two implementations by making the event arguements very similar. The following chart list
 	the member of event arguement in model event handler and view event handler. The highlighted
 	parts are the shared members. The other properties are specific to model event or view event.
 </p>

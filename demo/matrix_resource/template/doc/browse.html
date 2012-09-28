@@ -3,7 +3,7 @@
 	<div topModule="browse" data-sub="@ns:doc">
 
 		<div class="leftCol">
-			<div class="mod complex excerpt">
+			<div class="mod complex flow">
 				<b class="top">
 					<b class="tl"></b>
 					<b class="tr"></b>
@@ -62,7 +62,7 @@
 	<!--#data is selected entry-->
 	{{if #data}}
 
-	<div class="mod complex excerpt">
+	<div class="mod complex flow">
 		<b class="top">
 			<b class="tl"></b>
 			<b class="tr"></b>
@@ -79,9 +79,9 @@
 				</h2>
 			</div>
 			{{if ~getParentNamespaces(#data).length}}
-			<div class="bd mam">
+			<div class="bd ">
 				<!--~getParentNamespaces is a helper-->
-				<div class="entry-meta">
+				<div class="entry-meta mas">
 					{{for [~getParentNamespaces(#data)] tmpl="doc.browse.breadcrumb" /}}
 				</div>
 			</div>
@@ -90,7 +90,7 @@
 			{{for [~get("/doc.getSubEntries", #data)]}}
 			<ul>
 				{{for #data}}
-				<li>
+				<li class="mts">
 					<a href="#" data-sub="$click:.selectedEntryName|*hardCode|{{:~getFullName(#data)}}
 														 `preventDefault">
 						{{:shortDesc}}
@@ -127,7 +127,7 @@
 </script>
 
 <script type="jsrender" id="doc.browse.signature">
-	<div class="mod complex excerpt">
+	<div class="mod complex flow">
 		<b class="top">
 			<b class="tl"></b>
 			<b class="tr"></b>
@@ -140,7 +140,7 @@
 					<span class="returns fly_r">Returns:{{:returns}}</span>
 				</h2>
 			</div>
-			<div class="bd mam">
+			<div class="bd ">
 				<p class="desc">
 					<strong>Description:</strong>
 					<span>{{:shortDesc}}</span>
@@ -193,7 +193,7 @@
 </script>
 
 <script type="jsrender" id="doc.browse.examples">
-	{{if #data}}
+	{{if #data.length}}
 	<h3>Examples:</h3>
 	{{for #data}}
 	<div>

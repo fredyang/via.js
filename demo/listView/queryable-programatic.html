@@ -139,7 +139,7 @@
 <script>
 
 	$( function() {
-		via("contacts").queryable();
+		via("contacts").createQueryable();
 		$( "#originalContacts" ).subscribe( "contacts", "init after*", "*renderInside", "contactRow" );
 
 		$( "#queryContacts" ).subscribe( "contacts*queryResult", "init after*", "*renderInside", "contactRow" );

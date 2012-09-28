@@ -1,4 +1,4 @@
-module( "queryable" );
+module( "createQueryable" );
 
 test( "can create queryable shadow", function() {
 	via.set( "contacts", [
@@ -8,11 +8,11 @@ test( "can create queryable shadow", function() {
 		}
 	] );
 
-	var $list = $( "<div data-sub='@ns:contacts @queryableListView'></div>" ).appendTo( testArea() );
+	var $list = $( "<div data-sub='@ns:contacts @createQueryable'></div>" ).appendTo( testArea() );
 	$list.importSubs();
 
-	ok( via.get( "contacts*query" ), "@queryableListView will create the queryable support" );
-	ok( via.get( "contacts*queryResult" ).length, "@queryableListView will create the queryResult" );
+	ok( via.get( "contacts*query" ), "@createQueryable will create the queryable support" );
+	ok( via.get( "contacts*queryResult" ).length, "@createQueryable will create the queryResult" );
 
 	via.del( "contacts" );
 	assertEmptyDb();

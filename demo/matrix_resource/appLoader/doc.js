@@ -59,7 +59,6 @@
 								{
 									name: "",
 									returns: "",
-									priority: "",
 									shortDesc: "",
 									desc: "",
 									//each overload return different parameters
@@ -131,6 +130,19 @@
 							via.set( "doc.topModule", "browse" );
 						},
 
+						overrideDeleteHandler: function( elem, parseContext, subscriptions, options ) {
+							//subscribe it immediately before the original delete handler
+							//are subscribe
+							via( "doc.entries" ).subscribe( elem, "delete", function( e ) {
+								var deletedEntry = via( "doc.entries" ).get( e.selectedRowIndex() );
+								deleteSubEntries( deletedEntry );
+
+								//e.stopImmediatePropagation(); will stop proceeding next the original
+								//delete handler
+								e.stopImmediatePropagation();
+							} );
+						},
+
 						//------------------custom subscription-----------
 						//this is called by the @initSubs property
 						renderExample: function( elem, parseContext, subscriptions, options ) {
@@ -149,9 +161,8 @@
 								.find( "head" )
 								.append( '<style type="text/css">' + cssSource + '</style>' );
 						},
-						discardChange: function (e) {
-							debugger;
-							via("doc.entries").purgeLocal();
+						discardChange: function( e ) {
+							via( "doc.entries" ).purgeLocal();
 							location.reload();
 						}
 					};
@@ -182,7 +193,9 @@
 						//update "doc.selectedEntryName" will not trigger afterUpdate
 						//because new value is the same as old value
 						//so we need to manually trigger the change
-						rootModel.triggerChange( "doc.selectedEntryName" );
+						setTimeout( function() {
+							rootModel.triggerChange( "doc.selectedEntryName" );
+						}, 0 );
 					} else {
 						//the reason delay the set is that, the tree on the right need
 						//to be re-rendered, the delay is to let the re-rendering complete
@@ -193,25 +206,22 @@
 					}
 				} );
 
-				via.subscribe( null, "doc.entries", "afterDel.1", function( e ) {
-
-					if (rootModel.get( "doc.selectedEntryName" ) == getFullName( e.removed )) {
+				function deleteSubEntries ( entry ) {
+					var fullName = getFullName( entry );
+					if (rootModel.get( "doc.selectedEntryName" ) == fullName) {
 						rootModel.set( "doc.selectedEntryName", "" );
 					}
 
-					var entriesModel = via( "doc.entries" );
-
-					var children = rootModel.get( "doc.getSubEntries", e.removed );
-					//cascade delete children
+					var children = rootModel.get( "doc.getSubEntries", entry );
 					for (var i = 0; i < children.length; i++) {
-						entriesModel.removeItem( children[i] );
+						deleteSubEntries( children[i] );
 					}
-				} );
+
+					via( "doc.entries" ).removeItem( entry );
+				}
 
 				$( elem ).renderInside( /*templateId*/"doc", /*modelPath*/"doc" );
-
 				via( "doc.entries" ).saveLocalAfterUpdate();
-
 			}
 
 			var data = via( "doc.entries" ).getLocal();

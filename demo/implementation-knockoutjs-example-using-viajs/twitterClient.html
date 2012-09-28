@@ -21,7 +21,6 @@
 			user<span data-sub='`showPlural:selectedUserNames'>s</span>:</p>
 
 		<ul data-sub='`listView:selectedUserNames
-					  `deletableRow:selectedUserNames
 					  $delete:hasUnsavedChanges|*true'>
 			<li>
 				<span>{{:#data}}</span>
@@ -40,7 +39,7 @@
 	</div>
 	<div>
 		<div class='loadingIndicator'>Loading...</div>
-		<table data-sub="`fullUpdateListView:tweetsOfSelectedUsers">
+		<table data-sub="`forAll:tweetsOfSelectedUsers">
 			<tr>
 				<td><img src="{{:profile_image_url}}"/></td>
 				<td>
@@ -62,7 +61,7 @@
 <script src="../../src/must-have-extensions.js"></script>
 <script src="../../ref/jsrender.js"></script>
 <script src="../../src/template-engines/template-engine-jsrender.js"></script>
-<script src="../../src/nice-to-have-extensions/editableListView.js"></script>
+<script src="../../src/nice-to-have-extensions/editableRow.js"></script>
 <script>
 
 	(function() {

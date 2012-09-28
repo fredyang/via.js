@@ -16,6 +16,7 @@
 	var rootModel = via();
 	var subscribe = via.subscribe;
 	var defaultOptions = via.options;
+	var isFunction = $.isFunction;
 
 	function returnTrue () {
 		return true;
@@ -339,6 +340,34 @@
 			if (!confirm( message )) {
 				e.stopImmediatePropagation();
 			}
+		},
+
+		moveUp: function( e ) {
+			var selectedIndex = e.selectedRowIndex();
+			this.move( selectedIndex, selectedIndex - 1 );
+		},
+
+		moveDown: function( e ) {
+			var selectedIndex = e.selectedRowIndex();
+			this.move( selectedIndex, selectedIndex + 1 );
+		},
+
+		removeRow: function( e ) {
+			var index = e.selectedRowIndex();
+
+			var items = this.helper();
+			if (isFunction( items )) {
+				//this is case when items is model*queryResult
+				items = this.get();
+				this.mainModel().removeItem( items[index] );
+
+			} else {
+
+				this.removeAt( index );
+			}
+
+			e.stopImmediatePropagation();
+
 		}
 	} );
 
@@ -572,6 +601,10 @@
 	} );
 
 	extend( viaClasses, {
+
+		//handle the delete button evnet in the list view
+		deletableRow: "$delete:.|*removeRow",
+
 		//	<tbody data-sub="`listView:.,#contactRow">
 		//listView is used to render a list of items using a item template
 		//the publisher should be a array model, the class can also update
@@ -585,9 +618,13 @@
 				//render the updated data item in the view
 			"!afterUpdate.1:.|*updateTmplItem" +
 				//delete the deleted data item in the view
-			"!afterDel.1:.|*removeTmplItem",
+			"!afterDel.1:.|*removeTmplItem" +
 
-		fullUpdateListView: "!init after*:.|*renderInside",
+			"$moveUp:.|*moveUp" +
+
+			"$moveDown:.|*moveDown" +
+
+			"`deletableRow",
 
 		//a general class rule to synchronize
 		// the control with viewAdapter to a model
@@ -649,6 +686,10 @@
 		updateButton: "@aliasEvent:click,update",
 
 		editButton: "@aliasEvent:click,edit",
+
+		moveUpButton: "@aliasEvent:click,moveUp",
+
+		moveDownButton: "@aliasEvent:click,moveDown",
 
 		cancelButton: "@aliasEvent:click,cancel",
 

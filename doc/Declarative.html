@@ -33,7 +33,7 @@
 <ol class="simpleList">
 	<li>There is no need to select a view using a selector (such as id).</li>
 	<li>Better support template, especially nested template</li>
-	<li>Minimize coding by using custom property and class property</li>
+	<li>Reduce subscription code</li>
 </ol>
 
 
@@ -45,10 +45,10 @@
 	<li>The data embedded into the markup must be as compact as possible, while still semantic
 		enough to understand.
 	</li>
-	<li>The syntax used in the delcarative subscriptions must be extensible.</li>
+	<li>The delcarative subscriptions must be extensible.</li>
 </ol>
 
-<p>To achieve these goals, via.js borrow some css synatax.</p>
+<p>To achieve these goals, via.js borrows some css synatax.</p>
 
 <h3>Subscription rule</h3>
 
@@ -197,17 +197,18 @@
 <p>User subscription properties is good extension point to allow us dynamically
 	create subscriptions when can be not achieved by using system subscription properties.
 	It can be also used to inject some logic such as initialization during subscriptions is built.
-	We will talk about this advanced topic later.
+	We will talk about this in advanced topic later.
 </p>
 
 <h3>Package subscription rules with @class property</h3>
 
 <p>Subscription rule is not code by itself, its just some configuration information. However,
-	if we have many declarations in data-sub attribute, it is error prone.
-	To solve this problem, via.js can borrow the CSS practise. One way to apply CSS is to
-	to use inline style which put lots style properties into the style attribute. A better
-	practise is to apply a class to the element, and create a class rule with a set of css
-	declarations in an external css style sheet. By doing this, our markup is clean and semantic.
+	if we need to write a lots declarations in data-sub attribute, it can be error prone, and
+	it is also hard to read. To solve this problem, via.js can borrow the CSS practise. One way to
+	apply CSS is to to use inline style which put lots style properties into the style attribute. A
+	better practise is to package a set of css declarations with a class rule in an external css
+	style sheet, and then apply the class to an element. By doing this, our markup is clean and
+	semantic.
 </p>
 
 <p>Here, we try to do simliar thing with with <strong>@class</strong> property. We can create a
@@ -305,8 +306,8 @@
 	&lt;/div&gt;
 </pre>
 
-<p>The syntax of declarative subscription may not be as simple as the declarative binding of
-	knockoutjs, but it has lots machanism to extend yet main compact.
+<p>The syntax of declarative subscription may not be as simple as you want, but it is not so hard to
+	grasp after some practice.
 </p>
 
 <p>Next I will talk about <a href="template.html">template</a></p>

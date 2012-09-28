@@ -558,6 +558,18 @@
 			return this;
 		},
 
+		move: function (fromIndex, toIndex) {
+			var count = this.count();
+			if (fromIndex !== toIndex &&
+			    fromIndex >= 0 && fromIndex < count &&
+				toIndex >= 0 && toIndex < count) {
+				var item = this.get(fromIndex);
+				this.del(fromIndex);
+				this.insertAt(toIndex, item);
+			}
+			return this;
+		},
+
 		prepend: function( item ) {
 			return this.insertAt( 0, item );
 		},

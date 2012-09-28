@@ -40,13 +40,14 @@
 <ol class="simpleList">
 	<li>Event bubbling
 		<p>Model person's firstName's event can bubble up person. For example, if person firstName
-			raise an event
-			"afterChange", then person will raise "afterChange.1" after that.</p></li>
+			raise an event "afterChange", then person will raise "afterChange.1" after that.</p>
+	</li>
+
 	<li>Event cascading
 		<p>Model person's firstName's event can cascade to person's fullName, because of the
-			internal
-			dependencies between fullName and firstName. This is automatic, no code is required from
-			developers.</p></li>
+			internal dependencies between fullName and firstName. This is automatic, no code is
+			required from developers.</p></li>
+
 	<li>Customs event types.
 		<p>The built-in events include "beforeCreate", "beforeUpdate", "beforeRemove",
 			"afterCreate", "afterUpdate", "afterRemove" event. But we can raise and subscribe
@@ -450,7 +451,7 @@
 	a jQuery object(view), we use <strong>"$selector"</strong> to differentiate model path.
 </p>
 
-<p>A subscription always has one and only publisher, and any number of subscriber (from zero to
+<p>A subscription always has one and only one publisher, and any number of subscriber (from zero to
 	many).If a subscrptio does not have a subscriber, it becomes event binding. But this is
 	necessary in some case, but use it sparingly. Below is how it can be done.
 </p>
@@ -496,9 +497,8 @@
 
 <p><strong>The delegateSelector parameter is useful only when publisher is DOM element.</strong> It
 	is the same concept of jQuery delegateSelector. In the <a
-		href="../demo/filters/test-delegate.html">
-		following example</a> , there is only one subscriptions is
-	created.
+		href="../demo/filters/test-delegate.html"> following example</a> , there is only one
+	subscription created.
 </p>
 
 <pre class="brush:html">
@@ -571,7 +571,7 @@
 
 <h3>"init" event type for model event</h3>
 
-<p>"init" event is special event, it is triggered right after a subscription is created. And the
+<p>"init" event is a special event, it is triggered right after a subscription is created. And the
 	subscription handler will be invoked immediately. In the following example, "init" event is used
 	to populate the fullName value to the label.</p>
 

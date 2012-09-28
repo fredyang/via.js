@@ -22,17 +22,6 @@ Download
 ---------------------------
 You can [download released versions of via.js](https://github.com/fredyang/via.js/downloads) from Github.
 
-What you need to build your own via.js
---------------------------------------
-
-You can follow the instruction on https://github.com/jquery/jquery to install the software for build.
-
-For windows user, the packages can be installed in different folder
-as long as the path environment is set up.
-For windows xp/7 64-bit user, please do not install them into "C:\Program Files (x86)", because
-their GNU make file has problem in understanding the "(x86)" in path.
-
-
 How to build your own via.js
 ----------------------------
 

@@ -470,10 +470,10 @@ Instead of using
 
 <p>The answer is, there is no controller, because there is no need for one here. In viajs, all
 	objects regardless whether they are view or model, they are the master of their own domain.
-	If everybody can behave themself, why we need a controller or manager? If you want to run a
-	broadway show, you can not use the same skill of running puppet show. If you feel like something
-	is missied, you can think viajs is ultimate controller. What the ultimate controller does to
-	provide a stage to actors (views and models) to act. Here is a <a
+	If everybody can behave themself, why we need a controller or manager? The mindset to run
+	a broadway show is obviously different from the one to run puppet show. If you feel like
+	something is missied, you can think of viajs as ultimate controller. What it
+	does is to provide a stage to actors (views and models) to act. Here is a <a
 		href="http://emberjs.com/images/ember_mvc/embermvc.png">diagram</a> of
 	<a href="http://emberjs.com">emberjs</a>. In the diagram, there are complex relations
 	between models, controllers, statemanager, views, browser events. This is just beyond the
@@ -490,10 +490,15 @@ Instead of using
 
 </div>
 <script>
-          var _gaq=[['_setAccount','UA-34311489-2'],['_trackPageview']];
-          (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-          g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-          s.parentNode.insertBefore(g,s)}(document,'script'));
-      </script>
+	var _gaq = [
+		['_setAccount', 'UA-34311489-2'],
+		['_trackPageview']
+	];
+	(function( d, t ) {
+		var g = d.createElement( t ), s = d.getElementsByTagName( t )[0];
+		g.src = ('https:' == location.protocol ? '//ssl' : '//www') + '.google-analytics.com/ga.js';
+		s.parentNode.insertBefore( g, s )
+	}( document, 'script' ));
+</script>
 </body>
 </html>

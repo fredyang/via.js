@@ -8,7 +8,6 @@
 			display: block;
 		}
 	</style>
-	<script src='../../doc/analytic.js'></script>
 </head>
 <body>
 
@@ -19,7 +18,6 @@
 	Here are some text will change color to the value in input
 </div>
 
-</body>
 <script src="../../ref/jquery.js"></script>
 <script src="../../src/modelProxy.js"></script>
 <script src="../../src/eventSubscription.js"></script>
@@ -48,4 +46,12 @@
 	$("#txtColor").subscribe("test.color", "init", "get val");
 	$("#divSamples").subscribe("test.color", "init afterUpdate", "get css*color");
 </script>
+<script>
+          var _gaq=[['_setAccount','UA-34311489-2'],['_trackPageview']];
+          (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+          g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+          s.parentNode.insertBefore(g,s)}(document,'script'));
+      </script>
+</body>
+
 </html>
